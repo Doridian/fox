@@ -13,7 +13,7 @@ func main() {
 	for {
 		res, err := p.Prompt("fox> ")
 		if err != nil {
-			log.Printf("Prompt aborted: %v", err)
+			log.Printf("\nPrompt aborted: %v", err)
 			break
 		}
 		if res != "" {
