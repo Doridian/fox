@@ -46,7 +46,7 @@ func doWait(L *lua.LState) int {
 
 func doRun(L *lua.LState) int {
 	c, ud := checkShellCmd(L, 1)
-	err := c.Gocmd.Start()
+	err := c.prepareAndStart()
 	if err != nil {
 		return handleCmdError(L, 1, c, ud, err)
 	}
@@ -55,7 +55,7 @@ func doRun(L *lua.LState) int {
 
 func doStart(L *lua.LState) int {
 	c, ud := checkShellCmd(L, 1)
-	err := c.Gocmd.Start()
+	err := c.prepareAndStart()
 	if err != nil {
 		return handleCmdError(L, 1, c, ud, err)
 	}

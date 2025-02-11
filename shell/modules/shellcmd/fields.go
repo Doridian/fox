@@ -28,6 +28,11 @@ func getSetPath(L *lua.LState) int {
 	}
 	if L.GetTop() >= 2 {
 		c.Gocmd.Path = L.CheckString(2)
+		if c.Gocmd.Args == nil {
+			c.Gocmd.Args = []string{c.Gocmd.Path}
+		} else {
+			c.Gocmd.Args[0] = c.Gocmd.Path
+		}
 		L.Push(ud)
 		return 1
 	}
@@ -60,7 +65,8 @@ func getSetArgs(L *lua.LState) int {
 			return 0
 		}
 		argsLLen := argsL.MaxN()
-		args := make([]string, 0, argsLLen)
+		args := make([]string, 1, argsLLen)
+		args[0] = c.Gocmd.Path
 		for i := 1; i <= argsLLen; i++ {
 			args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
 		}

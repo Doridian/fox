@@ -1,6 +1,10 @@
 package shellcmd
 
-import lua "github.com/yuin/gopher-lua"
+import (
+	"os"
+
+	lua "github.com/yuin/gopher-lua"
+)
 
 func getSetStdout(L *lua.LState) int {
 	c, ud := checkShellCmd(L, 1)
@@ -57,4 +61,12 @@ func getSetStdin(L *lua.LState) int {
 	}
 
 	return pushShellCmd(L, c.Stdin)
+}
+
+func (c *ShellCmd) prepareAndStart() error {
+	c.Gocmd.Stderr = os.Stderr
+	c.Gocmd.Stdout = os.Stdout
+	c.Gocmd.Stdin = os.Stdin
+
+	return c.Gocmd.Start()
 }

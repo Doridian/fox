@@ -5,7 +5,7 @@ end
 
 local c = shellcmd.new()
 c:path("/bin/echo")
-c:args({"hello", "world"})
+c:args({"echo", "hello", "world"})
 c:errorPropagation(false)
 local c2, code, err = c:run()
 
