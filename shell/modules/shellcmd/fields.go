@@ -76,8 +76,8 @@ func getSetArgs(L *lua.LState) int {
 	}
 
 	ret := L.NewTable()
-	for _, arg := range c.Gocmd.Args {
-		ret.Append(lua.LString(arg))
+	for i := 1; i < len(c.Gocmd.Args); i++ {
+		ret.Append(lua.LString(c.Gocmd.Args[i]))
 	}
 	L.Push(ret)
 	return 1

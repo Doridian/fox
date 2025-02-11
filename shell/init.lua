@@ -4,8 +4,11 @@ function exit(code)
 end
 
 local c = shellcmd.new()
+print(#c:args())
 c:path("/bin/echo")
+print(#c:args())
 c:args({"echo", "hello", "world"})
+print(#c:args())
 c:errorPropagation(false)
 local c2, code, err = c:run()
 
