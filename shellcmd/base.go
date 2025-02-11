@@ -62,6 +62,9 @@ func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) (bool, int) {
 		cmd += cmdAdd
 	}
 
+	s.L.SetGlobal("_LAST_DO_EXIT", lua.LBool(false))
+	s.L.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
+
 	err = s.L.DoString(luaCode)
 	if err != nil {
 		log.Printf("Error running command: %v", err)
@@ -69,18 +72,10 @@ func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) (bool, int) {
 	}
 	retC := s.L.GetTop()
 	if retC > 0 {
-		defer s.L.Pop(retC)
+		s.L.Pop(retC)
 	}
 
-	var exitCode lua.LNumber
-	doExit := false
-	switch retC {
-	case 1:
-		exitCode = lua.LVAsNumber(s.L.Get(1))
-	case 2:
-		doExit = lua.LVAsBool(s.L.Get(1))
-		exitCode = lua.LVAsNumber(s.L.Get(2))
-	default:
-	}
+	doExit := lua.LVAsBool(s.L.GetGlobal("_LAST_DO_EXIT"))
+	exitCode := lua.LVAsNumber(s.L.GetGlobal("_LAST_EXIT_CODE"))
 	return doExit, int(exitCode)
 }

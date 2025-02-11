@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/Doridian/fox/prompt"
 	"github.com/Doridian/fox/shellcmd"
@@ -13,7 +14,8 @@ func main() {
 	for {
 		res, err := p.Prompt("fox> ")
 		if err != nil {
-			log.Printf("\nPrompt aborted: %v", err)
+			os.Stdout.Write([]byte("\n"))
+			log.Printf("Prompt aborted: %v", err)
 			break
 		}
 		if res != "" {
