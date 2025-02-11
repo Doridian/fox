@@ -12,8 +12,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-//go:embed shell.lua
-var shell string
+//go:embed init.lua
+var initCode string
 
 type ShellManager struct {
 	l *lua.LState
@@ -30,7 +30,7 @@ func NewShellManager() *ShellManager {
 func (s *ShellManager) init() {
 	mod := shellcmd.New()
 	mod.Init(s.l)
-	s.l.DoString(shell)
+	s.l.DoString(initCode)
 }
 
 // if .. then .. end
