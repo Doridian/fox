@@ -1,0 +1,5 @@
+/fox
+*.exe
+*.dll
+.vscode
+
