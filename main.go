@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/Doridian/fox/prompt"
-	"github.com/Doridian/fox/shellcmd"
+	"github.com/Doridian/fox/shell"
 )
 
 func main() {
 	p := prompt.NewPrompt()
-	c := shellcmd.NewShell()
+	c := shell.NewShellManager()
 	for {
 		res, err := p.Prompt("fox> ")
 		if err != nil {

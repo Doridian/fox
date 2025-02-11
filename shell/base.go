@@ -1,4 +1,4 @@
-package shellcmd
+package shell
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	_ "embed"
 
 	"github.com/Doridian/fox/prompt"
+	"github.com/Doridian/fox/shell/modules/shellcmd"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -18,12 +19,18 @@ type ShellManager struct {
 	l *lua.LState
 }
 
-func NewShell() *ShellManager {
+func NewShellManager() *ShellManager {
 	s := &ShellManager{
 		l: lua.NewState(),
 	}
-	s.l.DoString(shell)
+	s.init()
 	return s
+}
+
+func (s *ShellManager) init() {
+	mod := shellcmd.New()
+	mod.Init(s.l)
+	s.l.DoString(shell)
 }
 
 // if .. then .. end
