@@ -19,12 +19,9 @@ func main() {
 			break
 		}
 		if res != "" {
-			doExit, exitCode := c.Run(p, res)
+			exitCode := c.Run(p, res)
 			if exitCode != 0 {
 				log.Printf("Exit code: %v", exitCode)
-			}
-			if doExit {
-				break
 			}
 		}
 	}

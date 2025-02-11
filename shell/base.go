@@ -3,6 +3,7 @@ package shell
 import (
 	"errors"
 	"log"
+	"os"
 	"strings"
 
 	_ "embed"
@@ -30,7 +31,10 @@ func NewShellManager() *ShellManager {
 func (s *ShellManager) init() {
 	mod := shellcmd.New()
 	mod.Init(s.l)
-	s.l.DoString(initCode)
+	err := s.l.DoString(initCode)
+	if err != nil {
+		log.Fatalf("Error initializing shell: %v", err)
+	}
 }
 
 // if .. then .. end
@@ -49,7 +53,7 @@ func (s *ShellManager) CommandToLua(cmd string) (string, error) {
 }
 
 // Return true to exit shell
-func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) (bool, int) {
+func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) int {
 	var luaCode string
 	var err error
 	for {
@@ -59,30 +63,33 @@ func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) (bool, int) {
 		}
 		if err != ErrNeedMore {
 			log.Printf("Error parsing command: %v", err)
-			return false, 0
+			return 0
 		}
 		cmdAdd, err := p.Prompt("f.x> ")
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
-			return true, 0
+			os.Exit(0)
+			return 0
 		}
 		cmd += cmdAdd
 	}
 
-	s.l.SetGlobal("_LAST_DO_EXIT", lua.LBool(false))
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
-
 	err = s.l.DoString(luaCode)
+	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
+
 	if err != nil {
-		log.Printf("Error running command: %v", err)
-		return false, 1
+		if exitCode == 0 {
+			exitCode = 1
+		}
+		log.Printf("Error running command (code %d): %v", exitCode, err)
+		return exitCode
 	}
+
 	retC := s.l.GetTop()
 	if retC > 0 {
 		s.l.Pop(retC)
 	}
 
-	doExit := lua.LVAsBool(s.l.GetGlobal("_LAST_DO_EXIT"))
-	exitCode := lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE"))
-	return doExit, int(exitCode)
+	return exitCode
 }
