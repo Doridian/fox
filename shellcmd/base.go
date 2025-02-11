@@ -15,14 +15,14 @@ import (
 var shell string
 
 type ShellManager struct {
-	L *lua.LState
+	l *lua.LState
 }
 
 func NewShell() *ShellManager {
 	s := &ShellManager{
-		L: lua.NewState(),
+		l: lua.NewState(),
 	}
-	s.L.DoString(shell)
+	s.l.DoString(shell)
 	return s
 }
 
@@ -62,20 +62,20 @@ func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) (bool, int) {
 		cmd += cmdAdd
 	}
 
-	s.L.SetGlobal("_LAST_DO_EXIT", lua.LBool(false))
-	s.L.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
+	s.l.SetGlobal("_LAST_DO_EXIT", lua.LBool(false))
+	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 
-	err = s.L.DoString(luaCode)
+	err = s.l.DoString(luaCode)
 	if err != nil {
 		log.Printf("Error running command: %v", err)
 		return false, 1
 	}
-	retC := s.L.GetTop()
+	retC := s.l.GetTop()
 	if retC > 0 {
-		s.L.Pop(retC)
+		s.l.Pop(retC)
 	}
 
-	doExit := lua.LVAsBool(s.L.GetGlobal("_LAST_DO_EXIT"))
-	exitCode := lua.LVAsNumber(s.L.GetGlobal("_LAST_EXIT_CODE"))
+	doExit := lua.LVAsBool(s.l.GetGlobal("_LAST_DO_EXIT"))
+	exitCode := lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE"))
 	return doExit, int(exitCode)
 }
