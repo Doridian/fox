@@ -17,5 +17,6 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"modTime": fiModTime,
 		"isDir":   fiIsDir,
 	}))
+	mt.RawSetString("__tostring", L.NewFunction(fiToString))
 	tbl.RawSetString(LuaTypeName, mt)
 }

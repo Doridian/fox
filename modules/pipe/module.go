@@ -22,13 +22,14 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"canWrite": pipeCanWrite,
 		"close":    pipeClose,
 	}))
+	mt.RawSetString("__tostring", L.NewFunction(pipeToString))
 
 	mod := L.NewTable()
 
-	mod.RawSetString("null", makePipe(L, &nullPipe))
-	mod.RawSetString("stdin", makePipe(L, &stdinPipe))
-	mod.RawSetString("stderr", makePipe(L, &stderrPipe))
-	mod.RawSetString("stdout", makePipe(L, &stdoutPipe))
+	mod.RawSetString("null", Make(L, &nullPipe))
+	mod.RawSetString("stdin", Make(L, &stdinPipe))
+	mod.RawSetString("stderr", Make(L, &stderrPipe))
+	mod.RawSetString("stdout", Make(L, &stdoutPipe))
 
 	mod.RawSetString(LuaTypeName, mt)
 

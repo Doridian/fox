@@ -14,7 +14,7 @@ func getSetStdin(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe(L, 2, true)
+		ok, p, _ := pipe.Check(L, 2, true)
 		if !ok {
 			return 0
 		}
@@ -68,7 +68,7 @@ func getStdinPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewWritePipe(c, stdinPipe)
+	p := pipe.NewWritePipe(c, "stdin", stdinPipe)
 	c.stdin = p
 	c.closeStdin = true
 	c.lock.Unlock()
@@ -82,7 +82,7 @@ func getSetStderr(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe(L, 2, true)
+		ok, p, _ := pipe.Check(L, 2, true)
 		if !ok {
 			return 0
 		}
@@ -136,7 +136,7 @@ func getStderrPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewReadPipe(c, stderrPipe)
+	p := pipe.NewReadPipe(c, "stderr", stderrPipe)
 	c.stderr = p
 	c.closeStderr = true
 	c.lock.Unlock()
@@ -150,7 +150,7 @@ func getSetStdout(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe(L, 2, true)
+		ok, p, _ := pipe.Check(L, 2, true)
 		if !ok {
 			return 0
 		}
@@ -203,7 +203,7 @@ func getStdoutPipe(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	p := pipe.NewReadPipe(c, stdoutPipe)
+	p := pipe.NewReadPipe(c, "stdout", stdoutPipe)
 	c.stdout = p
 	c.closeStdout = true
 	c.lock.Unlock()

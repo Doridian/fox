@@ -1,6 +1,8 @@
 package direntry
 
 import (
+	"fmt"
+
 	"github.com/Doridian/fox/modules/fs/fileinfo"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -47,4 +49,17 @@ func deInfo(L *lua.LState) int {
 		return 0
 	}
 	return fileinfo.Push(L, fi)
+}
+
+func deToString(L *lua.LState) int {
+	de, _ := Check(L, 1)
+	if de == nil {
+		return 0
+	}
+	suffix := ""
+	if de.IsDir() {
+		suffix = "/"
+	}
+	L.Push(lua.LString(fmt.Sprintf("%s{%s%s}", LuaType, de.Name(), suffix)))
+	return 1
 }

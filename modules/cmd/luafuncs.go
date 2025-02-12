@@ -129,3 +129,12 @@ func getSetEnv(L *lua.LState) int {
 	L.Push(ret)
 	return 1
 }
+
+func cmdToString(L *lua.LState) int {
+	c, _ := checkCmd(L, 1)
+	if c == nil {
+		return 0
+	}
+	L.Push(lua.LString(c.ToString()))
+	return 1
+}

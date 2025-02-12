@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/Doridian/fox/modules/pipe"
@@ -26,4 +28,8 @@ func newCmd(L *lua.LState) int {
 		gocmd:            &exec.Cmd{},
 		ErrorPropagation: false,
 	})
+}
+
+func (c *Cmd) ToString() string {
+	return fmt.Sprintf("%s{%s}", LuaType, strings.Join(c.gocmd.Args, ", "))
 }

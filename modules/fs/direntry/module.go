@@ -16,5 +16,6 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"type":  deType,
 		"info":  deInfo,
 	}))
+	mt.RawSetString("__tostring", L.NewFunction(deToString))
 	tbl.RawSetString(LuaTypeName, mt)
 }
