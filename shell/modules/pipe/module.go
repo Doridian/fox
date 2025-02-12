@@ -2,7 +2,8 @@ package pipe
 
 import lua "github.com/yuin/gopher-lua"
 
-const LuaType = "go://fox/pipe/Pipe"
+const LuaName = "fox.pipe"
+const LuaType = LuaName + ":Pipe"
 
 type LuaModule struct {
 }
@@ -31,5 +32,5 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Name() string {
-	return "pipe"
+	return LuaName
 }

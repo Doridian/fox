@@ -4,7 +4,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaType = "go://fox/cmd/Cmd"
+const LuaName = "fox.cmd"
+const LuaType = LuaName + ":Cmd"
 
 type LuaModule struct {
 }
@@ -42,5 +43,5 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Name() string {
-	return "cmd"
+	return LuaName
 }

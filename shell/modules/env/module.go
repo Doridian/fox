@@ -4,6 +4,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
+const LuaName = "fox.env"
+
 type LuaModule struct {
 }
 
@@ -22,5 +24,5 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Name() string {
-	return "env"
+	return LuaName
 }
