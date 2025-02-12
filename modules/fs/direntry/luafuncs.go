@@ -1,7 +1,7 @@
 package direntry
 
 import (
-	"github.com/Doridian/fox/shell/modules/fs/fileinfo"
+	"github.com/Doridian/fox/modules/fs/fileinfo"
 	lua "github.com/yuin/gopher-lua"
 )
 

@@ -3,7 +3,7 @@ package embedded
 import (
 	"embed"
 
-	"github.com/Doridian/fox/shell/modules/fs/direntry"
+	"github.com/Doridian/fox/modules/fs/direntry"
 	lua "github.com/yuin/gopher-lua"
 )
 

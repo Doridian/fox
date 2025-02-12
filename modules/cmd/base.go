@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/Doridian/fox/shell/modules/pipe"
+	"github.com/Doridian/fox/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 

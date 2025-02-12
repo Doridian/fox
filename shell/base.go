@@ -8,13 +8,13 @@ import (
 
 	_ "embed"
 
+	"github.com/Doridian/fox/modules"
+	"github.com/Doridian/fox/modules/cmd"
+	"github.com/Doridian/fox/modules/embedded"
+	"github.com/Doridian/fox/modules/env"
+	"github.com/Doridian/fox/modules/fs"
+	"github.com/Doridian/fox/modules/pipe"
 	"github.com/Doridian/fox/prompt"
-	"github.com/Doridian/fox/shell/modules"
-	"github.com/Doridian/fox/shell/modules/cmd"
-	"github.com/Doridian/fox/shell/modules/embedded"
-	"github.com/Doridian/fox/shell/modules/env"
-	"github.com/Doridian/fox/shell/modules/fs"
-	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 
