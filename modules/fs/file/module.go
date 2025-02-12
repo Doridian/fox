@@ -1,4 +1,4 @@
-package direntry
+package file
 
 import (
 	lua "github.com/yuin/gopher-lua"
@@ -14,6 +14,7 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"stat":  fileStat,
 		"close": fileClose,
 		"read":  fileRead,
+		"write": fileWrite,
 	}))
 	mt.RawSetString("__tostring", L.NewFunction(fileToString))
 	tbl.RawSetString(LuaTypeName, mt)

@@ -2,6 +2,7 @@ package fs
 
 import (
 	"github.com/Doridian/fox/modules/fs/direntry"
+	"github.com/Doridian/fox/modules/fs/file"
 	"github.com/Doridian/fox/modules/fs/fileinfo"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -21,7 +22,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"lstat": doLStat,
 
 		"readDir": doReadDir,
+
+		"open": doOpen,
 	})
+	file.Load(L, mod)
 	fileinfo.Load(L, mod)
 	direntry.Load(L, mod)
 	L.Push(mod)

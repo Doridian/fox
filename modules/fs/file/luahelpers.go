@@ -1,4 +1,4 @@
-package direntry
+package file
 
 import (
 	"io/fs"

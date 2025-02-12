@@ -1,7 +1,8 @@
-package direntry
+package file
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/Doridian/fox/luautil"
 	"github.com/Doridian/fox/modules/fs/fileinfo"
@@ -43,6 +44,23 @@ func fileRead(L *lua.LState) int {
 	}
 
 	return luautil.ReaderRead(L, f)
+}
+
+func fileWrite(L *lua.LState) int {
+	f, ud := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	w, ok := f.(io.Writer)
+	if !ok {
+		L.ArgError(1, "file is not writable")
+		return 0
+	}
+
+	luautil.WriterWrite(L, w)
+	L.Push(ud)
+	return 1
 }
 
 func fileToString(L *lua.LState) int {
