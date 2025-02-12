@@ -2,16 +2,23 @@ package pipe
 
 import lua "github.com/yuin/gopher-lua"
 
-func pushPipe(L *lua.LState, pipe *Pipe) int {
+func makePipe(L *lua.LState, pipe *Pipe) *lua.LUserData {
 	if pipe == nil {
-		L.Push(lua.LNil)
-		return 1
+		panic("makePipe: pipe is nil")
 	}
 
 	ud := L.NewUserData()
 	ud.Value = pipe
 	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
-	L.Push(ud)
+	return ud
+}
+
+func pushPipe(L *lua.LState, pipe *Pipe) int {
+	if pipe == nil {
+		L.Push(lua.LNil)
+		return 1
+	}
+	L.Push(makePipe(L, pipe))
 	return 1
 }
 

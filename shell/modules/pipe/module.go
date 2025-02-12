@@ -22,9 +22,9 @@ func (m *LuaModule) Init(L *lua.LState) {
 
 	mt := L.NewTypeMetatable(LuaType)
 	L.SetGlobal("pipe", mt)
-	L.SetField(mt, "null", L.NewFunction(newNullPipe))
-	L.SetField(mt, "stdin", L.NewFunction(newStdinPipe))
-	L.SetField(mt, "stderr", L.NewFunction(newStderrPipe))
-	L.SetField(mt, "stdout", L.NewFunction(newStdoutPipe))
+	L.SetField(mt, "null", makePipe(L, &nullPipe))
+	L.SetField(mt, "stdin", makePipe(L, &stdinPipe))
+	L.SetField(mt, "stderr", makePipe(L, &stderrPipe))
+	L.SetField(mt, "stdout", makePipe(L, &stdoutPipe))
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))
 }

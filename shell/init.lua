@@ -17,4 +17,7 @@ c2:run()
 p:write("\nhi\n")
 p:close()
 
+print("stdout", pipe.stdout)
+pipe.stdout:write("stdout direct\n")
+
 print("W", c:wait())
