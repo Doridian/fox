@@ -16,6 +16,7 @@ func NewLuaModule() *LuaModule {
 func (m *LuaModule) Init(L *lua.LState) {
 	mt := L.NewTypeMetatable(LuaType)
 	L.SetGlobal("env", mt)
+	// TODO: __pairs
 	L.SetField(mt, "__index", L.NewFunction(envIndex))
 	L.SetField(mt, "__newindex", L.NewFunction(envNewIndex))
 	L.SetMetatable(mt, mt)
