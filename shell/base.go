@@ -13,6 +13,7 @@ import (
 	"github.com/Doridian/fox/shell/modules/cmd"
 	"github.com/Doridian/fox/shell/modules/embedded"
 	"github.com/Doridian/fox/shell/modules/env"
+	"github.com/Doridian/fox/shell/modules/fs"
 	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -42,6 +43,7 @@ func (s *ShellManager) luaInit() {
 	s.l.Register("exit", luaExit)
 
 	preloaded := []modules.LuaModule{
+		fs.NewLuaModule(),
 		embedded.NewLuaModule(),
 		env.NewLuaModule(),
 		pipe.NewLuaModule(),
