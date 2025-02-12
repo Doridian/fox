@@ -18,7 +18,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	L.SetFuncs(mod, map[string]lua.LGFunction{
 		"loader": m.luaLoader,
 	}, mod)
-	mod.RawSetString("path", lua.LString("?.lua;?/init.lua"))
+	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
 	L.Push(mod)
 	return 1
 }
