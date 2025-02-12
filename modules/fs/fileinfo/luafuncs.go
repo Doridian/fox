@@ -3,7 +3,7 @@ package fileinfo
 import (
 	"fmt"
 
-	foxtime "github.com/Doridian/fox/modules/time/time"
+	"github.com/Doridian/fox/modules/time/time"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -43,7 +43,7 @@ func fiModTime(L *lua.LState) int {
 		return 0
 	}
 
-	return foxtime.Push(L, fi.ModTime())
+	return time.Push(L, fi.ModTime())
 }
 
 func fiIsDir(L *lua.LState) int {

@@ -1,9 +1,8 @@
 package time
 
 import (
-	"github.com/Doridian/fox/modules"
-	foxduration "github.com/Doridian/fox/modules/time/duration"
-	foxtime "github.com/Doridian/fox/modules/time/time"
+	"github.com/Doridian/fox/modules/time/duration"
+	subtime "github.com/Doridian/fox/modules/time/time"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -17,13 +16,11 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
-	modules.RequireDependencies(L, m)
-
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"now": doNow,
 	})
-	foxduration.Load(L, mod)
-	foxtime.Load(L, mod)
+	duration.Load(L, mod)
+	subtime.Load(L, mod)
 	L.Push(mod)
 	return 1
 }

@@ -1,8 +1,7 @@
 package embed
 
 import (
-	"github.com/Doridian/fox/modules"
-	foxfs "github.com/Doridian/fox/modules/fs"
+	"github.com/Doridian/fox/modules/fs"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -16,8 +15,6 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
-	modules.RequireDependencies(L, m)
-
 	mod := L.NewTable()
 	L.SetFuncs(mod, map[string]lua.LGFunction{
 		"loader": luaLoader,
@@ -43,7 +40,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Dependencies() []string {
-	return []string{foxfs.LuaName}
+	return []string{fs.LuaName}
 }
 
 func (m *LuaModule) Name() string {

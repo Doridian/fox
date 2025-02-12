@@ -8,7 +8,7 @@ import (
 
 	_ "embed"
 
-	"github.com/Doridian/fox/modules/index"
+	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/prompt"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -49,8 +49,8 @@ func (s *ShellManager) luaInit() {
 	lua.OpenCoroutine(s.l)
 
 	s.l.Register("exit", luaExit)
-	indexMod := index.NewLuaModule()
-	indexMod.Load(s.l)
+	mainMod := loader.NewLuaModule()
+	mainMod.Load(s.l)
 
 	err := s.l.DoString(initCode)
 	if err != nil {
