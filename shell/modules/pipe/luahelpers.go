@@ -10,7 +10,7 @@ func pushPipe(L *lua.LState, pipe *Pipe) int {
 
 	ud := L.NewUserData()
 	ud.Value = pipe
-	L.SetMetatable(ud, L.GetTypeMetatable(luaShellPipeType))
+	L.SetMetatable(ud, L.GetTypeMetatable(luaPipeType))
 	L.Push(ud)
 	return 1
 }
