@@ -2,7 +2,7 @@ package pipe
 
 import lua "github.com/yuin/gopher-lua"
 
-const luaPipeType = "go://fox/pipe/Pipe"
+const LuaType = "go://fox/pipe/Pipe"
 
 type LuaModule struct {
 }
@@ -20,7 +20,7 @@ func (m *LuaModule) Init(L *lua.LState) {
 		"close":    pipeClose,
 	}
 
-	mt := L.NewTypeMetatable(luaPipeType)
+	mt := L.NewTypeMetatable(LuaType)
 	L.SetGlobal("pipe", mt)
 	L.SetField(mt, "null", L.NewFunction(newNullPipe))
 	L.SetField(mt, "stdin", L.NewFunction(newStdinPipe))

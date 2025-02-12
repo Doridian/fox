@@ -10,7 +10,7 @@ func pushPipe(L *lua.LState, pipe *Pipe) int {
 
 	ud := L.NewUserData()
 	ud.Value = pipe
-	L.SetMetatable(ud, L.GetTypeMetatable(luaPipeType))
+	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
 	L.Push(ud)
 	return 1
 }
@@ -26,9 +26,9 @@ func CheckPipe(L *lua.LState, i int, allowNil bool) (bool, *Pipe, *lua.LUserData
 	}
 
 	if allowNil {
-		L.ArgError(i, "pipe or nil expected")
+		L.ArgError(i, LuaType+" or nil expected")
 	} else {
-		L.ArgError(i, "pipe expected")
+		L.ArgError(i, LuaType+" expected")
 	}
 
 	return false, nil, nil

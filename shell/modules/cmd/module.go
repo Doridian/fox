@@ -4,7 +4,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const luaCmdType = "go://fox/cmd/Cmd"
+const LuaType = "go://fox/cmd/Cmd"
 
 type LuaModule struct {
 }
@@ -33,7 +33,7 @@ func (m *LuaModule) Init(L *lua.LState) {
 		"errorPropagation": getSetErrorPropagation,
 	}
 
-	mt := L.NewTypeMetatable(luaCmdType)
+	mt := L.NewTypeMetatable(LuaType)
 	L.SetGlobal("cmd", mt)
 	L.SetField(mt, "new", L.NewFunction(newCmd))
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))

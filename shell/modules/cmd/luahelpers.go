@@ -10,7 +10,7 @@ func pushCmd(L *lua.LState, cmd *Cmd) int {
 
 	ud := L.NewUserData()
 	ud.Value = cmd
-	L.SetMetatable(ud, L.GetTypeMetatable(luaCmdType))
+	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
 	L.Push(ud)
 	return 1
 }
@@ -20,6 +20,6 @@ func checkCmd(L *lua.LState, i int) (*Cmd, *lua.LUserData) {
 	if v, ok := ud.Value.(*Cmd); ok {
 		return v, ud
 	}
-	L.ArgError(i, "cmd expected")
+	L.ArgError(i, LuaType+" expected")
 	return nil, nil
 }

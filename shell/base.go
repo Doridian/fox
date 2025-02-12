@@ -9,7 +9,9 @@ import (
 	_ "embed"
 
 	"github.com/Doridian/fox/prompt"
+	"github.com/Doridian/fox/shell/modules"
 	"github.com/Doridian/fox/shell/modules/cmd"
+	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -29,8 +31,13 @@ func NewShellManager() *ShellManager {
 }
 
 func (s *ShellManager) init() {
-	mod := cmd.NewLuaModule()
-	mod.Init(s.l)
+	modules := []modules.LuaModule{
+		pipe.NewLuaModule(),
+		cmd.NewLuaModule(),
+	}
+	for _, m := range modules {
+		m.Init(s.l)
+	}
 	err := s.l.DoString(initCode)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
