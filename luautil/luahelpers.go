@@ -1,4 +1,4 @@
-package util
+package luautil
 
 import (
 	"io"

@@ -1,7 +1,7 @@
 package pipe
 
 import (
-	"github.com/Doridian/fox/modules/util"
+	"github.com/Doridian/fox/luautil"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -51,7 +51,7 @@ func pipeWrite(L *lua.LState) int {
 		return 0
 	}
 
-	util.WriterWrite(L, p.wc)
+	luautil.WriterWrite(L, p.wc)
 	L.Push(ud)
 	return 1
 }
@@ -72,7 +72,7 @@ func pipeRead(L *lua.LState) int {
 		return 0
 	}
 
-	return util.ReaderRead(L, p.rc)
+	return luautil.ReaderRead(L, p.rc)
 }
 
 func pipeToString(L *lua.LState) int {

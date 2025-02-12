@@ -3,8 +3,8 @@ package direntry
 import (
 	"fmt"
 
+	"github.com/Doridian/fox/luautil"
 	"github.com/Doridian/fox/modules/fs/fileinfo"
-	"github.com/Doridian/fox/modules/util"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -42,7 +42,7 @@ func fileRead(L *lua.LState) int {
 		return 0
 	}
 
-	return util.ReaderRead(L, f)
+	return luautil.ReaderRead(L, f)
 }
 
 func fileToString(L *lua.LState) int {
