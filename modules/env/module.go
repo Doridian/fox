@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/Doridian/fox/modules"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -14,6 +15,8 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
+	modules.RequireDependencies(L, m)
+
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"__index":    envIndex,
 		"__newindex": envNewIndex,
@@ -21,6 +24,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	L.SetMetatable(mod, mod)
 	L.Push(mod)
 	return 1
+}
+
+func (m *LuaModule) Dependencies() []string {
+	return []string{}
 }
 
 func (m *LuaModule) Name() string {

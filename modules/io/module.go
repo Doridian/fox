@@ -3,6 +3,7 @@ package io
 import (
 	"io"
 
+	"github.com/Doridian/fox/modules"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -18,6 +19,8 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
+	modules.RequireDependencies(L, m)
+
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{})
 	mod.RawSetString("SeekCurrent", lua.LNumber(io.SeekCurrent))
 	mod.RawSetString("SeekStart", lua.LNumber(io.SeekStart))
@@ -29,6 +32,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	L.Push(mod)
 	return 1
+}
+
+func (m *LuaModule) Dependencies() []string {
+	return []string{}
 }
 
 func (m *LuaModule) Name() string {

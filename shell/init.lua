@@ -1,16 +1,3 @@
-local GLOBAL_MODS = {
-    "time",
-    "io",
-    "fs",
-    "env",
-    "cmd",
-    "pipe",
-    "embed",
-}
-for _, m in pairs(GLOBAL_MODS) do
-    _G[m] = require("fox." .. m)
-end
-
 -- TODO: Respect XDG_CONFIG_HOME
 local lua_base = env["HOME"] .. "/.config/fox/lua"
 _G.LUA_BASE = lua_base

@@ -40,6 +40,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	return 1
 }
 
+func (m *LuaModule) Dependencies() []string {
+	return []string{}
+}
+
 func (m *LuaModule) Name() string {
 	return LuaName
 }

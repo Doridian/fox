@@ -8,14 +8,7 @@ import (
 
 	_ "embed"
 
-	"github.com/Doridian/fox/modules"
-	"github.com/Doridian/fox/modules/cmd"
-	foxembed "github.com/Doridian/fox/modules/embed"
-	"github.com/Doridian/fox/modules/env"
-	foxfs "github.com/Doridian/fox/modules/fs"
-	foxio "github.com/Doridian/fox/modules/io"
-	"github.com/Doridian/fox/modules/pipe"
-	foxtime "github.com/Doridian/fox/modules/time"
+	"github.com/Doridian/fox/modules/index"
 	"github.com/Doridian/fox/prompt"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -56,19 +49,8 @@ func (s *ShellManager) luaInit() {
 	lua.OpenCoroutine(s.l)
 
 	s.l.Register("exit", luaExit)
-
-	preloaded := []modules.LuaModule{
-		foxtime.NewLuaModule(),
-		foxio.NewLuaModule(),
-		foxfs.NewLuaModule(),
-		foxembed.NewLuaModule(),
-		env.NewLuaModule(),
-		pipe.NewLuaModule(),
-		cmd.NewLuaModule(),
-	}
-	for _, m := range preloaded {
-		modules.Preload(m, s.l)
-	}
+	indexMod := index.NewLuaModule()
+	indexMod.Load(s.l)
 
 	err := s.l.DoString(initCode)
 	if err != nil {

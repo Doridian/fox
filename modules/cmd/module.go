@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/Doridian/fox/modules"
+	"github.com/Doridian/fox/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -16,6 +18,8 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
+	modules.RequireDependencies(L, m)
+
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"dir": getSetDir,
@@ -45,6 +49,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	L.Push(mod)
 	return 1
+}
+
+func (m *LuaModule) Dependencies() []string {
+	return []string{pipe.LuaName}
 }
 
 func (m *LuaModule) Name() string {
