@@ -15,6 +15,7 @@ import (
 	foxfs "github.com/Doridian/fox/modules/fs"
 	foxio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/pipe"
+	foxtime "github.com/Doridian/fox/modules/time"
 	"github.com/Doridian/fox/prompt"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -57,6 +58,7 @@ func (s *ShellManager) luaInit() {
 	s.l.Register("exit", luaExit)
 
 	preloaded := []modules.LuaModule{
+		foxtime.NewLuaModule(),
 		foxio.NewLuaModule(),
 		foxfs.NewLuaModule(),
 		foxembed.NewLuaModule(),
