@@ -4,6 +4,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
+const luaCmdType = "go://fox/cmd/Cmd"
+
 type LuaModule struct {
 }
 

@@ -7,8 +7,6 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const luaCmdType = "FOX/cmd/Cmd"
-
 type Cmd struct {
 	stdout *pipe.Pipe
 	stderr *pipe.Pipe

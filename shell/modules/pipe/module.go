@@ -2,7 +2,7 @@ package pipe
 
 import lua "github.com/yuin/gopher-lua"
 
-const luaShellPipeType = "FOX/pipe/Pipe"
+const luaShellPipeType = "go://fox/pipe/Pipe"
 
 type LuaModule struct {
 }
