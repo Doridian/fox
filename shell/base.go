@@ -12,7 +12,8 @@ import (
 	"github.com/Doridian/fox/modules/cmd"
 	"github.com/Doridian/fox/modules/embedded"
 	"github.com/Doridian/fox/modules/env"
-	"github.com/Doridian/fox/modules/fs"
+	foxfs "github.com/Doridian/fox/modules/fs"
+	foxio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/pipe"
 	"github.com/Doridian/fox/prompt"
 	lua "github.com/yuin/gopher-lua"
@@ -43,7 +44,8 @@ func (s *ShellManager) luaInit() {
 	s.l.Register("exit", luaExit)
 
 	preloaded := []modules.LuaModule{
-		fs.NewLuaModule(),
+		foxio.NewLuaModule(),
+		foxfs.NewLuaModule(),
 		embedded.NewLuaModule(),
 		env.NewLuaModule(),
 		pipe.NewLuaModule(),

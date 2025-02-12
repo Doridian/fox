@@ -1,4 +1,5 @@
 local GLOBAL_MODS = {
+    "io",
     "fs",
     "env",
     "cmd",

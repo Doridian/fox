@@ -1,6 +1,10 @@
 package pipe
 
-import lua "github.com/yuin/gopher-lua"
+import (
+	"github.com/Doridian/fox/luautil"
+	foxio "github.com/Doridian/fox/modules/io"
+	lua "github.com/yuin/gopher-lua"
+)
 
 const LuaName = "fox.pipe"
 const LuaTypeName = "Pipe"
@@ -15,13 +19,12 @@ func NewLuaModule() *LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
-	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"read":     pipeRead,
+
+	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), luautil.MergeFuncMaps(foxio.IndexFuncs(), map[string]lua.LGFunction{
 		"canRead":  pipeCanRead,
-		"write":    pipeWrite,
 		"canWrite": pipeCanWrite,
-		"close":    pipeClose,
-	}))
+		"isNull":   pipeIsNull,
+	})))
 	mt.RawSetString("__tostring", L.NewFunction(pipeToString))
 
 	mod := L.NewTable()
