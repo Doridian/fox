@@ -28,7 +28,9 @@ type ShellManager struct {
 
 func NewShellManager() *ShellManager {
 	s := &ShellManager{
-		l: lua.NewState(),
+		l: lua.NewState(lua.Options{
+			SkipOpenLibs: true,
+		}),
 	}
 	s.luaInit()
 	return s
@@ -41,6 +43,17 @@ func luaExit(L *lua.LState) int {
 }
 
 func (s *ShellManager) luaInit() {
+	lua.OpenBase(s.l)
+	lua.OpenPackage(s.l)
+	lua.OpenTable(s.l)
+	// lua.OpenIo(s.l)
+	// lua.OpenOs(s.l)
+	lua.OpenString(s.l)
+	lua.OpenMath(s.l)
+	lua.OpenDebug(s.l)
+	lua.OpenChannel(s.l)
+	lua.OpenCoroutine(s.l)
+
 	s.l.Register("exit", luaExit)
 
 	preloaded := []modules.LuaModule{
