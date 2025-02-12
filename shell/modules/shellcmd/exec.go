@@ -6,7 +6,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func handleCmdExit(L *lua.LState, exitCode int, c *ShellCmd, ud *lua.LUserData, err error) int {
+func handleCmdExit(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err error) int {
 	c.releaseStdio()
 
 	if err != nil && exitCode == 0 {
@@ -33,7 +33,7 @@ func handleCmdExit(L *lua.LState, exitCode int, c *ShellCmd, ud *lua.LUserData, 
 	return 3
 }
 
-func doWaitCmd(L *lua.LState, c *ShellCmd, ud *lua.LUserData) int {
+func doWaitCmd(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
 	if c == nil {
 		return 0
 	}
@@ -46,12 +46,12 @@ func doWaitCmd(L *lua.LState, c *ShellCmd, ud *lua.LUserData) int {
 }
 
 func doWait(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	return doWaitCmd(L, c, ud)
 }
 
 func doRun(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	err := c.prepareAndStart()
 	if err != nil {
 		return handleCmdExit(L, 1, c, ud, err)
@@ -60,7 +60,7 @@ func doRun(L *lua.LState) int {
 }
 
 func doStart(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	err := c.prepareAndStart()
 	if err != nil {
 		return handleCmdExit(L, 1, c, ud, err)
@@ -69,7 +69,7 @@ func doStart(L *lua.LState) int {
 	return 1
 }
 
-func (c *ShellCmd) prepareAndStart() error {
+func (c *Cmd) prepareAndStart() error {
 	if err := c.setupStdio(); err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (c *ShellCmd) prepareAndStart() error {
 	return c.gocmd.Start()
 }
 
-func (c *ShellCmd) prepareAndRun() error {
+func (c *Cmd) prepareAndRun() error {
 	if err := c.prepareAndStart(); err != nil {
 		return err
 	}

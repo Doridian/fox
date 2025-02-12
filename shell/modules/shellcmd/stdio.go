@@ -3,171 +3,172 @@ package shellcmd
 import (
 	"os"
 
+	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 
 func getSetStdin(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
 	if L.GetTop() >= 2 {
-		ok, pipe, _ := checkPipe(L, 2, true)
+		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
 		if !ok {
 			return 0
 		}
-		if pipe != nil && pipe.rc == nil {
-			L.ArgError(2, "stdin must be a reader")
+		if p != nil && !p.CanRead() {
+			L.ArgError(2, "pipe must be a reader")
 			return 0
 		}
 
-		if c.stdin != nil && c.stdin.wc != nil {
+		if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
 			L.Error(lua.LString("stdin piped, can't redirect"), 0)
 			return 0
 		}
 
-		c.stdin = pipe
+		c.stdin = p
 		L.Push(ud)
 		return 1
 	}
 
-	return pushShellPipe(L, c.stdin)
+	return c.stdin.Push(L)
 }
 
 func getStdinPipe(L *lua.LState) int {
-	c, _ := checkShellCmd(L, 1)
+	c, _ := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
-	if c.stdin != nil && c.stdin.wc != nil {
-		return pushShellPipe(L, c.stdin)
+	if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
+		return c.stdin.Push(L)
 	}
 
-	pipe, err := c.gocmd.StdinPipe()
+	stdinPipe, err := c.gocmd.StdinPipe()
 	if err != nil {
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stdin = &Pipe{cmd: c, wc: pipe, forwardClose: true}
-	return pushShellPipe(L, c.stdin)
+	c.stdin = pipe.NewWritePipe(c, stdinPipe)
+	return c.stdin.Push(L)
 }
 
 func getSetStderr(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
 	if L.GetTop() >= 2 {
-		ok, pipe, _ := checkPipe(L, 2, true)
+		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
 		if !ok {
 			return 0
 		}
-		if pipe != nil && pipe.wc == nil {
-			L.ArgError(2, "stderr must be a writer")
+		if p != nil && !p.CanWrite() {
+			L.ArgError(2, "pipe must be a writer")
 			return 0
 		}
 
-		if c.stderr != nil && c.stderr.rc != nil {
+		if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
 			L.Error(lua.LString("stderr piped, can't redirect"), 0)
 			return 0
 		}
 
-		c.stderr = pipe
+		c.stderr = p
 		L.Push(ud)
 		return 1
 	}
 
-	return pushShellPipe(L, c.stderr)
+	return c.stderr.Push(L)
 }
 
 func getStderrPipe(L *lua.LState) int {
-	c, _ := checkShellCmd(L, 1)
+	c, _ := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
-	if c.stderr != nil && c.stderr.rc != nil {
-		return pushShellPipe(L, c.stderr)
+	if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
+		return c.stderr.Push(L)
 	}
 
-	pipe, err := c.gocmd.StderrPipe()
+	stderrPipe, err := c.gocmd.StderrPipe()
 	if err != nil {
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stderr = &Pipe{cmd: c, rc: pipe, forwardClose: true}
-	return pushShellPipe(L, c.stderr)
+	c.stderr = pipe.NewReadPipe(c, stderrPipe)
+	return c.stderr.Push(L)
 }
 
 func getSetStdout(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
 	if L.GetTop() >= 2 {
-		ok, pipe, _ := checkPipe(L, 2, true)
+		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
 		if !ok {
 			return 0
 		}
-		if pipe != nil && pipe.wc == nil {
-			L.ArgError(2, "stdout must be a writer")
+		if p != nil && !p.CanWrite() {
+			L.ArgError(2, "pipe must be a writer")
 			return 0
 		}
 
-		if c.stdout != nil && c.stdout.rc != nil {
+		if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
 			L.Error(lua.LString("stdout piped, can't redirect"), 0)
 			return 0
 		}
 
-		c.stdout = pipe
+		c.stdout = p
 		L.Push(ud)
 		return 1
 	}
 
-	return pushShellPipe(L, c.stdout)
+	return c.stdout.Push(L)
 }
 
 func getStdoutPipe(L *lua.LState) int {
-	c, _ := checkShellCmd(L, 1)
+	c, _ := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
 
-	if c.stdout != nil && c.stdout.rc != nil {
-		return pushShellPipe(L, c.stdout)
+	if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
+		return c.stdout.Push(L)
 	}
 
-	pipe, err := c.gocmd.StdoutPipe()
+	stdoutPipe, err := c.gocmd.StdoutPipe()
 	if err != nil {
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stdout = &Pipe{cmd: c, rc: pipe, forwardClose: true}
-	return pushShellPipe(L, c.stdout)
+	c.stdout = pipe.NewReadPipe(c, stdoutPipe)
+	return c.stdout.Push(L)
 }
 
-func (c *ShellCmd) setupStdio() error {
+func (c *Cmd) setupStdio() error {
 	if c.stdout != nil {
-		if c.stdout.wc != nil || c.stdout.isNull {
-			c.gocmd.Stdout = c.stdout.wc
+		if c.stdout.CanWrite() {
+			c.gocmd.Stdout = c.stdout.GetWriter()
 		}
 	} else {
 		c.gocmd.Stdout = os.Stdout
 	}
 	if c.stderr != nil {
-		if c.stderr.wc != nil || c.stderr.isNull {
-			c.gocmd.Stderr = c.stderr.wc
+		if c.stderr.CanWrite() {
+			c.gocmd.Stderr = c.stderr.GetWriter()
 		}
 	} else {
 		c.gocmd.Stderr = os.Stderr
 	}
 	if c.stdin != nil {
-		if c.stdin.rc != nil || c.stdin.isNull {
-			c.gocmd.Stdin = c.stdin.rc
+		if c.stdin.CanRead() {
+			c.gocmd.Stdin = c.stdin.GetReader()
 		}
 	} else {
 		c.gocmd.Stdin = os.Stdin
@@ -175,17 +176,20 @@ func (c *ShellCmd) setupStdio() error {
 	return nil
 }
 
-func (c *ShellCmd) waitStdio() error {
+func (c *Cmd) waitStdio() error {
 	if c.stdin != nil {
-		defer c.stdin.Close()
-		if c.stdin.cmd != nil {
-			return c.stdin.cmd.prepareAndRun()
+		creator := c.stdin.Creator()
+		if creator != nil {
+			cmd, ok := creator.(*Cmd)
+			if ok && cmd != nil {
+				return cmd.prepareAndRun()
+			}
 		}
 	}
 	return nil
 }
 
-func (c *ShellCmd) releaseStdio() error {
+func (c *Cmd) releaseStdio() error {
 	if c.stdin != nil {
 		c.stdin.Close()
 		c.stdin = nil

@@ -29,7 +29,7 @@ func NewShellManager() *ShellManager {
 }
 
 func (s *ShellManager) init() {
-	mod := shellcmd.New()
+	mod := shellcmd.NewLuaModule()
 	mod.Init(s.l)
 	err := s.l.DoString(initCode)
 	if err != nil {

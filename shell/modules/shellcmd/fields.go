@@ -8,7 +8,7 @@ import (
 )
 
 func getSetErrorPropagation(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -22,7 +22,7 @@ func getSetErrorPropagation(L *lua.LState) int {
 }
 
 func getSetDir(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -36,7 +36,7 @@ func getSetDir(L *lua.LState) int {
 }
 
 func getSetCmd(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -69,7 +69,7 @@ func getSetCmd(L *lua.LState) int {
 }
 
 func getSetEnv(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
+	c, ud := checkCmd(L, 1)
 	if c == nil {
 		return 0
 	}
