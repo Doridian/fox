@@ -16,10 +16,11 @@ func NewLuaModule() *LuaModule {
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.NewTable()
 	L.SetFuncs(mod, map[string]lua.LGFunction{
-		"loader":   luaLoader,
-		"readFile": luaReadFile,
-		"doFile":   luaDoFile,
-		"loadFile": luaLoadFile,
+		"bareLoader":   luaBareLoader,
+		"prefixLoader": luaPrefixLoader,
+		"readFile":     luaReadFile,
+		"doFile":       luaDoFile,
+		"loadFile":     luaLoadFile,
 	}, mod)
 	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
 	L.Push(mod)

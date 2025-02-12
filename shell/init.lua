@@ -8,7 +8,7 @@ for _, m in pairs(GLOBAL_MODS) do
     _G[m] = require("fox." .. m)
 end
 
-table.insert(package.loaders, embedded.loader)
+table.insert(package.loaders, embedded.prefixLoader)
 package.cpath = ""
 
 -- TODO: Respect XDG_CONFIG_HOME

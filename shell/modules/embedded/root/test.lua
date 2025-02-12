@@ -1,5 +1,5 @@
 local M = {}
 function M.hello()
-    print("Hello from embedded.test")
+    print("Hello from fox.embedded.test")
 end
 return M
