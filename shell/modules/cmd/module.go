@@ -16,7 +16,7 @@ func NewLuaModule() *LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
-	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"dir": getSetDir,
 		"cmd": getSetCmd,
 		"env": getSetEnv,

@@ -14,7 +14,7 @@ func NewLuaModule() *LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
-	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"read":     pipeRead,
 		"canRead":  pipeCanRead,
 		"write":    pipeWrite,
@@ -23,10 +23,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	}))
 
 	mod := L.NewTable()
-	L.SetField(mod, "null", makePipe(L, &nullPipe))
-	L.SetField(mod, "stdin", makePipe(L, &stdinPipe))
-	L.SetField(mod, "stderr", makePipe(L, &stderrPipe))
-	L.SetField(mod, "stdout", makePipe(L, &stdoutPipe))
+	mod.RawSetString("null", makePipe(L, &nullPipe))
+	mod.RawSetString("stdin", makePipe(L, &stdinPipe))
+	mod.RawSetString("stderr", makePipe(L, &stderrPipe))
+	mod.RawSetString("stdout", makePipe(L, &stdoutPipe))
 	L.Push(mod)
 	return 1
 }
