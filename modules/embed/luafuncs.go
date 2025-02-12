@@ -1,14 +1,14 @@
-package embedded
+package embed
 
 import (
-	"embed"
+	goembed "embed"
 
 	"github.com/Doridian/fox/modules/fs/direntry"
 	lua "github.com/yuin/gopher-lua"
 )
 
 //go:embed root/*
-var root embed.FS
+var root goembed.FS
 
 func luaBareLoader(L *lua.LState) int {
 	return luaLoader(L, "")

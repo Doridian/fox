@@ -10,7 +10,7 @@ import (
 
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/cmd"
-	"github.com/Doridian/fox/modules/embedded"
+	foxembed "github.com/Doridian/fox/modules/embed"
 	"github.com/Doridian/fox/modules/env"
 	foxfs "github.com/Doridian/fox/modules/fs"
 	foxio "github.com/Doridian/fox/modules/io"
@@ -46,7 +46,7 @@ func (s *ShellManager) luaInit() {
 	preloaded := []modules.LuaModule{
 		foxio.NewLuaModule(),
 		foxfs.NewLuaModule(),
-		embedded.NewLuaModule(),
+		foxembed.NewLuaModule(),
 		env.NewLuaModule(),
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),

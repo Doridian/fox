@@ -1,10 +1,10 @@
-package embedded
+package embed
 
 import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.embedded"
+const LuaName = "fox.embed"
 
 type LuaModule struct {
 }

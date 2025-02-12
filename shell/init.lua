@@ -4,13 +4,13 @@ local GLOBAL_MODS = {
     "env",
     "cmd",
     "pipe",
-    "embedded",
+    "embed",
 }
 for _, m in pairs(GLOBAL_MODS) do
     _G[m] = require("fox." .. m)
 end
 
-table.insert(package.loaders, embedded.prefixLoader)
+table.insert(package.loaders, embed.prefixLoader)
 package.cpath = ""
 
 -- TODO: Respect XDG_CONFIG_HOME
