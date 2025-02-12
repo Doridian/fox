@@ -6,7 +6,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func Make(L *lua.LState, fi fs.FileInfo) *lua.LUserData {
+func ToUserdata(L *lua.LState, fi fs.FileInfo) *lua.LUserData {
 	ud := L.NewUserData()
 	ud.Value = fi
 	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
@@ -18,7 +18,7 @@ func Push(L *lua.LState, fi fs.FileInfo) int {
 		L.Push(lua.LNil)
 		return 1
 	}
-	L.Push(Make(L, fi))
+	L.Push(ToUserdata(L, fi))
 	return 1
 }
 

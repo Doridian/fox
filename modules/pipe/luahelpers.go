@@ -2,7 +2,7 @@ package pipe
 
 import lua "github.com/yuin/gopher-lua"
 
-func Make(L *lua.LState, pipe *Pipe) *lua.LUserData {
+func ToUserdata(L *lua.LState, pipe *Pipe) *lua.LUserData {
 	ud := L.NewUserData()
 	ud.Value = pipe
 	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
@@ -14,7 +14,7 @@ func Push(L *lua.LState, pipe *Pipe) int {
 		L.Push(lua.LNil)
 		return 1
 	}
-	L.Push(Make(L, pipe))
+	L.Push(ToUserdata(L, pipe))
 	return 1
 }
 

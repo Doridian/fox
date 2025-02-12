@@ -72,7 +72,7 @@ func luaReadDir(L *lua.LState) int {
 
 	ret := L.NewTable()
 	for _, de := range dirents {
-		ret.Append(direntry.Make(L, de))
+		ret.Append(direntry.ToUserdata(L, de))
 	}
 	L.Push(ret)
 	return 1

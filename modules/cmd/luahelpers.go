@@ -2,7 +2,7 @@ package cmd
 
 import lua "github.com/yuin/gopher-lua"
 
-func Make(L *lua.LState, cmd *Cmd) *lua.LUserData {
+func ToUserdata(L *lua.LState, cmd *Cmd) *lua.LUserData {
 	ud := L.NewUserData()
 	ud.Value = cmd
 	L.SetMetatable(ud, L.GetTypeMetatable(LuaType))
@@ -15,7 +15,7 @@ func Push(L *lua.LState, cmd *Cmd) int {
 		return 1
 	}
 
-	ud := Make(L, cmd)
+	ud := ToUserdata(L, cmd)
 	L.Push(ud)
 	return 1
 }

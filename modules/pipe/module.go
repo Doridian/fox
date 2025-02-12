@@ -26,10 +26,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	mod := L.NewTable()
 
-	mod.RawSetString("null", Make(L, &nullPipe))
-	mod.RawSetString("stdin", Make(L, &stdinPipe))
-	mod.RawSetString("stderr", Make(L, &stderrPipe))
-	mod.RawSetString("stdout", Make(L, &stdoutPipe))
+	mod.RawSetString("null", ToUserdata(L, &nullPipe))
+	mod.RawSetString("stdin", ToUserdata(L, &stdinPipe))
+	mod.RawSetString("stderr", ToUserdata(L, &stderrPipe))
+	mod.RawSetString("stdout", ToUserdata(L, &stdoutPipe))
 
 	mod.RawSetString(LuaTypeName, mt)
 
