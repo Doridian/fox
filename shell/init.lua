@@ -1,1 +1,4 @@
-print(pcall(require, "test.abcd"))
+local env = require("env")
+local a = "mepw"
+a = env["PATH"]
+print(a)

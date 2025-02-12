@@ -13,8 +13,9 @@ func NewLuaModule() *LuaModule {
 	return &LuaModule{}
 }
 
-func (m *LuaModule) Init(L *lua.LState) {
-	funcs := map[string]lua.LGFunction{
+func (m *LuaModule) Loader(L *lua.LState) int {
+	mt := L.NewTypeMetatable(LuaType)
+	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"dir": getSetDir,
 		"cmd": getSetCmd,
 		"env": getSetEnv,
@@ -31,10 +32,15 @@ func (m *LuaModule) Init(L *lua.LState) {
 		"wait":  doWait,
 
 		"errorPropagation": getSetErrorPropagation,
-	}
+	}))
 
-	mt := L.NewTypeMetatable(LuaType)
-	L.SetGlobal("cmd", mt)
-	L.SetField(mt, "new", L.NewFunction(newCmd))
-	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"new": newCmd,
+	})
+	L.Push(mod)
+	return 1
+}
+
+func (m *LuaModule) Name() string {
+	return "cmd"
 }

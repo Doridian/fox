@@ -4,8 +4,6 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaType = "go://fox/env/Env"
-
 type LuaModule struct {
 }
 
@@ -13,11 +11,16 @@ func NewLuaModule() *LuaModule {
 	return &LuaModule{}
 }
 
-func (m *LuaModule) Init(L *lua.LState) {
-	mt := L.NewTypeMetatable(LuaType)
-	L.SetGlobal("env", mt)
-	// TODO: __pairs
-	L.SetField(mt, "__index", L.NewFunction(envIndex))
-	L.SetField(mt, "__newindex", L.NewFunction(envNewIndex))
-	L.SetMetatable(mt, mt)
+func (m *LuaModule) Loader(L *lua.LState) int {
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"__index":    envIndex,
+		"__newindex": envNewIndex,
+	})
+	L.SetMetatable(mod, mod)
+	L.Push(mod)
+	return 1
+}
+
+func (m *LuaModule) Name() string {
+	return "env"
 }

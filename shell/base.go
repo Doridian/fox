@@ -11,7 +11,6 @@ import (
 	"github.com/Doridian/fox/prompt"
 	"github.com/Doridian/fox/shell/modules"
 	"github.com/Doridian/fox/shell/modules/cmd"
-	"github.com/Doridian/fox/shell/modules/embedded"
 	"github.com/Doridian/fox/shell/modules/env"
 	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
@@ -41,14 +40,14 @@ func luaExit(L *lua.LState) int {
 func (s *ShellManager) luaInit() {
 	s.l.Register("exit", luaExit)
 
-	modules := []modules.LuaModule{
-		embedded.NewLuaModule(),
+	preloaded := []modules.LuaModule{
+		// embedded.NewLuaModule(),
 		env.NewLuaModule(),
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),
 	}
-	for _, m := range modules {
-		m.Init(s.l)
+	for _, m := range preloaded {
+		modules.Preload(m, s.l)
 	}
 
 	err := s.l.DoString(initCode)

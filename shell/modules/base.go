@@ -3,5 +3,10 @@ package modules
 import lua "github.com/yuin/gopher-lua"
 
 type LuaModule interface {
-	Init(l *lua.LState)
+	Name() string
+	Loader(l *lua.LState) int
+}
+
+func Preload(mod LuaModule, L *lua.LState) {
+	L.PreloadModule(mod.Name(), mod.Loader)
 }
