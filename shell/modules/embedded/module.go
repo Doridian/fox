@@ -11,11 +11,14 @@ func NewLuaModule() *LuaModule {
 	return &LuaModule{}
 }
 
-func (m *LuaModule) Init(L *lua.LState) {
-	loader := L.NewFunction(luaLoader)
+func (m *LuaModule) Loader(L *lua.LState) int {
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"loader": luaLoader,
+	})
+	L.Push(mod)
+	return 1
+}
 
-	packageL := L.GetGlobal("package").(*lua.LTable)
-	loadersL := L.GetField(packageL, "preload").(*lua.LTable)
-
-	loadersL.Append(loader)
+func (m *LuaModule) Name() string {
+	return "embedded"
 }
