@@ -37,6 +37,8 @@ func luaExit(L *lua.LState) int {
 }
 
 func (s *ShellManager) luaInit() {
+	s.l.SetGlobal("exit", s.l.NewFunction(luaExit))
+
 	modules := []modules.LuaModule{
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),
@@ -44,8 +46,6 @@ func (s *ShellManager) luaInit() {
 	for _, m := range modules {
 		m.Init(s.l)
 	}
-
-	s.l.SetGlobal("exit", s.l.NewFunction(luaExit))
 
 	err := s.l.DoString(initCode)
 	if err != nil {
