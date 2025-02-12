@@ -51,7 +51,7 @@ func pipeWrite(L *lua.LState) int {
 
 	_, err := p.wc.Write([]byte(data))
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return 0
 	}
 	L.Push(ud)
@@ -82,7 +82,7 @@ func pipeRead(L *lua.LState) int {
 	data := make([]byte, len)
 	n, err := pipe.rc.Read(data)
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return 0
 	}
 

@@ -17,7 +17,7 @@ func readFileFromLua(L *lua.LState) []byte {
 
 	data, err := root.ReadFile(name)
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return nil
 	}
 	return data

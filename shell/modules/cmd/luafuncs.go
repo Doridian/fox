@@ -63,7 +63,7 @@ func getSetCmd(L *lua.LState) int {
 		}
 		argsLLen := argsL.MaxN()
 		if argsLLen < 1 {
-			L.Error(lua.LString("cmd must have at least one argument (the process binary)"), 0)
+			L.RaiseError("cmd must have at least one argument (the process binary)")
 			return 0
 		}
 		args := make([]string, 0, argsLLen)

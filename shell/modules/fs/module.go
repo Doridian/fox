@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"github.com/Doridian/fox/shell/modules/fs/direntry"
+	"github.com/Doridian/fox/shell/modules/fs/fileinfo"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -14,6 +16,9 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
+	fileinfo.Load(L)
+	direntry.Load(L)
+
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{})
 	L.Push(mod)
 	return 1

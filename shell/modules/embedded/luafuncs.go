@@ -3,6 +3,7 @@ package embedded
 import (
 	"embed"
 
+	"github.com/Doridian/fox/shell/modules/fs/direntry"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -35,7 +36,7 @@ func luaLoadFile(L *lua.LState) int {
 
 	lf, err := L.LoadString(string(data))
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return 0
 	}
 	L.Push(lf)
@@ -50,7 +51,7 @@ func luaDoFile(L *lua.LState) int {
 
 	err := L.DoString(string(data))
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return 0
 	}
 	return 0
@@ -65,17 +66,13 @@ func luaReadDir(L *lua.LState) int {
 
 	dirents, err := root.ReadDir(name)
 	if err != nil {
-		L.Error(lua.LString(err.Error()), 0)
+		L.RaiseError("%v", err)
 		return 0
 	}
 
 	ret := L.NewTable()
-	for _, dirent := range dirents {
-		name := dirent.Name()
-		if dirent.IsDir() {
-			name += "/"
-		}
-		ret.Append(lua.LString(name))
+	for _, de := range dirents {
+		ret.Append(direntry.Make(L, de))
 	}
 	L.Push(ret)
 	return 1
