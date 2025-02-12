@@ -24,7 +24,7 @@ type Cmd struct {
 }
 
 func newCmd(L *lua.LState) int {
-	return pushCmd(L, &Cmd{
+	return Push(L, &Cmd{
 		gocmd:            &exec.Cmd{},
 		ErrorPropagation: false,
 	})

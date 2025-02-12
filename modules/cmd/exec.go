@@ -43,7 +43,7 @@ func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
 }
 
 func doWait(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -54,7 +54,7 @@ func doWait(L *lua.LState) int {
 }
 
 func doRun(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -70,7 +70,7 @@ func doRun(L *lua.LState) int {
 }
 
 func doStart(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 func getSetStdin(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -49,7 +49,7 @@ func getSetStdin(L *lua.LState) int {
 }
 
 func getStdinPipe(L *lua.LState) int {
-	c, _ := checkCmd(L, 1)
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -76,7 +76,7 @@ func getStdinPipe(L *lua.LState) int {
 }
 
 func getSetStderr(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -117,7 +117,7 @@ func getSetStderr(L *lua.LState) int {
 }
 
 func getStderrPipe(L *lua.LState) int {
-	c, _ := checkCmd(L, 1)
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -144,7 +144,7 @@ func getStderrPipe(L *lua.LState) int {
 }
 
 func getSetStdout(L *lua.LState) int {
-	c, ud := checkCmd(L, 1)
+	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
@@ -185,7 +185,7 @@ func getSetStdout(L *lua.LState) int {
 }
 
 func getStdoutPipe(L *lua.LState) int {
-	c, _ := checkCmd(L, 1)
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
 	}
