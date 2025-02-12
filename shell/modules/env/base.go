@@ -1,0 +1,30 @@
+package env
+
+import (
+	"os"
+
+	lua "github.com/yuin/gopher-lua"
+)
+
+// __index(t, k)
+func envIndex(L *lua.LState) int {
+	k := L.CheckString(2)
+
+	v, ok := os.LookupEnv(k)
+	if !ok {
+		L.Push(lua.LNil)
+		return 1
+	}
+
+	L.Push(lua.LString(v))
+	return 1
+}
+
+// __newindex(t, k, v)
+func envNewIndex(L *lua.LState) int {
+	k := L.CheckString(2)
+	v := L.CheckString(3)
+
+	os.Setenv(k, v)
+	return 0
+}
