@@ -20,7 +20,3 @@ local ok, err = pcall(dofile, lua_base .. "/init.lua")
 if not ok then
     print("Error loading user init.lua: " .. err)
 end
-
-for k, v in pairs(embedded.readDir("root")) do
-    print(k, v)
-end
