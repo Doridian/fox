@@ -27,16 +27,16 @@ func getSetPath(L *lua.LState) int {
 		return 0
 	}
 	if L.GetTop() >= 2 {
-		c.Gocmd.Path = L.CheckString(2)
-		if c.Gocmd.Args == nil {
-			c.Gocmd.Args = []string{c.Gocmd.Path}
+		c.gocmd.Path = L.CheckString(2)
+		if c.gocmd.Args == nil {
+			c.gocmd.Args = []string{c.gocmd.Path}
 		} else {
-			c.Gocmd.Args[0] = c.Gocmd.Path
+			c.gocmd.Args[0] = c.gocmd.Path
 		}
 		L.Push(ud)
 		return 1
 	}
-	L.Push(lua.LString(c.Gocmd.Path))
+	L.Push(lua.LString(c.gocmd.Path))
 	return 1
 }
 
@@ -46,11 +46,11 @@ func getSetDir(L *lua.LState) int {
 		return 0
 	}
 	if L.GetTop() >= 2 {
-		c.Gocmd.Dir = L.CheckString(2)
+		c.gocmd.Dir = L.CheckString(2)
 		L.Push(ud)
 		return 1
 	}
-	L.Push(lua.LString(c.Gocmd.Dir))
+	L.Push(lua.LString(c.gocmd.Dir))
 	return 1
 }
 
@@ -66,18 +66,18 @@ func getSetArgs(L *lua.LState) int {
 		}
 		argsLLen := argsL.MaxN()
 		args := make([]string, 1, argsLLen)
-		args[0] = c.Gocmd.Path
+		args[0] = c.gocmd.Path
 		for i := 1; i <= argsLLen; i++ {
 			args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
 		}
-		c.Gocmd.Args = args
+		c.gocmd.Args = args
 		L.Push(ud)
 		return 1
 	}
 
 	ret := L.NewTable()
-	for i := 1; i < len(c.Gocmd.Args); i++ {
-		ret.Append(lua.LString(c.Gocmd.Args[i]))
+	for i := 1; i < len(c.gocmd.Args); i++ {
+		ret.Append(lua.LString(c.gocmd.Args[i]))
 	}
 	L.Push(ret)
 	return 1
@@ -99,13 +99,13 @@ func getSetEnv(L *lua.LState) int {
 			env = append(env, fmt.Sprintf("%s=%s", lua.LVAsString(envK), lua.LVAsString(envV)))
 			envK, envV = envL.Next(envK)
 		}
-		c.Gocmd.Env = env
+		c.gocmd.Env = env
 		L.Push(ud)
 		return 1
 	}
 
 	ret := L.NewTable()
-	for _, arg := range c.Gocmd.Env {
+	for _, arg := range c.gocmd.Env {
 		envSplit := strings.SplitN(arg, "=", 2)
 		if len(envSplit) < 2 {
 			continue

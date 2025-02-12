@@ -11,11 +11,8 @@ local c2 = shellcmd.new()
 c2:path("/bin/echo")
 c2:args({"meow", "test"})
 
-c2:stdout(c)
+c:stdin(c2:stdout())
 
-c2:start()
-print("Ran c2")
-c:start()
-print("Ran c")
+print("GO")
 
-print(c:wait())
+print(c:run())
