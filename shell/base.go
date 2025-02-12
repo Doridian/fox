@@ -26,11 +26,17 @@ func NewShellManager() *ShellManager {
 	s := &ShellManager{
 		l: lua.NewState(),
 	}
-	s.init()
+	s.luaInit()
 	return s
 }
 
-func (s *ShellManager) init() {
+func luaExit(L *lua.LState) int {
+	exitCodeL := lua.LVAsNumber(L.CheckNumber(1))
+	os.Exit(int(exitCodeL))
+	return 0
+}
+
+func (s *ShellManager) luaInit() {
 	modules := []modules.LuaModule{
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),
@@ -38,6 +44,9 @@ func (s *ShellManager) init() {
 	for _, m := range modules {
 		m.Init(s.l)
 	}
+
+	s.l.SetGlobal("exit", s.l.NewFunction(luaExit))
+
 	err := s.l.DoString(initCode)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)

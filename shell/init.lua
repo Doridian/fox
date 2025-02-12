@@ -1,8 +1,3 @@
-function exit(code)
-    _LAST_DO_EXIT = true
-    _LAST_EXIT_CODE = code
-end
-
 local c = cmd.new()
 c:cmd({"/bin/cat", "-"})
 
@@ -21,3 +16,5 @@ print("stdout", pipe.stdout)
 pipe.stdout:write("stdout direct\n")
 
 print("W", c:wait())
+
+exit(1)
