@@ -15,32 +15,32 @@ func pipeClose(L *lua.LState) int {
 }
 
 func pipeCanWrite(L *lua.LState) int {
-	ok, pipe, _ := CheckPipe(L, 1, false)
+	ok, p, _ := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}
-	L.Push(lua.LBool(pipe.CanWrite()))
+	L.Push(lua.LBool(p.CanWrite()))
 	return 1
 }
 
 func pipeCanRead(L *lua.LState) int {
-	ok, pipe, _ := CheckPipe(L, 1, false)
+	ok, p, _ := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}
-	L.Push(lua.LBool(pipe.CanRead()))
+	L.Push(lua.LBool(p.CanRead()))
 	return 1
 }
 
 func pipeWrite(L *lua.LState) int {
-	ok, pipe, ud := CheckPipe(L, 1, false)
+	ok, p, ud := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}
 	data := L.CheckString(2)
 
-	if pipe.wc == nil {
-		if pipe.isNull {
+	if p.wc == nil {
+		if p.isNull {
 			L.Push(ud)
 			return 1
 		}
@@ -49,7 +49,7 @@ func pipeWrite(L *lua.LState) int {
 		return 0
 	}
 
-	_, err := pipe.wc.Write([]byte(data))
+	_, err := p.wc.Write([]byte(data))
 	if err != nil {
 		L.Error(lua.LString(err.Error()), 0)
 		return 0

@@ -9,9 +9,12 @@ import (
 )
 
 type Cmd struct {
-	stdout *pipe.Pipe
-	stderr *pipe.Pipe
-	stdin  *pipe.Pipe
+	stdout      *pipe.Pipe
+	closeStdout bool
+	stderr      *pipe.Pipe
+	closeStderr bool
+	stdin       *pipe.Pipe
+	closeStdin  bool
 
 	lock             sync.RWMutex
 	gocmd            *exec.Cmd

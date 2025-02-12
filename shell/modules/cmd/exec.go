@@ -6,8 +6,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func handleCmdExit(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err error) int {
-	c.releaseStdio()
+func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err error) int {
+	c.releaseStdioNoLock()
 
 	if err != nil && exitCode == 0 {
 		exitCode = 1
@@ -33,13 +33,13 @@ func handleCmdExit(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err e
 	return 3
 }
 
-func doWaitCmd(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
+func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
 	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
 	if err == nil {
 		err = pipeErr
 	}
-	return handleCmdExit(L, c.gocmd.ProcessState.ExitCode(), c, ud, err)
+	return handleCmdExitNoLock(L, c.gocmd.ProcessState.ExitCode(), c, ud, err)
 }
 
 func doWait(L *lua.LState) int {
@@ -48,7 +48,9 @@ func doWait(L *lua.LState) int {
 		return 0
 	}
 
-	return doWaitCmd(L, c, ud)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return doWaitCmdNoLock(L, c, ud)
 }
 
 func doRun(L *lua.LState) int {
@@ -62,9 +64,9 @@ func doRun(L *lua.LState) int {
 
 	err := c.prepareAndStartNoLock()
 	if err != nil {
-		return handleCmdExit(L, 1, c, ud, err)
+		return handleCmdExitNoLock(L, 1, c, ud, err)
 	}
-	return doWaitCmd(L, c, ud)
+	return doWaitCmdNoLock(L, c, ud)
 }
 
 func doStart(L *lua.LState) int {
@@ -78,7 +80,7 @@ func doStart(L *lua.LState) int {
 
 	err := c.prepareAndStartNoLock()
 	if err != nil {
-		return handleCmdExit(L, 1, c, ud, err)
+		return handleCmdExitNoLock(L, 1, c, ud, err)
 	}
 	L.Push(ud)
 	return 1

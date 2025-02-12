@@ -23,6 +23,11 @@ func getSetStdin(L *lua.LState) int {
 			return 0
 		}
 
+		doClose := true
+		if L.GetTop() >= 3 {
+			doClose = L.CheckBool(3)
+		}
+
 		c.lock.Lock()
 		if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
 			c.lock.Unlock()
@@ -31,6 +36,7 @@ func getSetStdin(L *lua.LState) int {
 		}
 
 		c.stdin = p
+		c.closeStdin = doClose
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -64,6 +70,7 @@ func getStdinPipe(L *lua.LState) int {
 
 	p := pipe.NewWritePipe(c, stdinPipe)
 	c.stdin = p
+	c.closeStdin = true
 	c.lock.Unlock()
 	return p.Push(L)
 }
@@ -84,6 +91,11 @@ func getSetStderr(L *lua.LState) int {
 			return 0
 		}
 
+		doClose := true
+		if L.GetTop() >= 3 {
+			doClose = L.CheckBool(3)
+		}
+
 		c.lock.Lock()
 		if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
 			c.lock.Unlock()
@@ -92,6 +104,7 @@ func getSetStderr(L *lua.LState) int {
 		}
 
 		c.stderr = p
+		c.closeStderr = doClose
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -125,6 +138,7 @@ func getStderrPipe(L *lua.LState) int {
 
 	p := pipe.NewReadPipe(c, stderrPipe)
 	c.stderr = p
+	c.closeStderr = true
 	c.lock.Unlock()
 	return p.Push(L)
 }
@@ -145,6 +159,11 @@ func getSetStdout(L *lua.LState) int {
 			return 0
 		}
 
+		doClose := true
+		if L.GetTop() >= 3 {
+			doClose = L.CheckBool(3)
+		}
+
 		c.lock.Lock()
 		if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
 			c.lock.Unlock()
@@ -153,6 +172,7 @@ func getSetStdout(L *lua.LState) int {
 		}
 
 		c.stdout = p
+		c.closeStdout = doClose
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -185,6 +205,7 @@ func getStdoutPipe(L *lua.LState) int {
 	}
 	p := pipe.NewReadPipe(c, stdoutPipe)
 	c.stdout = p
+	c.closeStdout = true
 	c.lock.Unlock()
 	return p.Push(L)
 }
@@ -215,29 +236,42 @@ func (c *Cmd) setupStdio() error {
 }
 
 func (c *Cmd) waitStdio() error {
-	if c.stdin != nil {
-		creator := c.stdin.Creator()
-		if creator != nil {
-			cmd, ok := creator.(*Cmd)
-			if ok && cmd != nil && cmd != c {
-				return cmd.ensureRan()
-			}
-		}
+	c.lock.RLock()
+	stdin := c.stdin
+	c.lock.RUnlock()
+
+	if stdin == nil {
+		return nil
 	}
-	return nil
+	creator := stdin.Creator()
+	if creator == nil {
+		return nil
+	}
+	cmd, ok := creator.(*Cmd)
+	if !ok || cmd == nil || cmd == c {
+		return nil
+	}
+
+	return cmd.ensureRan()
 }
 
-func (c *Cmd) releaseStdio() error {
+func (c *Cmd) releaseStdioNoLock() error {
 	if c.stdin != nil {
-		c.stdin.Close()
+		if c.closeStdin {
+			c.stdin.Close()
+		}
 		c.stdin = nil
 	}
 	if c.stdout != nil {
-		c.stdout.Close()
+		if c.closeStdout {
+			c.stdout.Close()
+		}
 		c.stdout = nil
 	}
 	if c.stderr != nil {
-		c.stderr.Close()
+		if c.closeStderr {
+			c.stderr.Close()
+		}
 		c.stderr = nil
 	}
 	return nil
