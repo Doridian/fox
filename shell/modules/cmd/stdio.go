@@ -219,8 +219,8 @@ func (c *Cmd) waitStdio() error {
 		creator := c.stdin.Creator()
 		if creator != nil {
 			cmd, ok := creator.(*Cmd)
-			if ok && cmd != nil {
-				return cmd.prepareAndRun()
+			if ok && cmd != nil && cmd != c {
+				return cmd.ensureRan()
 			}
 		}
 	}

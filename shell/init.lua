@@ -6,11 +6,11 @@ end
 local c = cmd.new()
 c:cmd({"/bin/cat", "-"})
 
-local c2 = cmd.new()
-c2:cmd({"/bin/echo", "meow", "test"})
+local p = c:stdinPipe()
+print("S", c:start())
 
-c:stdin(c2:stdoutPipe())
+p:write("meow\nim a fomx :3\n")
+p:close()
 
 print("GO")
-
-print(c:run())
+print("W", c:wait())

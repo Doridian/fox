@@ -92,12 +92,14 @@ func (c *Cmd) prepareAndStartNoLock() error {
 	return c.gocmd.Start()
 }
 
-func (c *Cmd) prepareAndRun() error {
+func (c *Cmd) ensureRan() error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if err := c.prepareAndStartNoLock(); err != nil {
-		return err
+	if c.gocmd.Process == nil {
+		if err := c.prepareAndStartNoLock(); err != nil {
+			return err
+		}
 	}
 
 	pipeErr := c.waitStdio()
