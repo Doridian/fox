@@ -3,15 +3,13 @@ function exit(code)
     _LAST_EXIT_CODE = code
 end
 
-local c = shellcmd.new()
-c:path("/bin/grep")
-c:args({"-F", "test"})
+local c = cmd.new()
+c:cmd({"/bin/cat", "-"})
 
-local c2 = shellcmd.new()
-c2:path("/bin/echo")
-c2:args({"meow", "test"})
+local c2 = cmd.new()
+c2:cmd({"/bin/echo", "meow", "test"})
 
-c:stdin(c2:stdout())
+c:stdin(c2:stdoutPipe())
 
 print("GO")
 

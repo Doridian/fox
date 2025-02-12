@@ -24,7 +24,7 @@ func checkShellCmd(L *lua.LState, i int) (*ShellCmd, *lua.LUserData) {
 	return nil, nil
 }
 
-func pushShellPipe(L *lua.LState, pipe *ShellPipe) int {
+func pushShellPipe(L *lua.LState, pipe *Pipe) int {
 	if pipe == nil {
 		L.Push(lua.LNil)
 		return 1
@@ -37,11 +37,21 @@ func pushShellPipe(L *lua.LState, pipe *ShellPipe) int {
 	return 1
 }
 
-func checkShellPipe(L *lua.LState, i int) (*ShellPipe, *lua.LUserData) {
-	ud := L.CheckUserData(i)
-	if v, ok := ud.Value.(*ShellPipe); ok {
-		return v, ud
+func checkPipe(L *lua.LState, i int, allowNil bool) (bool, *Pipe, *lua.LUserData) {
+	if L.Get(i) == lua.LNil && allowNil {
+		return true, nil, nil
 	}
-	L.ArgError(i, "ShellPipe expected")
-	return nil, nil
+
+	ud := L.CheckUserData(i)
+	if v, ok := ud.Value.(*Pipe); ok {
+		return true, v, ud
+	}
+
+	if allowNil {
+		L.ArgError(i, "Pipe or nil expected")
+	} else {
+		L.ArgError(i, "Pipe expected")
+	}
+
+	return false, nil, nil
 }

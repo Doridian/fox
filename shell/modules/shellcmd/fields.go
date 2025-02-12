@@ -21,25 +21,6 @@ func getSetErrorPropagation(L *lua.LState) int {
 	return 1
 }
 
-func getSetPath(L *lua.LState) int {
-	c, ud := checkShellCmd(L, 1)
-	if c == nil {
-		return 0
-	}
-	if L.GetTop() >= 2 {
-		c.gocmd.Path = L.CheckString(2)
-		if c.gocmd.Args == nil {
-			c.gocmd.Args = []string{c.gocmd.Path}
-		} else {
-			c.gocmd.Args[0] = c.gocmd.Path
-		}
-		L.Push(ud)
-		return 1
-	}
-	L.Push(lua.LString(c.gocmd.Path))
-	return 1
-}
-
 func getSetDir(L *lua.LState) int {
 	c, ud := checkShellCmd(L, 1)
 	if c == nil {
@@ -54,7 +35,7 @@ func getSetDir(L *lua.LState) int {
 	return 1
 }
 
-func getSetArgs(L *lua.LState) int {
+func getSetCmd(L *lua.LState) int {
 	c, ud := checkShellCmd(L, 1)
 	if c == nil {
 		return 0
@@ -65,19 +46,23 @@ func getSetArgs(L *lua.LState) int {
 			return 0
 		}
 		argsLLen := argsL.MaxN()
-		args := make([]string, 1, argsLLen)
-		args[0] = c.gocmd.Path
+		if argsLLen < 1 {
+			L.Error(lua.LString("cmd must have at least one argument (the process binary)"), 0)
+			return 0
+		}
+		args := make([]string, 0, argsLLen)
 		for i := 1; i <= argsLLen; i++ {
 			args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
 		}
+		c.gocmd.Path = args[0]
 		c.gocmd.Args = args
 		L.Push(ud)
 		return 1
 	}
 
 	ret := L.NewTable()
-	for i := 1; i < len(c.gocmd.Args); i++ {
-		ret.Append(lua.LString(c.gocmd.Args[i]))
+	for _, arg := range c.gocmd.Args {
+		ret.Append(lua.LString(arg))
 	}
 	L.Push(ret)
 	return 1

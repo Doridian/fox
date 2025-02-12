@@ -7,7 +7,7 @@ import (
 )
 
 func handleCmdExit(L *lua.LState, exitCode int, c *ShellCmd, ud *lua.LUserData, err error) int {
-	c.releasePipes()
+	c.releaseStdio()
 
 	if err != nil && exitCode == 0 {
 		exitCode = 1
@@ -37,7 +37,7 @@ func doWaitCmd(L *lua.LState, c *ShellCmd, ud *lua.LUserData) int {
 	if c == nil {
 		return 0
 	}
-	pipeErr := c.waitPipes()
+	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
 	if err == nil {
 		err = pipeErr
@@ -70,7 +70,7 @@ func doStart(L *lua.LState) int {
 }
 
 func (c *ShellCmd) prepareAndStart() error {
-	if err := c.setupPipes(); err != nil {
+	if err := c.setupStdio(); err != nil {
 		return err
 	}
 
@@ -82,7 +82,7 @@ func (c *ShellCmd) prepareAndRun() error {
 		return err
 	}
 
-	pipeErr := c.waitPipes()
+	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
 	if err == nil {
 		err = pipeErr

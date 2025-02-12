@@ -1,7 +1,6 @@
 package shellcmd
 
 import (
-	"os"
 	"os/exec"
 
 	lua "github.com/yuin/gopher-lua"
@@ -17,9 +16,9 @@ func New() *ShellCmdModule {
 const luaShellCmdType = "shell/modules/shellcmd/ShellCmd"
 
 type ShellCmd struct {
-	stdout *ShellPipe
-	stderr *ShellPipe
-	stdin  *ShellPipe
+	stdout *Pipe
+	stderr *Pipe
+	stdin  *Pipe
 
 	gocmd            *exec.Cmd
 	ErrorPropagation bool
@@ -27,14 +26,16 @@ type ShellCmd struct {
 
 func (m *ShellCmdModule) Init(L *lua.LState) {
 	funcs := map[string]lua.LGFunction{
-		"path": getSetPath,
-		"dir":  getSetDir,
-		"args": getSetArgs,
-		"env":  getSetEnv,
+		"dir": getSetDir,
+		"cmd": getSetCmd,
+		"env": getSetEnv,
 
-		"stdout": getSetStdout,
-		"stderr": getSetStderr,
-		"stdin":  getSetStdin,
+		"stdout":     getSetStdout,
+		"stdoutPipe": getStdoutPipe,
+		"stderr":     getSetStderr,
+		"stderrPipe": getStderrPipe,
+		"stdin":      getSetStdin,
+		"stdinPipe":  getStdinPipe,
 
 		"run":   doRun,
 		"start": doStart,
@@ -44,25 +45,28 @@ func (m *ShellCmdModule) Init(L *lua.LState) {
 	}
 
 	mt := L.NewTypeMetatable(luaShellCmdType)
-	L.SetGlobal("shellcmd", mt)
+	L.SetGlobal("cmd", mt)
 	L.SetField(mt, "new", L.NewFunction(newShellCmd))
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))
 
-	funcs = map[string]lua.LGFunction{}
+	funcs = map[string]lua.LGFunction{
+		"read":  luaPipeRead,
+		"write": luaPipeWrite,
+		"close": luaPipeClose,
+	}
 
 	mt = L.NewTypeMetatable(luaShellPipeType)
-	L.SetGlobal("shellpipe", mt)
-	L.SetField(mt, "null", L.NewFunction(newNullShellPipe))
+	L.SetGlobal("pipe", mt)
+	L.SetField(mt, "null", L.NewFunction(newNullPipe))
+	L.SetField(mt, "stdin", L.NewFunction(newStdinPipe))
+	L.SetField(mt, "stderr", L.NewFunction(newStderrPipe))
+	L.SetField(mt, "stdout", L.NewFunction(newStdoutPipe))
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))
 }
 
 func newShellCmd(L *lua.LState) int {
 	return pushShellCmd(L, &ShellCmd{
-		gocmd: &exec.Cmd{
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-			Stdin:  os.Stdin,
-		},
+		gocmd:            &exec.Cmd{},
 		ErrorPropagation: false,
 	})
 }
