@@ -4,10 +4,11 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.fs.fileinfo"
-const LuaType = LuaName + ":FileInfo"
+const LuaName = "fox.fs"
+const LuaTypeName = "FileInfo"
+const LuaType = LuaName + ":" + LuaTypeName
 
-func Load(L *lua.LState) {
+func Load(L *lua.LState, tbl *lua.LTable) {
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"name":    fiName,
@@ -16,4 +17,5 @@ func Load(L *lua.LState) {
 		"modTime": fiModTime,
 		"isDir":   fiIsDir,
 	}))
+	tbl.RawSetString(LuaTypeName, mt)
 }

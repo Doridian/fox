@@ -3,7 +3,8 @@ package pipe
 import lua "github.com/yuin/gopher-lua"
 
 const LuaName = "fox.pipe"
-const LuaType = LuaName + ":Pipe"
+const LuaTypeName = "Pipe"
+const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
 }
@@ -23,10 +24,14 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	}))
 
 	mod := L.NewTable()
+
 	mod.RawSetString("null", makePipe(L, &nullPipe))
 	mod.RawSetString("stdin", makePipe(L, &stdinPipe))
 	mod.RawSetString("stderr", makePipe(L, &stderrPipe))
 	mod.RawSetString("stdout", makePipe(L, &stdoutPipe))
+
+	mod.RawSetString(LuaTypeName, mt)
+
 	L.Push(mod)
 	return 1
 }

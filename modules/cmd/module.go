@@ -5,7 +5,8 @@ import (
 )
 
 const LuaName = "fox.cmd"
-const LuaType = LuaName + ":Cmd"
+const LuaTypeName = "Cmd"
+const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
 }
@@ -38,6 +39,9 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"new": newCmd,
 	})
+
+	mod.RawSetString(LuaTypeName, mt)
+
 	L.Push(mod)
 	return 1
 }
