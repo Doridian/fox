@@ -16,8 +16,7 @@ func NewLuaModule() *LuaModule {
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.NewTable()
 	L.SetFuncs(mod, map[string]lua.LGFunction{
-		"bareLoader":   luaBareLoader,
-		"prefixLoader": luaPrefixLoader,
+		"loader": luaLoader,
 
 		"readFile": luaReadFile,
 		"doFile":   luaDoFile,
@@ -26,6 +25,12 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"readDir": luaReadDir,
 	}, mod)
 	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
+	mod.RawSetString("prefix", lua.LString(LuaName))
+
+	packagesL := L.GetGlobal("package").(*lua.LTable)
+	loadersL := packagesL.RawGetString("loaders").(*lua.LTable)
+	loadersL.Append(mod.RawGetString("loader"))
+
 	L.Push(mod)
 	return 1
 }

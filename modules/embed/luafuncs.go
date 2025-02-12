@@ -10,12 +10,13 @@ import (
 //go:embed root/*
 var root goembed.FS
 
-func luaBareLoader(L *lua.LState) int {
-	return luaLoader(L, "")
-}
-
-func luaPrefixLoader(L *lua.LState) int {
-	return luaLoader(L, LuaName)
+func luaLoader(L *lua.LState) int {
+	mod := L.CheckTable(lua.UpvalueIndex(1))
+	if mod == nil {
+		return 0
+	}
+	prefixStr := lua.LVAsString(L.GetField(mod, "prefix"))
+	return luaLoaderInt(L, prefixStr)
 }
 
 func luaReadFile(L *lua.LState) int {

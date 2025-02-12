@@ -23,7 +23,7 @@ func readFileFromLua(L *lua.LState) []byte {
 	return data
 }
 
-func luaLoader(L *lua.LState, prefix string) int {
+func luaLoaderInt(L *lua.LState, prefix string) int {
 	name := L.CheckString(1)
 	if name == "" {
 		return 0
