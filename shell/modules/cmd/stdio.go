@@ -14,7 +14,7 @@ func getSetStdin(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
+		ok, p, _ := pipe.CheckPipe(L, 2, true)
 		if !ok {
 			return 0
 		}
@@ -62,7 +62,7 @@ func getSetStderr(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
+		ok, p, _ := pipe.CheckPipe(L, 2, true)
 		if !ok {
 			return 0
 		}
@@ -110,7 +110,7 @@ func getSetStdout(L *lua.LState) int {
 	}
 
 	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.CheckPipe[*Cmd](L, 2, true)
+		ok, p, _ := pipe.CheckPipe(L, 2, true)
 		if !ok {
 			return 0
 		}

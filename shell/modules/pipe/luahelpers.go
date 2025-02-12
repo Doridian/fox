@@ -15,7 +15,7 @@ func pushPipe(L *lua.LState, pipe *Pipe) int {
 	return 1
 }
 
-func CheckPipe[K interface{}](L *lua.LState, i int, allowNil bool) (bool, *Pipe, *lua.LUserData) {
+func CheckPipe(L *lua.LState, i int, allowNil bool) (bool, *Pipe, *lua.LUserData) {
 	if L.Get(i) == lua.LNil && allowNil {
 		return true, nil, nil
 	}

@@ -3,7 +3,7 @@ package pipe
 import lua "github.com/yuin/gopher-lua"
 
 func pipeClose(L *lua.LState) int {
-	ok, pipe, ud := CheckPipe[interface{}](L, 1, false)
+	ok, pipe, ud := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}
@@ -14,8 +14,26 @@ func pipeClose(L *lua.LState) int {
 	return 1
 }
 
+func pipeCanWrite(L *lua.LState) int {
+	ok, pipe, _ := CheckPipe(L, 1, false)
+	if !ok {
+		return 0
+	}
+	L.Push(lua.LBool(pipe.CanWrite()))
+	return 1
+}
+
+func pipeCanRead(L *lua.LState) int {
+	ok, pipe, _ := CheckPipe(L, 1, false)
+	if !ok {
+		return 0
+	}
+	L.Push(lua.LBool(pipe.CanRead()))
+	return 1
+}
+
 func pipeWrite(L *lua.LState) int {
-	ok, pipe, ud := CheckPipe[interface{}](L, 1, false)
+	ok, pipe, ud := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}
@@ -41,7 +59,7 @@ func pipeWrite(L *lua.LState) int {
 }
 
 func pipeRead(L *lua.LState) int {
-	ok, pipe, _ := CheckPipe[interface{}](L, 1, false)
+	ok, pipe, _ := CheckPipe(L, 1, false)
 	if !ok {
 		return 0
 	}

@@ -13,9 +13,11 @@ func NewLuaModule() *LuaModule {
 
 func (m *LuaModule) Init(L *lua.LState) {
 	funcs := map[string]lua.LGFunction{
-		"read":  pipeRead,
-		"write": pipeWrite,
-		"close": pipeClose,
+		"read":     pipeRead,
+		"canRead":  pipeCanRead,
+		"write":    pipeWrite,
+		"canWrite": pipeCanWrite,
+		"close":    pipeClose,
 	}
 
 	mt := L.NewTypeMetatable(luaShellPipeType)
