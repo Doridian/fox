@@ -1,4 +1,4 @@
-package shellcmd
+package cmd
 
 import lua "github.com/yuin/gopher-lua"
 
@@ -10,7 +10,7 @@ func pushCmd(L *lua.LState, cmd *Cmd) int {
 
 	ud := L.NewUserData()
 	ud.Value = cmd
-	L.SetMetatable(ud, L.GetTypeMetatable(luaShellCmdType))
+	L.SetMetatable(ud, L.GetTypeMetatable(luaCmdType))
 	L.Push(ud)
 	return 1
 }

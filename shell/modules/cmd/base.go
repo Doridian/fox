@@ -1,4 +1,4 @@
-package shellcmd
+package cmd
 
 import (
 	"os/exec"
@@ -7,7 +7,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const luaShellCmdType = "FOX/shellcmd/Cmd"
+const luaCmdType = "FOX/cmd/Cmd"
 
 type Cmd struct {
 	stdout *pipe.Pipe
@@ -18,7 +18,7 @@ type Cmd struct {
 	ErrorPropagation bool
 }
 
-func newShellCmd(L *lua.LState) int {
+func newCmd(L *lua.LState) int {
 	return pushCmd(L, &Cmd{
 		gocmd:            &exec.Cmd{},
 		ErrorPropagation: false,

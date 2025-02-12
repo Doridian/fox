@@ -1,4 +1,4 @@
-package shellcmd
+package cmd
 
 import (
 	lua "github.com/yuin/gopher-lua"
@@ -31,8 +31,8 @@ func (m *LuaModule) Init(L *lua.LState) {
 		"errorPropagation": getSetErrorPropagation,
 	}
 
-	mt := L.NewTypeMetatable(luaShellCmdType)
+	mt := L.NewTypeMetatable(luaCmdType)
 	L.SetGlobal("cmd", mt)
-	L.SetField(mt, "new", L.NewFunction(newShellCmd))
+	L.SetField(mt, "new", L.NewFunction(newCmd))
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), funcs))
 }

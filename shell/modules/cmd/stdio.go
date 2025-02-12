@@ -1,4 +1,4 @@
-package shellcmd
+package cmd
 
 import (
 	"os"

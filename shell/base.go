@@ -9,7 +9,7 @@ import (
 	_ "embed"
 
 	"github.com/Doridian/fox/prompt"
-	"github.com/Doridian/fox/shell/modules/shellcmd"
+	"github.com/Doridian/fox/shell/modules/cmd"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -29,7 +29,7 @@ func NewShellManager() *ShellManager {
 }
 
 func (s *ShellManager) init() {
-	mod := shellcmd.NewLuaModule()
+	mod := cmd.NewLuaModule()
 	mod.Init(s.l)
 	err := s.l.DoString(initCode)
 	if err != nil {
