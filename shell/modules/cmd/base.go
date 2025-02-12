@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os/exec"
+	"sync"
 
 	"github.com/Doridian/fox/shell/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
@@ -12,6 +13,7 @@ type Cmd struct {
 	stderr *pipe.Pipe
 	stdin  *pipe.Pipe
 
+	lock             sync.RWMutex
 	gocmd            *exec.Cmd
 	ErrorPropagation bool
 }

@@ -13,11 +13,19 @@ func getSetErrorPropagation(L *lua.LState) int {
 		return 0
 	}
 	if L.GetTop() >= 2 {
-		c.ErrorPropagation = L.CheckBool(2)
+		val := L.CheckBool(2)
+		c.lock.Lock()
+		c.ErrorPropagation = val
+		c.lock.Unlock()
+
 		L.Push(ud)
 		return 1
 	}
-	L.Push(lua.LBool(c.ErrorPropagation))
+
+	c.lock.RLock()
+	val := lua.LBool(c.ErrorPropagation)
+	c.lock.RUnlock()
+	L.Push(val)
 	return 1
 }
 
@@ -27,11 +35,19 @@ func getSetDir(L *lua.LState) int {
 		return 0
 	}
 	if L.GetTop() >= 2 {
-		c.gocmd.Dir = L.CheckString(2)
+		val := L.CheckString(2)
+		c.lock.Lock()
+		c.gocmd.Dir = val
+		c.lock.Unlock()
+
 		L.Push(ud)
 		return 1
 	}
-	L.Push(lua.LString(c.gocmd.Dir))
+
+	c.lock.RLock()
+	val := lua.LString(c.gocmd.Dir)
+	c.lock.RUnlock()
+	L.Push(val)
 	return 1
 }
 
@@ -54,16 +70,22 @@ func getSetCmd(L *lua.LState) int {
 		for i := 1; i <= argsLLen; i++ {
 			args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
 		}
+
+		c.lock.Lock()
 		c.gocmd.Path = args[0]
 		c.gocmd.Args = args
+		c.lock.Unlock()
+
 		L.Push(ud)
 		return 1
 	}
 
+	c.lock.RLock()
 	ret := L.NewTable()
 	for _, arg := range c.gocmd.Args {
 		ret.Append(lua.LString(arg))
 	}
+	c.lock.RUnlock()
 	L.Push(ret)
 	return 1
 }
@@ -78,17 +100,23 @@ func getSetEnv(L *lua.LState) int {
 		if envL == nil {
 			return 0
 		}
+
 		env := make([]string, 0)
 		envK, envV := envL.Next(lua.LNil)
 		for envK != lua.LNil {
 			env = append(env, fmt.Sprintf("%s=%s", lua.LVAsString(envK), lua.LVAsString(envV)))
 			envK, envV = envL.Next(envK)
 		}
+
+		c.lock.Lock()
 		c.gocmd.Env = env
+		c.lock.Unlock()
+
 		L.Push(ud)
 		return 1
 	}
 
+	c.lock.RLock()
 	ret := L.NewTable()
 	for _, arg := range c.gocmd.Env {
 		envSplit := strings.SplitN(arg, "=", 2)
@@ -97,6 +125,7 @@ func getSetEnv(L *lua.LState) int {
 		}
 		ret.RawSetString(envSplit[0], lua.LString(envSplit[1]))
 	}
+	c.lock.RUnlock()
 	L.Push(ret)
 	return 1
 }

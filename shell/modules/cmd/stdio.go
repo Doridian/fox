@@ -23,17 +23,23 @@ func getSetStdin(L *lua.LState) int {
 			return 0
 		}
 
+		c.lock.Lock()
 		if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
+			c.lock.Unlock()
 			L.Error(lua.LString("stdin piped, can't redirect"), 0)
 			return 0
 		}
 
 		c.stdin = p
+		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	return c.stdin.Push(L)
+	c.lock.RLock()
+	val := c.stdin
+	c.lock.RUnlock()
+	return val.Push(L)
 }
 
 func getStdinPipe(L *lua.LState) int {
@@ -42,17 +48,24 @@ func getStdinPipe(L *lua.LState) int {
 		return 0
 	}
 
+	c.lock.Lock()
 	if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
-		return c.stdin.Push(L)
+		p := c.stdin
+		c.lock.Unlock()
+		return p.Push(L)
 	}
 
 	stdinPipe, err := c.gocmd.StdinPipe()
 	if err != nil {
+		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stdin = pipe.NewWritePipe(c, stdinPipe)
-	return c.stdin.Push(L)
+
+	p := pipe.NewWritePipe(c, stdinPipe)
+	c.stdin = p
+	c.lock.Unlock()
+	return p.Push(L)
 }
 
 func getSetStderr(L *lua.LState) int {
@@ -71,17 +84,23 @@ func getSetStderr(L *lua.LState) int {
 			return 0
 		}
 
+		c.lock.Lock()
 		if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
+			c.lock.Unlock()
 			L.Error(lua.LString("stderr piped, can't redirect"), 0)
 			return 0
 		}
 
 		c.stderr = p
+		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	return c.stderr.Push(L)
+	c.lock.RLock()
+	val := c.stderr
+	c.lock.RUnlock()
+	return val.Push(L)
 }
 
 func getStderrPipe(L *lua.LState) int {
@@ -90,17 +109,24 @@ func getStderrPipe(L *lua.LState) int {
 		return 0
 	}
 
+	c.lock.Lock()
 	if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
-		return c.stderr.Push(L)
+		p := c.stderr
+		c.lock.Unlock()
+		return p.Push(L)
 	}
 
 	stderrPipe, err := c.gocmd.StderrPipe()
 	if err != nil {
+		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stderr = pipe.NewReadPipe(c, stderrPipe)
-	return c.stderr.Push(L)
+
+	p := pipe.NewReadPipe(c, stderrPipe)
+	c.stderr = p
+	c.lock.Unlock()
+	return p.Push(L)
 }
 
 func getSetStdout(L *lua.LState) int {
@@ -119,17 +145,23 @@ func getSetStdout(L *lua.LState) int {
 			return 0
 		}
 
+		c.lock.Lock()
 		if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
+			c.lock.Unlock()
 			L.Error(lua.LString("stdout piped, can't redirect"), 0)
 			return 0
 		}
 
 		c.stdout = p
+		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	return c.stdout.Push(L)
+	c.lock.RLock()
+	val := c.stdout
+	c.lock.RUnlock()
+	return val.Push(L)
 }
 
 func getStdoutPipe(L *lua.LState) int {
@@ -138,17 +170,23 @@ func getStdoutPipe(L *lua.LState) int {
 		return 0
 	}
 
+	c.lock.Lock()
 	if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
-		return c.stdout.Push(L)
+		p := c.stdout
+		c.lock.Unlock()
+		return p.Push(L)
 	}
 
 	stdoutPipe, err := c.gocmd.StdoutPipe()
 	if err != nil {
+		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	c.stdout = pipe.NewReadPipe(c, stdoutPipe)
-	return c.stdout.Push(L)
+	p := pipe.NewReadPipe(c, stdoutPipe)
+	c.stdout = p
+	c.lock.Unlock()
+	return p.Push(L)
 }
 
 func (c *Cmd) setupStdio() error {

@@ -34,9 +34,6 @@ func handleCmdExit(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err e
 }
 
 func doWaitCmd(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
-	if c == nil {
-		return 0
-	}
 	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
 	if err == nil {
@@ -47,12 +44,23 @@ func doWaitCmd(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
 
 func doWait(L *lua.LState) int {
 	c, ud := checkCmd(L, 1)
+	if c == nil {
+		return 0
+	}
+
 	return doWaitCmd(L, c, ud)
 }
 
 func doRun(L *lua.LState) int {
 	c, ud := checkCmd(L, 1)
-	err := c.prepareAndStart()
+	if c == nil {
+		return 0
+	}
+
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	err := c.prepareAndStartNoLock()
 	if err != nil {
 		return handleCmdExit(L, 1, c, ud, err)
 	}
@@ -61,7 +69,14 @@ func doRun(L *lua.LState) int {
 
 func doStart(L *lua.LState) int {
 	c, ud := checkCmd(L, 1)
-	err := c.prepareAndStart()
+	if c == nil {
+		return 0
+	}
+
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	err := c.prepareAndStartNoLock()
 	if err != nil {
 		return handleCmdExit(L, 1, c, ud, err)
 	}
@@ -69,7 +84,7 @@ func doStart(L *lua.LState) int {
 	return 1
 }
 
-func (c *Cmd) prepareAndStart() error {
+func (c *Cmd) prepareAndStartNoLock() error {
 	if err := c.setupStdio(); err != nil {
 		return err
 	}
@@ -78,7 +93,10 @@ func (c *Cmd) prepareAndStart() error {
 }
 
 func (c *Cmd) prepareAndRun() error {
-	if err := c.prepareAndStart(); err != nil {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if err := c.prepareAndStartNoLock(); err != nil {
 		return err
 	}
 
