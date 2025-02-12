@@ -4,12 +4,18 @@ function exit(code)
 end
 
 local c = shellcmd.new()
-print(#c:args())
-c:path("/bin/echo")
-print(#c:args())
-c:args({"echo", "hello", "world"})
-print(#c:args())
-c:errorPropagation(false)
-local c2, code, err = c:run()
+c:path("/bin/grep")
+c:args({"-F", "test"})
 
-print("INIT OK!", c2, code, err)
+local c2 = shellcmd.new()
+c2:path("/bin/echo")
+c2:args({"meow", "test"})
+
+c2:stdout(c)
+
+c2:start()
+print("Ran c2")
+c:start()
+print("Ran c")
+
+print(c:wait())

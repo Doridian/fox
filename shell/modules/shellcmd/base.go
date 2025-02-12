@@ -12,9 +12,9 @@ type ShellCmdModule struct {
 const luaShellCmdType = "shell/modules/shellcmd"
 
 type ShellCmd struct {
-	Stdin            *ShellCmd
-	Stdout           *ShellCmd
-	Stderr           *ShellCmd
+	Stdout *ShellCmd
+	Stderr *ShellCmd
+
 	Gocmd            *exec.Cmd
 	ErrorPropagation bool
 }
@@ -32,7 +32,6 @@ func (m *ShellCmdModule) Init(L *lua.LState) {
 
 		"stdout": getSetStdout,
 		"stderr": getSetStderr,
-		"stdin":  getSetStdin,
 
 		"run":   doRun,
 		"start": doStart,

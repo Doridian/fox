@@ -35,7 +35,11 @@ func doWaitCmd(L *lua.LState, c *ShellCmd, ud *lua.LUserData) int {
 	if c == nil {
 		return 0
 	}
+	pipeErr := c.waitPipes()
 	err := c.Gocmd.Wait()
+	if err == nil {
+		err = pipeErr
+	}
 	return handleCmdError(L, c.Gocmd.ProcessState.ExitCode(), c, ud, err)
 }
 
@@ -61,4 +65,25 @@ func doStart(L *lua.LState) int {
 	}
 	L.Push(ud)
 	return 1
+}
+
+func (c *ShellCmd) prepareAndStart() error {
+	if err := c.setupPipes(); err != nil {
+		return err
+	}
+
+	return c.Gocmd.Start()
+}
+
+func (c *ShellCmd) prepareAndWait() error {
+	if err := c.prepareAndStart(); err != nil {
+		return err
+	}
+
+	pipeErr := c.waitPipes()
+	err := c.Gocmd.Wait()
+	if err == nil {
+		err = pipeErr
+	}
+	return err
 }
