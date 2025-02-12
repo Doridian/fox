@@ -16,7 +16,12 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
-	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{})
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"stat":  doStat,
+		"lstat": doLStat,
+
+		"readDir": doReadDir,
+	})
 	fileinfo.Load(L, mod)
 	direntry.Load(L, mod)
 	L.Push(mod)

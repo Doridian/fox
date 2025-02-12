@@ -1,6 +1,7 @@
 package pipe
 
 import (
+	"github.com/Doridian/fox/modules/util"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -39,7 +40,6 @@ func pipeWrite(L *lua.LState) int {
 	if p == nil {
 		return 0
 	}
-	data := L.CheckString(2)
 
 	if p.wc == nil {
 		if p.isNull {
@@ -51,11 +51,7 @@ func pipeWrite(L *lua.LState) int {
 		return 0
 	}
 
-	_, err := p.wc.Write([]byte(data))
-	if err != nil {
-		L.RaiseError("%v", err)
-		return 0
-	}
+	util.WriterWrite(L, p.wc)
 	L.Push(ud)
 	return 1
 }
@@ -63,11 +59,6 @@ func pipeWrite(L *lua.LState) int {
 func pipeRead(L *lua.LState) int {
 	_, p, _ := Check(L, 1, false)
 	if p == nil {
-		return 0
-	}
-	len := int(L.CheckNumber(2))
-	if len < 1 {
-		L.ArgError(2, "len must be greater than 0")
 		return 0
 	}
 
@@ -81,15 +72,7 @@ func pipeRead(L *lua.LState) int {
 		return 0
 	}
 
-	data := make([]byte, len)
-	n, err := p.rc.Read(data)
-	if err != nil {
-		L.RaiseError("%v", err)
-		return 0
-	}
-
-	L.Push(lua.LString(data[:n]))
-	return 1
+	return util.ReaderRead(L, p.rc)
 }
 
 func pipeToString(L *lua.LState) int {

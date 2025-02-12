@@ -31,3 +31,16 @@ func Check(L *lua.LState, i int) (fs.DirEntry, *lua.LUserData) {
 	L.ArgError(i, LuaType+" expected")
 	return nil, nil
 }
+
+func ArrayToUserdata(L *lua.LState, dirents []fs.DirEntry) *lua.LTable {
+	ret := L.NewTable()
+	for _, de := range dirents {
+		ret.Append(ToUserdata(L, de))
+	}
+	return ret
+}
+
+func PushArray(L *lua.LState, dirents []fs.DirEntry) int {
+	L.Push(ArrayToUserdata(L, dirents))
+	return 1
+}
