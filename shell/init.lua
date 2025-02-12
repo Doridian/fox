@@ -1,3 +1,1 @@
-local a = "mepw"
-a = env["PATH"]
-print(a)
+print(pcall(require, "test.abcd"))
