@@ -18,9 +18,12 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	L.SetFuncs(mod, map[string]lua.LGFunction{
 		"bareLoader":   luaBareLoader,
 		"prefixLoader": luaPrefixLoader,
-		"readFile":     luaReadFile,
-		"doFile":       luaDoFile,
-		"loadFile":     luaLoadFile,
+
+		"readFile": luaReadFile,
+		"doFile":   luaDoFile,
+		"loadFile": luaLoadFile,
+
+		"readDir": luaReadDir,
 	}, mod)
 	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
 	L.Push(mod)

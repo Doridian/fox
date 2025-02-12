@@ -11,6 +11,7 @@ import (
 func readFileFromLua(L *lua.LState) []byte {
 	name := L.CheckString(1)
 	if name == "" {
+		L.ArgError(1, "empty file name")
 		return nil
 	}
 

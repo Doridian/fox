@@ -55,3 +55,28 @@ func luaDoFile(L *lua.LState) int {
 	}
 	return 0
 }
+
+func luaReadDir(L *lua.LState) int {
+	name := L.CheckString(1)
+	if name == "" {
+		L.ArgError(1, "empty dir name")
+		return 0
+	}
+
+	dirents, err := root.ReadDir(name)
+	if err != nil {
+		L.Error(lua.LString(err.Error()), 0)
+		return 0
+	}
+
+	ret := L.NewTable()
+	for _, dirent := range dirents {
+		name := dirent.Name()
+		if dirent.IsDir() {
+			name += "/"
+		}
+		ret.Append(lua.LString(name))
+	}
+	L.Push(ret)
+	return 1
+}
