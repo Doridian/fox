@@ -24,7 +24,7 @@ func getSetStdin(L *lua.LState) int {
 		}
 
 		c.lock.Lock()
-		if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
+		if c.stdinPipe != nil {
 			c.lock.Unlock()
 			L.Error(lua.LString("stdin piped, can't redirect"), 0)
 			return 0
@@ -49,21 +49,22 @@ func getStdinPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
-		p := c.stdin
+	if c.stdinPipe != nil {
+		p := c.stdinPipe
 		c.lock.Unlock()
 		return p.Push(L)
 	}
 
-	stdinPipe, err := c.gocmd.StdinPipe()
+	cmdPipe, err := c.gocmd.StdinPipe()
 	if err != nil {
 		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
 
-	p := pipe.NewWritePipe(c, stdinPipe)
-	c.stdin = p
+	p := pipe.NewWritePipe(c, cmdPipe)
+	c.stdinPipe = p
+	c.stdin = nil
 	c.lock.Unlock()
 	return p.Push(L)
 }
@@ -85,7 +86,7 @@ func getSetStderr(L *lua.LState) int {
 		}
 
 		c.lock.Lock()
-		if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
+		if c.stderrPipe != nil {
 			c.lock.Unlock()
 			L.Error(lua.LString("stderr piped, can't redirect"), 0)
 			return 0
@@ -110,21 +111,22 @@ func getStderrPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
-		p := c.stderr
+	if c.stderrPipe != nil {
+		p := c.stderrPipe
 		c.lock.Unlock()
 		return p.Push(L)
 	}
 
-	stderrPipe, err := c.gocmd.StderrPipe()
+	cmdPipe, err := c.gocmd.StderrPipe()
 	if err != nil {
 		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
 
-	p := pipe.NewReadPipe(c, stderrPipe)
-	c.stderr = p
+	p := pipe.NewReadPipe(c, cmdPipe)
+	c.stderrPipe = p
+	c.stderr = nil
 	c.lock.Unlock()
 	return p.Push(L)
 }
@@ -146,7 +148,7 @@ func getSetStdout(L *lua.LState) int {
 		}
 
 		c.lock.Lock()
-		if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
+		if c.stdoutPipe != nil {
 			c.lock.Unlock()
 			L.Error(lua.LString("stdout piped, can't redirect"), 0)
 			return 0
@@ -171,44 +173,40 @@ func getStdoutPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
-		p := c.stdout
+	if c.stdoutPipe != nil {
+		p := c.stdoutPipe
 		c.lock.Unlock()
 		return p.Push(L)
 	}
 
-	stdoutPipe, err := c.gocmd.StdoutPipe()
+	cmdPipe, err := c.gocmd.StdoutPipe()
 	if err != nil {
 		c.lock.Unlock()
 		L.Error(lua.LString(err.Error()), 0)
 		return 0
 	}
-	p := pipe.NewReadPipe(c, stdoutPipe)
-	c.stdout = p
+
+	p := pipe.NewReadPipe(c, cmdPipe)
+	c.stdoutPipe = p
+	c.stdout = nil
 	c.lock.Unlock()
 	return p.Push(L)
 }
 
 func (c *Cmd) setupStdio() error {
 	if c.stdout != nil {
-		if c.stdout.CanWrite() {
-			c.gocmd.Stdout = c.stdout.GetWriter()
-		}
-	} else {
+		c.gocmd.Stdout = c.stdout.GetWriter()
+	} else if c.stdoutPipe == nil {
 		c.gocmd.Stdout = os.Stdout
 	}
 	if c.stderr != nil {
-		if c.stderr.CanWrite() {
-			c.gocmd.Stderr = c.stderr.GetWriter()
-		}
-	} else {
+		c.gocmd.Stderr = c.stderr.GetWriter()
+	} else if c.stderrPipe == nil {
 		c.gocmd.Stderr = os.Stderr
 	}
 	if c.stdin != nil {
-		if c.stdin.CanRead() {
-			c.gocmd.Stdin = c.stdin.GetReader()
-		}
-	} else {
+		c.gocmd.Stdin = c.stdin.GetReader()
+	} else if c.stdinPipe == nil {
 		c.gocmd.Stdin = os.Stdin
 	}
 	return nil

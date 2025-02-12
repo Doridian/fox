@@ -13,6 +13,10 @@ type Cmd struct {
 	stderr *pipe.Pipe
 	stdin  *pipe.Pipe
 
+	stdoutPipe *pipe.Pipe
+	stderrPipe *pipe.Pipe
+	stdinPipe  *pipe.Pipe
+
 	lock             sync.RWMutex
 	gocmd            *exec.Cmd
 	ErrorPropagation bool
