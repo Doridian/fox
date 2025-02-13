@@ -16,8 +16,6 @@ import (
 //go:embed init.lua
 var initCode string
 
-const FailoverPrompt = "?fox?>"
-
 type Shell struct {
 	l   *lua.LState
 	mod *lua.LTable
@@ -75,20 +73,25 @@ func (s *Shell) luaInit() {
 
 var ErrNeedMore = errors.New("Need more input")
 
+func defaultShellParser(cmd string) (string, error) {
+	if cmd[len(cmd)-1] == '\\' {
+		return "", ErrNeedMore
+	}
+	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
+}
+
 func (s *Shell) CommandToLua(cmd string) (string, error) {
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser == nil || shellParser == lua.LNil {
-		if cmd[len(cmd)-1] == '\\' {
-			return "", ErrNeedMore
-		}
-		return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
+		return defaultShellParser(cmd)
 	}
 
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
 	err := s.l.PCall(1, 1, nil)
 	if err != nil {
-		return "", err
+		log.Printf("Error in Lua shell.parser: %v", err)
+		return defaultShellParser(cmd)
 	}
 	parseRet := s.l.Get(-1)
 	s.l.Pop(1)
@@ -98,32 +101,33 @@ func (s *Shell) CommandToLua(cmd string) (string, error) {
 	return lua.LVAsString(parseRet), nil
 }
 
-func (s *Shell) RenderPrompt(lineNo int) (string, error) {
+func defaultRenderPrompt(lineNo int) string {
+	if lineNo < 2 {
+		return "fox> "
+	}
+	return "fo+> "
+}
+
+func (s *Shell) RenderPrompt(lineNo int) string {
 	renderPrompt := s.mod.RawGetString("renderPrompt")
 	if renderPrompt == nil || renderPrompt == lua.LNil {
-		if lineNo < 2 {
-			return "fox> ", nil
-		}
-		return "fo+> ", nil
+		return defaultRenderPrompt(lineNo)
 	}
 
 	s.l.Push(renderPrompt)
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
 	if err != nil {
-		return FailoverPrompt, err
+		log.Printf("Error in Lua shell.renderPrompt: %v", err)
+		return defaultRenderPrompt(lineNo)
 	}
 	parseRet := s.l.Get(-1)
 	s.l.Pop(1)
-	return lua.LVAsString(parseRet), nil
+	return lua.LVAsString(parseRet)
 }
 
 func (s *Shell) Run(p *prompt.PromptManager) bool {
-	pStr, err := s.RenderPrompt(1)
-	if err != nil {
-		log.Printf("Prompt rendering error: %v", err)
-	}
-	res, err := p.Prompt(pStr)
+	res, err := p.Prompt(s.RenderPrompt(1))
 	if err != nil {
 		os.Stdout.Write([]byte("\n"))
 		log.Printf("Prompt aborted: %v", err)
@@ -155,12 +159,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 			return 0
 		}
 
-		pStr, err := s.RenderPrompt(lineNo)
-		if err != nil {
-			log.Printf("Prompt rendering error: %v", err)
-		}
-
-		cmdAdd, err := p.Prompt(pStr)
+		cmdAdd, err := p.Prompt(s.RenderPrompt(lineNo))
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
 			os.Exit(0)
