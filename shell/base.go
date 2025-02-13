@@ -98,8 +98,24 @@ func (s *ShellManager) CommandToLua(cmd string) (string, error) {
 	return lua.String(), nil
 }
 
+func (s *ShellManager) Run(p *prompt.PromptManager) bool {
+	res, err := p.Prompt("fox> ")
+	if err != nil {
+		os.Stdout.Write([]byte("\n"))
+		log.Printf("Prompt aborted: %v", err)
+		return false
+	}
+	if res != "" {
+		exitCode := s.runOne(p, res)
+		if exitCode != 0 {
+			log.Printf("Exit code: %v", exitCode)
+		}
+	}
+	return true
+}
+
 // Return true to exit shell
-func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) int {
+func (s *ShellManager) runOne(p *prompt.PromptManager, cmd string) int {
 	var luaCode string
 	var err error
 	for {
