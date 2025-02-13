@@ -5,11 +5,12 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	_ "embed"
 
 	"github.com/Doridian/fox/modules/loader"
-	"github.com/Doridian/fox/prompt"
+	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -20,13 +21,22 @@ type Shell struct {
 	l     *lua.LState
 	mod   *lua.LTable
 	print *lua.LFunction
+
+	rlLock sync.Mutex
+	rl     *readline.Instance
 }
 
 func NewShell() *Shell {
+	rl, err := readline.New("?fox?> ")
+	if err != nil {
+		log.Panicf("Error initializing readline: %v", err)
+	}
+
 	s := &Shell{
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs: true,
 		}),
+		rl: rl,
 	}
 	s.luaInit()
 	return s
@@ -80,7 +90,7 @@ func defaultShellParser(cmd string) (string, error) {
 	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
 }
 
-func (s *Shell) CommandToLua(cmd string) (string, error) {
+func (s *Shell) shellParser(cmd string) (string, error) {
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser == nil || shellParser == lua.LNil {
 		return defaultShellParser(cmd)
@@ -110,7 +120,7 @@ func defaultRenderPrompt(lineNo int) string {
 	return "fo+> "
 }
 
-func (s *Shell) RenderPrompt(lineNo int) string {
+func (s *Shell) renderPrompt(lineNo int) string {
 	renderPrompt := s.mod.RawGetString("renderPrompt")
 	if renderPrompt == nil || renderPrompt == lua.LNil {
 		return defaultRenderPrompt(lineNo)
@@ -132,15 +142,23 @@ func (s *Shell) RenderPrompt(lineNo int) string {
 	return lua.LVAsString(parseRet)
 }
 
-func (s *Shell) Run(p *prompt.PromptManager) bool {
-	res, err := p.Prompt(s.RenderPrompt(1))
+func (s *Shell) readLine(disp string) (string, error) {
+	s.rlLock.Lock()
+	defer s.rlLock.Unlock()
+
+	s.rl.SetPrompt(disp)
+	return s.rl.ReadLine()
+}
+
+func (s *Shell) Run() bool {
+	res, err := s.readLine(s.renderPrompt(1))
 	if err != nil {
 		os.Stdout.Write([]byte("\n"))
 		log.Printf("Prompt aborted: %v", err)
 		return false
 	}
 	if res != "" {
-		exitCode := s.runOne(p, res)
+		exitCode := s.runOne(res)
 		if exitCode != 0 {
 			log.Printf("Exit code: %v", exitCode)
 		}
@@ -149,7 +167,7 @@ func (s *Shell) Run(p *prompt.PromptManager) bool {
 }
 
 // Return true to exit shell
-func (s *Shell) runOne(p *prompt.PromptManager, firstLine string) int {
+func (s *Shell) runOne(firstLine string) int {
 	var luaCode string
 	var err error
 
@@ -159,7 +177,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, firstLine string) int {
 	lineNo := 1
 
 	for {
-		luaCode, err = s.CommandToLua(cmdBuilder.String())
+		luaCode, err = s.shellParser(cmdBuilder.String())
 		if err == nil {
 			break
 		}
@@ -169,7 +187,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, firstLine string) int {
 		}
 
 		lineNo++
-		cmdAdd, err := p.Prompt(s.RenderPrompt(lineNo))
+		cmdAdd, err := s.readLine(s.renderPrompt(lineNo))
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
 			os.Exit(0)
