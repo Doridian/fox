@@ -26,8 +26,7 @@ type Shell struct {
 	rl     *readline.Instance
 }
 
-// TODO: Handle Ctrl+C
-// TODO: Handle SIGINT
+// TODO: Handle Ctrl+C (SIGINT?)
 // TODO: Handle SIGTERM
 
 func NewShell() *Shell {
