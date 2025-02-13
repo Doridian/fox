@@ -87,7 +87,7 @@ func (s *Shell) CommandToLua(cmd string) (string, error) {
 		if parseRet == lua.LTrue {
 			return "", ErrNeedMore
 		}
-		return parseRet.(lua.LString).String(), nil
+		return lua.LVAsString(parseRet), nil
 	}
 
 	if cmd[len(cmd)-1] == '\\' {
@@ -96,8 +96,31 @@ func (s *Shell) CommandToLua(cmd string) (string, error) {
 	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
 }
 
+func (s *Shell) RenderPrompt(lineNo int) (string, error) {
+	renderPrompt := s.mod.RawGetString("renderPrompt")
+	if renderPrompt == nil || renderPrompt == lua.LNil {
+		return "", errors.New("No prompt renderer defined")
+	}
+
+	s.l.Push(renderPrompt)
+	s.l.Push(lua.LNumber(lineNo))
+	err := s.l.PCall(1, 1, nil)
+	if err != nil {
+		return "", err
+	}
+	parseRet := s.l.Get(-1)
+	s.l.Pop(1)
+	return lua.LVAsString(parseRet), nil
+}
+
 func (s *Shell) Run(p *prompt.PromptManager) bool {
-	res, err := p.Prompt("fox> ")
+	pStr, err := s.RenderPrompt(1)
+	if err != nil {
+		os.Stdout.Write([]byte("\n"))
+		log.Printf("Prompt rendering error: %v", err)
+		return false
+	}
+	res, err := p.Prompt(pStr)
 	if err != nil {
 		os.Stdout.Write([]byte("\n"))
 		log.Printf("Prompt aborted: %v", err)
@@ -118,6 +141,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 	var err error
 	cmdB := strings.Builder{}
 	cmdB.WriteString(cmd)
+	lineNo := 2
 	for {
 		luaCode, err = s.CommandToLua(cmdB.String())
 		if err == nil {
@@ -127,7 +151,16 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 			log.Printf("Error parsing command: %v", err)
 			return 0
 		}
-		cmdAdd, err := p.Prompt("fo+> ")
+
+		pStr, err := s.RenderPrompt(lineNo)
+		if err != nil {
+			os.Stdout.Write([]byte("\n"))
+			log.Printf("Prompt rendering error: %v", err)
+			os.Exit(1)
+			return 1
+		}
+
+		cmdAdd, err := p.Prompt(pStr)
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
 			os.Exit(0)
@@ -135,6 +168,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 		}
 		cmdB.WriteRune('\n')
 		cmdB.WriteString(cmdAdd)
+		lineNo++
 	}
 
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))

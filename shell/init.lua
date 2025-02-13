@@ -12,3 +12,10 @@ local ok, err = pcall(dofile, lua_base .. "/init.lua")
 if not ok then
     print("Error loading user init.lua: " .. tostring(err))
 end
+
+function shell.renderPrompt(lineNo)
+    if lineNo < 2 then
+        return "fox> "
+    end
+    return "fo+> "
+end
