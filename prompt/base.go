@@ -1,30 +1,30 @@
 package prompt
 
 import (
-	"bufio"
-	"errors"
-	"os"
+	"sync"
+
+	"github.com/ergochat/readline"
 )
 
 type PromptManager struct {
-	inScanner *bufio.Scanner
+	lock sync.Mutex
+	rl   *readline.Instance
 }
 
 func NewPrompt() *PromptManager {
+	rl, err := readline.New("?fox?> ")
+	if err != nil {
+		panic(err)
+	}
 	return &PromptManager{
-		inScanner: bufio.NewScanner(os.Stdin),
+		rl: rl,
 	}
 }
 
 func (p *PromptManager) Prompt(disp string) (string, error) {
-	os.Stdout.WriteString(disp)
-	os.Stdout.Sync()
-	if !p.inScanner.Scan() {
-		err := p.inScanner.Err()
-		if err == nil {
-			err = errors.New("stdin closed")
-		}
-		return "", err
-	}
-	return p.inScanner.Text(), nil
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.rl.SetPrompt(disp)
+	return p.rl.ReadLine()
 }
