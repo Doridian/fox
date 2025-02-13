@@ -69,15 +69,7 @@ func (s *Shell) signalInit() {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		for range signals {
-			interrupted := s.mainMod.Interrupt(false)
-			if interrupted {
-				continue
-			}
-
-			cancelCtx := s.cancelCtx
-			if cancelCtx != nil {
-				cancelCtx()
-			}
+			s.mainMod.Interrupt(false)
 		}
 	}()
 }
@@ -109,6 +101,7 @@ func (s *Shell) init() {
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
 	mainMod := loader.NewLuaModule()
+	mainMod.AddModule(s.l, s)
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
 
