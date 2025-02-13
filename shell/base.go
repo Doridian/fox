@@ -16,6 +16,8 @@ import (
 //go:embed init.lua
 var initCode string
 
+const FailoverPrompt = "?fox?>"
+
 type Shell struct {
 	l   *lua.LState
 	mod *lua.LTable
@@ -75,38 +77,41 @@ var ErrNeedMore = errors.New("Need more input")
 
 func (s *Shell) CommandToLua(cmd string) (string, error) {
 	shellParser := s.mod.RawGetString("parser")
-	if shellParser != nil && shellParser != lua.LNil {
-		s.l.Push(shellParser)
-		s.l.Push(lua.LString(cmd))
-		err := s.l.PCall(1, 1, nil)
-		if err != nil {
-			return "", err
-		}
-		parseRet := s.l.Get(-1)
-		s.l.Pop(1)
-		if parseRet == lua.LTrue {
+	if shellParser == nil || shellParser == lua.LNil {
+		if cmd[len(cmd)-1] == '\\' {
 			return "", ErrNeedMore
 		}
-		return lua.LVAsString(parseRet), nil
+		return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
 	}
 
-	if cmd[len(cmd)-1] == '\\' {
+	s.l.Push(shellParser)
+	s.l.Push(lua.LString(cmd))
+	err := s.l.PCall(1, 1, nil)
+	if err != nil {
+		return "", err
+	}
+	parseRet := s.l.Get(-1)
+	s.l.Pop(1)
+	if parseRet == lua.LTrue {
 		return "", ErrNeedMore
 	}
-	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
+	return lua.LVAsString(parseRet), nil
 }
 
 func (s *Shell) RenderPrompt(lineNo int) (string, error) {
 	renderPrompt := s.mod.RawGetString("renderPrompt")
 	if renderPrompt == nil || renderPrompt == lua.LNil {
-		return "", errors.New("No prompt renderer defined")
+		if lineNo < 2 {
+			return "fox> ", nil
+		}
+		return "fo+> ", nil
 	}
 
 	s.l.Push(renderPrompt)
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
 	if err != nil {
-		return "", err
+		return FailoverPrompt, err
 	}
 	parseRet := s.l.Get(-1)
 	s.l.Pop(1)
@@ -116,9 +121,7 @@ func (s *Shell) RenderPrompt(lineNo int) (string, error) {
 func (s *Shell) Run(p *prompt.PromptManager) bool {
 	pStr, err := s.RenderPrompt(1)
 	if err != nil {
-		os.Stdout.Write([]byte("\n"))
 		log.Printf("Prompt rendering error: %v", err)
-		return false
 	}
 	res, err := p.Prompt(pStr)
 	if err != nil {
@@ -154,10 +157,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 
 		pStr, err := s.RenderPrompt(lineNo)
 		if err != nil {
-			os.Stdout.Write([]byte("\n"))
 			log.Printf("Prompt rendering error: %v", err)
-			os.Exit(1)
-			return 1
 		}
 
 		cmdAdd, err := p.Prompt(pStr)
