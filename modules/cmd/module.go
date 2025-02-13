@@ -36,7 +36,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 		"errorPropagation": getSetErrorPropagation,
 	}))
-	mt.RawSetString("__tostring", L.NewFunction(cmdToString))
+	L.SetFuncs(mt, map[string]lua.LGFunction{
+		"__tostring": cmdToString,
+		"__call":     doRun,
+	})
 
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"new": newCmd,
