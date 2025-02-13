@@ -67,7 +67,7 @@ func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock()
+	err := c.prepareAndStartNoLock(true)
 	if err != nil {
 		return handleCmdExitNoLock(L, 1, c, ud, err)
 	}
@@ -86,7 +86,7 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock()
+	err := c.prepareAndStartNoLock(false)
 	if err != nil {
 		return handleCmdExitNoLock(L, 1, c, ud, err)
 	}
@@ -94,7 +94,7 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 	return 1
 }
 
-func (c *Cmd) prepareAndStartNoLock() error {
+func (c *Cmd) prepareAndStartNoLock(defaultStdin bool) error {
 	var err error
 
 	path := c.gocmd.Args[0]
@@ -106,7 +106,7 @@ func (c *Cmd) prepareAndStartNoLock() error {
 	}
 	c.gocmd.Path = path
 
-	err = c.setupStdio()
+	err = c.setupStdio(defaultStdin)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (c *Cmd) ensureRan() error {
 	defer c.lock.RUnlock()
 
 	if c.gocmd.Process == nil {
-		if err := c.prepareAndStartNoLock(); err != nil {
+		if err := c.prepareAndStartNoLock(true); err != nil {
 			return err
 		}
 	}

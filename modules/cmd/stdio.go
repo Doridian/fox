@@ -216,7 +216,7 @@ func acquireStdoutPipe(L *lua.LState) int {
 	return p.PushNew(L)
 }
 
-func (c *Cmd) setupStdio() error {
+func (c *Cmd) setupStdio(defaultStdin bool) error {
 	if c.stdout != nil {
 		if c.stdout.CanWrite() {
 			c.gocmd.Stdout = c.stdout.GetWriter()
@@ -235,8 +235,10 @@ func (c *Cmd) setupStdio() error {
 		if c.stdin.CanRead() {
 			c.gocmd.Stdin = c.stdin.GetReader()
 		}
-	} else {
+	} else if defaultStdin {
 		c.gocmd.Stdin = os.Stdin
+	} else {
+		c.gocmd.Stdin = nil
 	}
 	return nil
 }
