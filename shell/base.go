@@ -16,14 +16,14 @@ import (
 //go:embed init.lua
 var initCode string
 
-type ShellManager struct {
+type Shell struct {
 	l *lua.LState
 
 	shellParser *lua.LFunction
 }
 
-func NewShellManager() *ShellManager {
-	s := &ShellManager{
+func NewShell() *Shell {
+	s := &Shell{
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs: true,
 		}),
@@ -39,13 +39,13 @@ func luaExit(L *lua.LState) int {
 	return 0
 }
 
-func (s *ShellManager) luaSetShellParser(L *lua.LState) int {
+func (s *Shell) luaSetShellParser(L *lua.LState) int {
 	newParser := L.OptFunction(1, nil)
 	s.shellParser = newParser
 	return 0
 }
 
-func (s *ShellManager) luaInit() {
+func (s *Shell) luaInit() {
 	lua.OpenBase(s.l)
 	lua.OpenPackage(s.l)
 	lua.OpenTable(s.l)
@@ -77,7 +77,7 @@ func (s *ShellManager) luaInit() {
 
 var ErrNeedMore = errors.New("Need more input")
 
-func (s *ShellManager) CommandToLua(cmd string) (string, error) {
+func (s *Shell) CommandToLua(cmd string) (string, error) {
 	if s.shellParser != nil {
 		s.l.Push(s.shellParser)
 		s.l.Push(lua.LString(cmd))
@@ -98,7 +98,7 @@ func (s *ShellManager) CommandToLua(cmd string) (string, error) {
 	return lua.String(), nil
 }
 
-func (s *ShellManager) Run(p *prompt.PromptManager) bool {
+func (s *Shell) Run(p *prompt.PromptManager) bool {
 	res, err := p.Prompt("fox> ")
 	if err != nil {
 		os.Stdout.Write([]byte("\n"))
@@ -115,7 +115,7 @@ func (s *ShellManager) Run(p *prompt.PromptManager) bool {
 }
 
 // Return true to exit shell
-func (s *ShellManager) runOne(p *prompt.PromptManager, cmd string) int {
+func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 	var luaCode string
 	var err error
 	for {

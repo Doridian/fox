@@ -7,7 +7,7 @@ import (
 
 func main() {
 	p := prompt.NewPrompt()
-	s := shell.NewShellManager()
+	s := shell.NewShell()
 
 	running := true
 	for running {
