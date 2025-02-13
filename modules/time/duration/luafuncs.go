@@ -47,6 +47,51 @@ func durationAbs(L *lua.LState) int {
 	return Push(L, d.Abs())
 }
 
+func luaEq(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := Check(L, 2)
+	L.Push(lua.LBool(d == d2))
+	return 1
+}
+
+func luaLt(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := Check(L, 2)
+	L.Push(lua.LBool(d > d2))
+	return 1
+}
+
+func luaLe(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := Check(L, 2)
+	L.Push(lua.LBool(d <= d2))
+	return 1
+}
+
+func luaAdd(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := CheckAllowNumber(L, 2)
+	return Push(L, (d + d2))
+}
+
+func luaSub(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := CheckAllowNumber(L, 2)
+	return Push(L, (d - d2))
+}
+
+func luaMul(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := CheckAllowNumber(L, 2)
+	return Push(L, (d * d2))
+}
+
+func luaDiv(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := CheckAllowNumber(L, 2)
+	return Push(L, (d / d2))
+}
+
 func luaString(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	L.Push(lua.LString(d.String()))

@@ -31,16 +31,24 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"isoWeek": timeISOWeek,
 		"yearDay": timeYearDay,
 
-		"utc":    timeUTC,
-		"local":  timeLocal,
-		"before": timeBefore,
-		"after":  timeAfter,
-		"add":    timeAdd,
-		"sub":    timeSub,
+		"utc":   timeUTC,
+		"local": timeLocal,
+		"delta": timeDelta,
 
 		"format": luaFormat,
 		"string": luaString,
 	}))
-	mt.RawSetString("__tostring", L.NewFunction(luaToString))
+
+	L.SetFuncs(mt, map[string]lua.LGFunction{
+		"__add": timeAddDuration,
+		"__sub": timeSubDuration,
+
+		"__eq": timeEq,
+		"__lt": timeBefore,
+		"__le": timeNotAfter,
+
+		"__tostring": luaToString,
+	})
+
 	tbl.RawSetString(LuaTypeName, mt)
 }

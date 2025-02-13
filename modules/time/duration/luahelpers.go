@@ -27,3 +27,11 @@ func Check(L *lua.LState, i int) (time.Duration, *lua.LUserData) {
 	L.ArgError(i, LuaType+" expected")
 	return 0, nil
 }
+
+func CheckAllowNumber(L *lua.LState, i int) (time.Duration, *lua.LUserData) {
+	num, ok := L.Get(i).(lua.LNumber)
+	if ok {
+		return time.Duration(num), nil
+	}
+	return Check(L, i)
+}

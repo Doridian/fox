@@ -17,7 +17,9 @@ func NewLuaModule() *LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"now": doNow,
+		"now":   doNow,
+		"since": timeSince,
+		"until": timeUntil,
 	})
 	duration.Load(L, mod)
 	subtime.Load(L, mod)

@@ -118,10 +118,10 @@ func timeBefore(L *lua.LState) int {
 	return 1
 }
 
-func timeAfter(L *lua.LState) int {
+func timeNotAfter(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	t2, _ := Check(L, 2)
-	L.Push(lua.LBool(t.After(t2)))
+	L.Push(lua.LBool(!t.After(t2)))
 	return 1
 }
 
@@ -135,16 +135,37 @@ func timeLocal(L *lua.LState) int {
 	return Push(L, t.Local())
 }
 
-func timeAdd(L *lua.LState) int {
+func timeAddDate(L *lua.LState) int {
+	t, _ := Check(L, 1)
+	years := L.CheckInt(2)
+	months := L.CheckInt(3)
+	days := L.CheckInt(4)
+	return Push(L, t.AddDate(years, months, days))
+}
+
+func timeAddDuration(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	d, _ := duration.Check(L, 2)
 	return Push(L, t.Add(d))
 }
 
-func timeSub(L *lua.LState) int {
+func timeSubDuration(L *lua.LState) int {
+	t, _ := Check(L, 1)
+	d, _ := duration.Check(L, 2)
+	return Push(L, t.Add(-d))
+}
+
+func timeDelta(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	t2, _ := Check(L, 2)
 	return duration.Push(L, t.Sub(t2))
+}
+
+func timeEq(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	d2, _ := Check(L, 2)
+	L.Push(lua.LBool(d.Equal(d2)))
+	return 1
 }
 
 func luaString(L *lua.LState) int {

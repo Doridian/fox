@@ -21,6 +21,19 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"abs":    durationAbs,
 		"string": luaString,
 	}))
-	mt.RawSetString("__tostring", L.NewFunction(luaToString))
+
+	L.SetFuncs(mt, map[string]lua.LGFunction{
+		"__add": luaAdd,
+		"__sub": luaSub,
+		"__mul": luaMul,
+		"__div": luaDiv,
+
+		"__eq": luaEq,
+		"__lt": luaLt,
+		"__le": luaLe,
+
+		"__tostring": luaToString,
+	})
+
 	tbl.RawSetString(LuaTypeName, mt)
 }
