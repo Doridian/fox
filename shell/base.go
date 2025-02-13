@@ -27,6 +27,8 @@ type Shell struct {
 }
 
 // TODO: Handle Ctrl+C
+// TODO: Handle SIGINT
+// TODO: Handle SIGTERM
 
 func NewShell() *Shell {
 	rl, err := readline.New("?fox?> ")
