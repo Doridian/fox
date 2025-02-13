@@ -60,7 +60,10 @@ func doRun(L *lua.LState) int {
 	if c == nil {
 		return 0
 	}
+	return c.doRun(L, ud)
+}
 
+func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -76,7 +79,10 @@ func doStart(L *lua.LState) int {
 	if c == nil {
 		return 0
 	}
+	return c.doStart(L, ud)
+}
 
+func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 

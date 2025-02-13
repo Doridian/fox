@@ -52,6 +52,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"new":      newCmd,
+		"run":      runCmd,
+		"start":    startCmd,
 		"lookPath": lookPath,
 	})
 
