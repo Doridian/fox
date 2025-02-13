@@ -7,11 +7,9 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"sync"
 
 	_ "embed"
 
-	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/cmd"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
@@ -21,27 +19,11 @@ import (
 //go:embed init.lua
 var initCode string
 
-type Shell struct {
-	l     *lua.LState
-	lLock sync.Mutex
-
-	mod   *lua.LTable
-	print *lua.LFunction
-
-	ctx       context.Context
-	cancelCtx context.CancelFunc
-
-	mainMod modules.LuaModule
-
-	rlLock sync.Mutex
-	rl     *readline.Instance
-
-	signals chan os.Signal
-}
+var ErrNeedMore = errors.New("Need more input")
 
 // TODO: Handle SIGTERM
 
-func NewShell() *Shell {
+func New() *Shell {
 	rl, err := readline.New("?fox?> ")
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
@@ -58,12 +40,6 @@ func NewShell() *Shell {
 	return s
 }
 
-func luaExit(L *lua.LState) int {
-	exitCodeL := lua.LVAsNumber(L.CheckNumber(1))
-	os.Exit(int(exitCodeL))
-	return 0
-}
-
 func (s *Shell) signalInit() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -76,7 +52,9 @@ func (s *Shell) signalInit() {
 
 func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
-		"exit": luaExit,
+		"exit":              luaExit,
+		"readLineConfig":    s.luaSetReadLineConfig,
+		"getReadLineConfig": s.luaGetReadLineConfig,
 	})
 	s.mod = mod
 	L.Push(mod)
@@ -115,8 +93,6 @@ func (s *Shell) init() {
 		log.Panicf("luaInit %d left stack frames!", s.l.GetTop())
 	}
 }
-
-var ErrNeedMore = errors.New("Need more input")
 
 func defaultShellParser(cmd string) (string, error) {
 	if cmd[len(cmd)-1] == '\\' {

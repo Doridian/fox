@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	s := shell.NewShell()
+	s := shell.New()
 
 	running := true
 	for running {
