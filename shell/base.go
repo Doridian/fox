@@ -87,6 +87,8 @@ func (s *Shell) luaInit() {
 	s.startLuaLock()
 	defer s.endLuaLock()
 
+	s.l.SetContext(context.Background())
+
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))
 	s.l.Pop(lua.OpenTable(s.l))
@@ -110,6 +112,7 @@ func (s *Shell) luaInit() {
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
 
+	s.l.SetContext(s.ctx)
 	err := s.l.DoString(initCode)
 	if err != nil {
 		log.Panicf("Error initializing shell: %v", err)
