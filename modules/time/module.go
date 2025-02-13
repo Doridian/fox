@@ -79,3 +79,7 @@ func (m *LuaModule) Dependencies() []string {
 func (m *LuaModule) Name() string {
 	return LuaName
 }
+
+func (m *LuaModule) Interrupt() bool {
+	return false
+}

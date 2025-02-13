@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"sync"
+
 	"github.com/Doridian/fox/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -10,10 +12,14 @@ const LuaTypeName = "Cmd"
 const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
+	awaitedCmds    map[*Cmd]bool
+	awaitedCmdLock sync.Mutex
 }
 
 func NewLuaModule() *LuaModule {
-	return &LuaModule{}
+	return &LuaModule{
+		awaitedCmds: make(map[*Cmd]bool),
+	}
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
@@ -51,9 +57,9 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	})
 
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"new":      newCmd,
-		"run":      runCmd,
-		"start":    startCmd,
+		"new":      m.newCmd,
+		"run":      m.runCmd,
+		"start":    m.startCmd,
 		"lookPath": lookPath,
 	})
 
@@ -69,4 +75,40 @@ func (m *LuaModule) Dependencies() []string {
 
 func (m *LuaModule) Name() string {
 	return LuaName
+}
+
+func (m *LuaModule) Interrupt() bool {
+	m.awaitedCmdLock.Lock()
+	defer m.awaitedCmdLock.Unlock()
+
+	triedKill := false
+	toDelete := make([]*Cmd, 0)
+	for cmd := range m.awaitedCmds {
+		if cmd.gocmd.Process != nil {
+			cmd.gocmd.Process.Kill()
+			triedKill = true
+		}
+
+		if cmd.gocmd.ProcessState != nil {
+			toDelete = append(toDelete, cmd)
+		}
+	}
+
+	for _, cmd := range toDelete {
+		delete(m.awaitedCmds, cmd)
+	}
+
+	return triedKill
+}
+
+func (m *LuaModule) AwaitCmd(cmd *Cmd) {
+	m.awaitedCmdLock.Lock()
+	m.awaitedCmds[cmd] = true
+	m.awaitedCmdLock.Unlock()
+}
+
+func (m *LuaModule) StopAwaitCmd(cmd *Cmd) {
+	m.awaitedCmdLock.Lock()
+	delete(m.awaitedCmds, cmd)
+	m.awaitedCmdLock.Unlock()
 }

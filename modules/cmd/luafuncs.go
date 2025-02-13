@@ -232,13 +232,14 @@ func lookPath(L *lua.LState) int {
 	return 1
 }
 
-func newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
+func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	c := &Cmd{
+		mod:          m,
 		gocmd:        &exec.Cmd{},
 		AutoLookPath: true,
 	}
 
-	// new([args, [dir, [env]]])
+	// new|run|start([args, [dir, [env]]])
 	c.setArgs(L.OptTable(1, nil))
 	c.gocmd.Dir = L.OptString(2, "")
 	c.setEnv(L.OptTable(3, nil))
@@ -246,18 +247,18 @@ func newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	return c, ToUserdata(L, c)
 }
 
-func newCmd(L *lua.LState) int {
-	_, ud := newCmdInt(L)
+func (m *LuaModule) newCmd(L *lua.LState) int {
+	_, ud := m.newCmdInt(L)
 	L.Push(ud)
 	return 1
 }
 
-func runCmd(L *lua.LState) int {
-	c, ud := newCmdInt(L)
+func (m *LuaModule) runCmd(L *lua.LState) int {
+	c, ud := m.newCmdInt(L)
 	return c.doRun(L, ud)
 }
 
-func startCmd(L *lua.LState) int {
-	c, ud := newCmdInt(L)
+func (m *LuaModule) startCmd(L *lua.LState) int {
+	c, ud := m.newCmdInt(L)
 	return c.doStart(L, ud)
 }

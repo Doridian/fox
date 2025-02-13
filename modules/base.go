@@ -8,6 +8,7 @@ type LuaModule interface {
 	Name() string
 	Dependencies() []string
 	Loader(l *lua.LState) int
+	Interrupt() bool // Return true if you took the Interrupt (stops trying to stop other things)
 }
 
 func Preload(L *lua.LState, m LuaModule) {

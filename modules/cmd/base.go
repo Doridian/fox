@@ -21,6 +21,7 @@ type Cmd struct {
 	gocmd            *exec.Cmd
 	AutoLookPath     bool
 	ErrorPropagation bool
+	mod              *LuaModule
 }
 
 func (c *Cmd) ToString() string {

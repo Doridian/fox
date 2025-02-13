@@ -35,12 +35,20 @@ func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData,
 	return 3
 }
 
-func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
+func (c *Cmd) doWaitCmdNoLock() error {
+	c.mod.AwaitCmd(c)
+	defer c.mod.StopAwaitCmd(c)
+
 	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
 	if err == nil {
-		err = pipeErr
+		return pipeErr
 	}
+	return err
+}
+
+func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
+	err := c.doWaitCmdNoLock()
 	return handleCmdExitNoLock(L, c.gocmd.ProcessState.ExitCode(), c, ud, err)
 }
 
@@ -124,10 +132,5 @@ func (c *Cmd) ensureRan() error {
 		}
 	}
 
-	pipeErr := c.waitStdio()
-	err := c.gocmd.Wait()
-	if err == nil {
-		err = pipeErr
-	}
-	return err
+	return c.doWaitCmdNoLock()
 }

@@ -68,3 +68,7 @@ func (m *moduleProxyInt) SetAutoload(autoload bool) {
 func (m *moduleProxyInt) Base() modules.LuaModule {
 	return m.base
 }
+
+func (m *moduleProxyInt) Interrupt() bool {
+	return m.base.Interrupt()
+}

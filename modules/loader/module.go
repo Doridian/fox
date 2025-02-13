@@ -111,3 +111,12 @@ func (m *LuaModule) SetAutoload(autoload bool) {
 		panic("cannot disable autoload for the loader module")
 	}
 }
+
+func (m *LuaModule) Interrupt() bool {
+	for _, m := range m.gomods {
+		if m.base.Interrupt() {
+			return true
+		}
+	}
+	return false
+}
