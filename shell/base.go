@@ -95,7 +95,9 @@ func (s *Shell) CommandToLua(cmd string) (string, error) {
 	}
 	parseRet := s.l.Get(-1)
 	s.l.Pop(1)
-	if parseRet == lua.LTrue {
+	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
+		return defaultShellParser(cmd)
+	} else if parseRet == lua.LTrue {
 		return "", ErrNeedMore
 	}
 	return lua.LVAsString(parseRet), nil
@@ -123,6 +125,10 @@ func (s *Shell) RenderPrompt(lineNo int) string {
 	}
 	parseRet := s.l.Get(-1)
 	s.l.Pop(1)
+
+	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
+		return defaultRenderPrompt(lineNo)
+	}
 	return lua.LVAsString(parseRet)
 }
 
