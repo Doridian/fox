@@ -2,6 +2,7 @@ package time
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Doridian/fox/modules/duration"
 	lua "github.com/yuin/gopher-lua"
@@ -166,6 +167,12 @@ func timeEq(L *lua.LState) int {
 	d2, _ := Check(L, 2)
 	L.Push(lua.LBool(d.Equal(d2)))
 	return 1
+}
+
+func timeSleepUntil(L *lua.LState) int {
+	t, _ := Check(L, 1)
+	time.Sleep(time.Until(t))
+	return 0
 }
 
 func luaString(L *lua.LState) int {

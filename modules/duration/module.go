@@ -31,6 +31,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"minutes":      durationMinutes,
 		"hours":        durationHours,
 
+		"sleepFor": durationSleepFor,
+
 		"abs":    durationAbs,
 		"string": luaString,
 	}))

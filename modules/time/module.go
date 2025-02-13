@@ -50,6 +50,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"until": timeUntil,
 		"since": timeSince,
 
+		"sleepUntil": timeSleepUntil,
+
 		"format": luaFormat,
 		"string": luaString,
 	}))

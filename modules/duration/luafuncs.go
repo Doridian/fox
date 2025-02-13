@@ -2,6 +2,7 @@ package duration
 
 import (
 	"fmt"
+	"time"
 
 	lua "github.com/yuin/gopher-lua"
 )
@@ -45,6 +46,12 @@ func durationNanoseconds(L *lua.LState) int {
 func durationAbs(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	return Push(L, d.Abs())
+}
+
+func durationSleepFor(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	time.Sleep(d)
+	return 0
 }
 
 func luaEq(L *lua.LState) int {
