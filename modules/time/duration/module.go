@@ -1,6 +1,8 @@
 package duration
 
 import (
+	"time"
+
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -22,6 +24,13 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"string": luaString,
 	}))
 
+	mt.RawSetString("nanosecond", ToUserdata(L, time.Nanosecond))
+	mt.RawSetString("microsecond", ToUserdata(L, time.Microsecond))
+	mt.RawSetString("millisecond", ToUserdata(L, time.Millisecond))
+	mt.RawSetString("second", ToUserdata(L, time.Second))
+	mt.RawSetString("minute", ToUserdata(L, time.Minute))
+	mt.RawSetString("hour", ToUserdata(L, time.Hour))
+
 	L.SetFuncs(mt, map[string]lua.LGFunction{
 		"__add": luaAdd,
 		"__sub": luaSub,
@@ -34,6 +43,8 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"__le": luaLe,
 
 		"__tostring": luaToString,
+
+		"parse": durationParse,
 	})
 
 	tbl.RawSetString(LuaTypeName, mt)

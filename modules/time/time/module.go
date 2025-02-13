@@ -34,6 +34,8 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"utc":   timeUTC,
 		"local": timeLocal,
 		"delta": timeDelta,
+		"until": timeUntil,
+		"since": timeSince,
 
 		"format": luaFormat,
 		"string": luaString,
@@ -48,6 +50,9 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"__le": timeNotAfter,
 
 		"__tostring": luaToString,
+
+		"now":   timeNow,
+		"parse": timeParse,
 	})
 
 	tbl.RawSetString(LuaTypeName, mt)
