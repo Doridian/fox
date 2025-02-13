@@ -12,3 +12,28 @@ local ok, err = pcall(dofile, lua_base .. "/init.lua")
 if not ok then
     print("Error loading user init.lua: " .. tostring(err))
 end
+
+shell.parsers = {}
+function shell.parsers.lua(cmd)
+    cmdLen = cmd:len()
+    cmdLastTwo = cmd:sub(cmdLen - 1, cmdLen)
+    if cmdLastTwo == "\n\n" then
+        return cmd
+    end
+    return true
+end
+
+function shell.parser(cmd)
+    if cmd:sub(1, 1) == "!" then
+        newLine = cmd:find("\n", 1, true)
+        cmdPrefix = cmd:sub(2, newLine - 1)
+        if shell.parsers[cmdPrefix] then
+            return shell.parsers[cmdPrefix](cmd:sub(newLine + 1))
+        end
+
+        print("Unknown parser " .. cmdPrefix)
+        return ""
+    end
+
+    return false
+end

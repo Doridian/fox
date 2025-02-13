@@ -84,6 +84,9 @@ func (s *Shell) signalInit() {
 }
 
 func (s *Shell) luaInit() {
+	s.startLuaLock()
+	defer s.endLuaLock()
+
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))
 	s.l.Pop(lua.OpenTable(s.l))
@@ -132,9 +135,11 @@ func (s *Shell) shellParser(cmd string) (string, error) {
 		return defaultShellParser(cmd)
 	}
 
+	s.startLuaLock()
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
 	err := s.l.PCall(1, 1, nil)
+	s.endLuaLock()
 	if err != nil {
 		log.Printf("Error in Lua shell.parser: %v", err)
 		return defaultShellParser(cmd)
@@ -162,9 +167,11 @@ func (s *Shell) renderPrompt(lineNo int) string {
 		return defaultRenderPrompt(lineNo)
 	}
 
-	s.l.Push(renderPrompt)
+	s.startLuaLock()
+	defer s.l.Push(renderPrompt)
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
+	s.endLuaLock()
 	if err != nil {
 		log.Printf("Error in Lua shell.renderPrompt: %v", err)
 		return defaultRenderPrompt(lineNo)
@@ -206,6 +213,22 @@ func (s *Shell) Run() bool {
 	return true
 }
 
+func (s *Shell) startLuaLock() {
+	s.lLock.Lock()
+	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
+	s.l.SetContext(s.ctx)
+}
+
+func (s *Shell) endLuaLock() {
+	cancelCtx := s.cancelCtx
+	if cancelCtx != nil {
+		cancelCtx()
+	}
+	s.ctx = nil
+	s.cancelCtx = nil
+	s.lLock.Unlock()
+}
+
 // Return true to exit shell
 func (s *Shell) runOne(firstLine string) int {
 	var luaCode string
@@ -217,6 +240,8 @@ func (s *Shell) runOne(firstLine string) int {
 	lineNo := 1
 
 	for {
+		cmdBuilder.WriteRune('\n')
+
 		luaCode, err = s.shellParser(cmdBuilder.String())
 		if err == nil {
 			break
@@ -236,22 +261,15 @@ func (s *Shell) runOne(firstLine string) int {
 			os.Exit(0)
 			return 0
 		}
-		cmdBuilder.WriteRune('\n')
 		cmdBuilder.WriteString(cmdAdd)
 	}
 
-	s.lLock.Lock()
-	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
-	defer func() {
-		cancelCtx := s.cancelCtx
-		if cancelCtx != nil {
-			cancelCtx()
-		}
-		s.ctx = nil
-		s.cancelCtx = nil
-		s.lLock.Unlock()
-	}()
-	s.l.SetContext(s.ctx)
+	if luaCode == "" {
+		return 0
+	}
+
+	s.startLuaLock()
+	defer s.endLuaLock()
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 	err = s.l.DoString(luaCode)
 	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
