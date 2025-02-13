@@ -48,7 +48,8 @@ func NewShell() *Shell {
 
 	s := &Shell{
 		l: lua.NewState(lua.Options{
-			SkipOpenLibs: true,
+			SkipOpenLibs:        true,
+			IncludeGoStackTrace: true,
 		}),
 		rl: rl,
 	}
@@ -256,7 +257,7 @@ func (s *Shell) runOne(firstLine string) int {
 
 	if err != nil {
 		if exitCode == 0 {
-			exitCode = 1
+			exitCode = -10001
 		}
 		log.Printf("Internal error running command: %v", err)
 		return exitCode

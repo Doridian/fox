@@ -17,7 +17,8 @@ type Cmd struct {
 	stdin       *pipe.Pipe
 	closeStdin  bool
 
-	awaited bool
+	awaited  bool
+	waitSync sync.WaitGroup
 
 	lock             sync.RWMutex
 	gocmd            *exec.Cmd

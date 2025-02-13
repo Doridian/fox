@@ -23,15 +23,9 @@ func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData)
 	return 2
 }
 
-func (c *Cmd) doWaitCmdNoLock() error {
+func (c *Cmd) doWaitCmdNoLock() {
 	c.awaited = true
-
-	pipeErr := c.waitStdio()
-	err := c.gocmd.Wait()
-	if err == nil {
-		return pipeErr
-	}
-	return err
+	c.waitSync.Wait()
 }
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
@@ -64,7 +58,7 @@ func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(true)
 	if err != nil {
-		return handleCmdExitNoLock(L, -1, c, ud)
+		return handleCmdExitNoLock(L, -10002, c, ud)
 	}
 	return doWaitCmdNoLock(L, c, ud)
 }
@@ -83,7 +77,7 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(false)
 	if err != nil {
-		return handleCmdExitNoLock(L, -1, c, ud)
+		return handleCmdExitNoLock(L, -10002, c, ud)
 	}
 	L.Push(ud)
 	return 1
@@ -111,9 +105,12 @@ func (c *Cmd) prepareAndStartNoLock(defaultStdin bool) error {
 		return err
 	}
 
+	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
+		c.waitStdio()
 		c.gocmd.Wait()
+		c.waitSync.Done()
 	}()
 
 	return nil
@@ -129,7 +126,8 @@ func (c *Cmd) ensureRan() error {
 		}
 	}
 
-	return c.doWaitCmdNoLock()
+	c.doWaitCmdNoLock()
+	return nil
 }
 
 func doKill(L *lua.LState) int {
