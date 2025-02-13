@@ -17,6 +17,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"__index":    envIndex,
 		"__newindex": envNewIndex,
+		"__call":     envCall,
 	})
 	L.SetMetatable(mod, mod)
 	L.Push(mod)

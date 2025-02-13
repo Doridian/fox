@@ -27,6 +27,7 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"__sub": luaSub,
 		"__mul": luaMul,
 		"__div": luaDiv,
+		"__unm": luaUnm,
 
 		"__eq": luaEq,
 		"__lt": luaLt,

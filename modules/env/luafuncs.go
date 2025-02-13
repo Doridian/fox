@@ -2,6 +2,7 @@ package env
 
 import (
 	"os"
+	"strings"
 
 	lua "github.com/yuin/gopher-lua"
 )
@@ -27,4 +28,23 @@ func envNewIndex(L *lua.LState) int {
 
 	os.Setenv(k, v)
 	return 0
+}
+
+// __call()
+func envCall(L *lua.LState) int {
+	ret := L.NewTable()
+
+	for _, env := range os.Environ() {
+		spl := strings.SplitN(env, "=", 2)
+		k := spl[0]
+		v := ""
+		if len(spl) > 1 {
+			v = spl[1]
+		}
+
+		ret.RawSetString(k, lua.LString(v))
+	}
+
+	L.Push(ret)
+	return 1
 }

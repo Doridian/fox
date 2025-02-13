@@ -92,6 +92,11 @@ func luaDiv(L *lua.LState) int {
 	return Push(L, (d / d2))
 }
 
+func luaUnm(L *lua.LState) int {
+	d, _ := Check(L, 1)
+	return Push(L, -d)
+}
+
 func luaString(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	L.Push(lua.LString(d.String()))
