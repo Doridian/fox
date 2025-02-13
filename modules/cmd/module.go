@@ -19,22 +19,29 @@ func NewLuaModule() *LuaModule {
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"dir": getSetDir,
-		"cmd": getSetCmd,
-		"env": getSetEnv,
+		"getDir": getDir,
+		"dir":    setDir,
+		"getCmd": getCmd,
+		"cmd":    setCmd,
+		"getEnv": getCmd,
+		"env":    setEnv,
 
-		"stdout":     getSetStdout,
-		"stdoutPipe": getStdoutPipe,
-		"stderr":     getSetStderr,
-		"stderrPipe": getStderrPipe,
-		"stdin":      getSetStdin,
-		"stdinPipe":  getStdinPipe,
+		"stdout":     setStdout,
+		"getStdout":  getStdout,
+		"stdoutPipe": acquireStdoutPipe,
+		"stderr":     setStderr,
+		"getStderr":  getStderr,
+		"stderrPipe": acquireStderrPipe,
+		"stdin":      setStdin,
+		"getStdin":   getStdin,
+		"stdinPipe":  acquireStdinPipe,
 
 		"run":   doRun,
 		"start": doStart,
 		"wait":  doWait,
 
-		"errorPropagation": getSetErrorPropagation,
+		"getErrorPropagation": getErrorPropagation,
+		"errorPropagation":    setErrorPropagation,
 	}))
 	L.SetFuncs(mt, map[string]lua.LGFunction{
 		"__tostring": cmdToString,

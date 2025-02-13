@@ -7,19 +7,10 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func getSetErrorPropagation(L *lua.LState) int {
-	c, ud := Check(L, 1)
+func getErrorPropagation(L *lua.LState) int {
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
-	}
-	if L.GetTop() >= 2 {
-		val := L.CheckBool(2)
-		c.lock.Lock()
-		c.ErrorPropagation = val
-		c.lock.Unlock()
-
-		L.Push(ud)
-		return 1
 	}
 
 	c.lock.RLock()
@@ -29,19 +20,25 @@ func getSetErrorPropagation(L *lua.LState) int {
 	return 1
 }
 
-func getSetDir(L *lua.LState) int {
+func setErrorPropagation(L *lua.LState) int {
 	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
-	if L.GetTop() >= 2 {
-		val := L.CheckString(2)
-		c.lock.Lock()
-		c.gocmd.Dir = val
-		c.lock.Unlock()
 
-		L.Push(ud)
-		return 1
+	val := L.CheckBool(2)
+	c.lock.Lock()
+	c.ErrorPropagation = val
+	c.lock.Unlock()
+
+	L.Push(ud)
+	return 1
+}
+
+func getDir(L *lua.LState) int {
+	c, _ := Check(L, 1)
+	if c == nil {
+		return 0
 	}
 
 	c.lock.RLock()
@@ -51,33 +48,25 @@ func getSetDir(L *lua.LState) int {
 	return 1
 }
 
-func getSetCmd(L *lua.LState) int {
+func setDir(L *lua.LState) int {
 	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
-	if L.GetTop() >= 2 {
-		argsL := L.CheckTable(2)
-		if argsL == nil {
-			return 0
-		}
-		argsLLen := argsL.MaxN()
-		if argsLLen < 1 {
-			L.RaiseError("cmd must have at least one argument (the process binary)")
-			return 0
-		}
-		args := make([]string, 0, argsLLen)
-		for i := 1; i <= argsLLen; i++ {
-			args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
-		}
 
-		c.lock.Lock()
-		c.gocmd.Path = args[0]
-		c.gocmd.Args = args
-		c.lock.Unlock()
+	val := L.CheckString(2)
+	c.lock.Lock()
+	c.gocmd.Dir = val
+	c.lock.Unlock()
 
-		L.Push(ud)
-		return 1
+	L.Push(ud)
+	return 1
+}
+
+func getCmd(L *lua.LState) int {
+	c, _ := Check(L, 1)
+	if c == nil {
+		return 0
 	}
 
 	c.lock.RLock()
@@ -90,30 +79,39 @@ func getSetCmd(L *lua.LState) int {
 	return 1
 }
 
-func getSetEnv(L *lua.LState) int {
+func setCmd(L *lua.LState) int {
 	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
 	}
-	if L.GetTop() >= 2 {
-		envL := L.CheckTable(2)
-		if envL == nil {
-			return 0
-		}
 
-		env := make([]string, 0)
-		envK, envV := envL.Next(lua.LNil)
-		for envK != lua.LNil {
-			env = append(env, fmt.Sprintf("%s=%s", lua.LVAsString(envK), lua.LVAsString(envV)))
-			envK, envV = envL.Next(envK)
-		}
+	argsL := L.CheckTable(2)
+	if argsL == nil {
+		return 0
+	}
+	argsLLen := argsL.MaxN()
+	if argsLLen < 1 {
+		L.RaiseError("cmd must have at least one argument (the process binary)")
+		return 0
+	}
+	args := make([]string, 0, argsLLen)
+	for i := 1; i <= argsLLen; i++ {
+		args = append(args, lua.LVAsString(argsL.RawGetInt(i)))
+	}
 
-		c.lock.Lock()
-		c.gocmd.Env = env
-		c.lock.Unlock()
+	c.lock.Lock()
+	c.gocmd.Path = args[0]
+	c.gocmd.Args = args
+	c.lock.Unlock()
 
-		L.Push(ud)
-		return 1
+	L.Push(ud)
+	return 1
+}
+
+func getEnv(L *lua.LState) int {
+	c, _ := Check(L, 1)
+	if c == nil {
+		return 0
 	}
 
 	c.lock.RLock()
@@ -127,6 +125,32 @@ func getSetEnv(L *lua.LState) int {
 	}
 	c.lock.RUnlock()
 	L.Push(ret)
+	return 1
+}
+
+func setEnv(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	envL := L.CheckTable(2)
+	if envL == nil {
+		return 0
+	}
+
+	env := make([]string, 0)
+	envK, envV := envL.Next(lua.LNil)
+	for envK != lua.LNil {
+		env = append(env, fmt.Sprintf("%s=%s", lua.LVAsString(envK), lua.LVAsString(envV)))
+		envK, envV = envL.Next(envK)
+	}
+
+	c.lock.Lock()
+	c.gocmd.Env = env
+	c.lock.Unlock()
+
+	L.Push(ud)
 	return 1
 }
 

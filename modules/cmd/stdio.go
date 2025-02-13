@@ -7,39 +7,10 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func getSetStdin(L *lua.LState) int {
-	c, ud := Check(L, 1)
+func getStdin(L *lua.LState) int {
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
-	}
-
-	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.Check(L, 2, true)
-		if !ok {
-			return 0
-		}
-		if p != nil && !p.CanRead() {
-			L.ArgError(2, "pipe must be a reader")
-			return 0
-		}
-
-		doClose := true
-		if L.GetTop() >= 3 {
-			doClose = L.CheckBool(3)
-		}
-
-		c.lock.Lock()
-		if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
-			c.lock.Unlock()
-			L.RaiseError("stdin piped, can't redirect")
-			return 0
-		}
-
-		c.stdin = p
-		c.closeStdin = doClose
-		c.lock.Unlock()
-		L.Push(ud)
-		return 1
 	}
 
 	c.lock.RLock()
@@ -48,7 +19,38 @@ func getSetStdin(L *lua.LState) int {
 	return val.Push(L)
 }
 
-func getStdinPipe(L *lua.LState) int {
+func setStdin(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	ok, p, _ := pipe.Check(L, 2, true)
+	if !ok {
+		return 0
+	}
+	if p != nil && !p.CanRead() {
+		L.ArgError(2, "pipe must be a reader")
+		return 0
+	}
+
+	doClose := L.OptBool(3, true)
+
+	c.lock.Lock()
+	if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
+		c.lock.Unlock()
+		L.RaiseError("stdin piped, can't redirect")
+		return 0
+	}
+
+	c.stdin = p
+	c.closeStdin = doClose
+	c.lock.Unlock()
+	L.Push(ud)
+	return 1
+}
+
+func acquireStdinPipe(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
@@ -75,39 +77,10 @@ func getStdinPipe(L *lua.LState) int {
 	return p.Push(L)
 }
 
-func getSetStderr(L *lua.LState) int {
-	c, ud := Check(L, 1)
+func getStderr(L *lua.LState) int {
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
-	}
-
-	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.Check(L, 2, true)
-		if !ok {
-			return 0
-		}
-		if p != nil && !p.CanWrite() {
-			L.ArgError(2, "pipe must be a writer")
-			return 0
-		}
-
-		doClose := true
-		if L.GetTop() >= 3 {
-			doClose = L.CheckBool(3)
-		}
-
-		c.lock.Lock()
-		if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
-			c.lock.Unlock()
-			L.RaiseError("stderr piped, can't redirect")
-			return 0
-		}
-
-		c.stderr = p
-		c.closeStderr = doClose
-		c.lock.Unlock()
-		L.Push(ud)
-		return 1
 	}
 
 	c.lock.RLock()
@@ -116,7 +89,38 @@ func getSetStderr(L *lua.LState) int {
 	return val.Push(L)
 }
 
-func getStderrPipe(L *lua.LState) int {
+func setStderr(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	ok, p, _ := pipe.Check(L, 2, true)
+	if !ok {
+		return 0
+	}
+	if p != nil && !p.CanWrite() {
+		L.ArgError(2, "pipe must be a writer")
+		return 0
+	}
+
+	doClose := L.OptBool(3, true)
+
+	c.lock.Lock()
+	if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
+		c.lock.Unlock()
+		L.RaiseError("stderr piped, can't redirect")
+		return 0
+	}
+
+	c.stderr = p
+	c.closeStderr = doClose
+	c.lock.Unlock()
+	L.Push(ud)
+	return 1
+}
+
+func acquireStderrPipe(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
@@ -143,39 +147,10 @@ func getStderrPipe(L *lua.LState) int {
 	return p.Push(L)
 }
 
-func getSetStdout(L *lua.LState) int {
-	c, ud := Check(L, 1)
+func getStdout(L *lua.LState) int {
+	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
-	}
-
-	if L.GetTop() >= 2 {
-		ok, p, _ := pipe.Check(L, 2, true)
-		if !ok {
-			return 0
-		}
-		if p != nil && !p.CanWrite() {
-			L.ArgError(2, "pipe must be a writer")
-			return 0
-		}
-
-		doClose := true
-		if L.GetTop() >= 3 {
-			doClose = L.CheckBool(3)
-		}
-
-		c.lock.Lock()
-		if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
-			c.lock.Unlock()
-			L.RaiseError("stdout piped, can't redirect")
-			return 0
-		}
-
-		c.stdout = p
-		c.closeStdout = doClose
-		c.lock.Unlock()
-		L.Push(ud)
-		return 1
 	}
 
 	c.lock.RLock()
@@ -184,7 +159,38 @@ func getSetStdout(L *lua.LState) int {
 	return val.Push(L)
 }
 
-func getStdoutPipe(L *lua.LState) int {
+func setStdout(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	ok, p, _ := pipe.Check(L, 2, true)
+	if !ok {
+		return 0
+	}
+	if p != nil && !p.CanWrite() {
+		L.ArgError(2, "pipe must be a writer")
+		return 0
+	}
+
+	doClose := L.OptBool(3, true)
+
+	c.lock.Lock()
+	if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
+		c.lock.Unlock()
+		L.RaiseError("stdout piped, can't redirect")
+		return 0
+	}
+
+	c.stdout = p
+	c.closeStdout = doClose
+	c.lock.Unlock()
+	L.Push(ud)
+	return 1
+}
+
+func acquireStdoutPipe(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
