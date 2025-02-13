@@ -1,6 +1,10 @@
--- TODO: Respect XDG_CONFIG_HOME
-local lua_base = tostring(env["HOME"]) .. "/.config/fox/lua"
+local config_home = env["XDG_CONFIG_HOME"]
+if (not config_home) or config_home == "" then
+    config_home = env["HOME"] .. "/.config"
+end
+local lua_base = config_home .. "/fox/lua"
 _G.LUA_BASE = lua_base
+
 package.path = lua_base .. "/modules/?.lua;" .. lua_base .. "/modules/?/init.lua"
 package.cpath = ""
 
