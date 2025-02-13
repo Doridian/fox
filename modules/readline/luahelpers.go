@@ -1,6 +1,8 @@
 package readline
 
 import (
+	"errors"
+
 	goreadline "github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -29,4 +31,19 @@ func Check(L *lua.LState, i int) (*goreadline.Instance, *lua.LUserData) {
 
 	L.ArgError(i, LuaType+" expected")
 	return nil, nil
+}
+
+func rlResultHandler(L *lua.LState, val string, err error) int {
+	if err != nil {
+		if errors.Is(err, goreadline.ErrInterrupt) {
+			L.Push(lua.LNil)
+			return 1
+		}
+
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	L.Push(lua.LString(val))
+	return 1
 }

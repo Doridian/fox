@@ -78,13 +78,7 @@ func rlReadLineWithConfig(L *lua.LState) int {
 	cfg, _ := config.Check(L, 2)
 
 	val, err := rl.ReadLineWithConfig(cfg)
-	if err != nil {
-		L.RaiseError("%v", err)
-		return 0
-	}
-
-	L.Push(lua.LString(val))
-	return 1
+	return rlResultHandler(L, val, err)
 }
 
 func rlReadLine(L *lua.LState) int {
@@ -94,13 +88,7 @@ func rlReadLine(L *lua.LState) int {
 	}
 
 	val, err := rl.ReadLine()
-	if err != nil {
-		L.RaiseError("%v", err)
-		return 0
-	}
-
-	L.Push(lua.LString(val))
-	return 1
+	return rlResultHandler(L, val, err)
 }
 
 func rlReadLineWithDefault(L *lua.LState) int {
@@ -115,13 +103,7 @@ func rlReadLineWithDefault(L *lua.LState) int {
 	}
 
 	val, err := rl.ReadLineWithDefault(def)
-	if err != nil {
-		L.RaiseError("%v", err)
-		return 0
-	}
-
-	L.Push(lua.LString(val))
-	return 1
+	return rlResultHandler(L, val, err)
 }
 
 func rlToString(L *lua.LState) int {
