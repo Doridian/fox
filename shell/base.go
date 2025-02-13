@@ -153,6 +153,9 @@ func (s *Shell) readLine(disp string) (string, error) {
 func (s *Shell) Run() bool {
 	res, err := s.readLine(s.renderPrompt(1))
 	if err != nil {
+		if errors.Is(err, readline.ErrInterrupt) {
+			return true
+		}
 		log.Printf("Prompt aborted: %v", err)
 		return false
 	}
@@ -188,6 +191,9 @@ func (s *Shell) runOne(firstLine string) int {
 		lineNo++
 		cmdAdd, err := s.readLine(s.renderPrompt(lineNo))
 		if err != nil {
+			if errors.Is(err, readline.ErrInterrupt) {
+				return 0
+			}
 			log.Printf("Prompt aborted: %v", err)
 			os.Exit(0)
 			return 0
