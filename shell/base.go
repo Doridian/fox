@@ -73,11 +73,11 @@ func (s *Shell) luaInit() {
 
 var ErrNeedMore = errors.New("Need more input")
 
-func (s *Shell) CommandToLua(cmd string) (string, error) {
+func (s *Shell) CommandToLua(lines []string) (string, error) {
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser != nil && shellParser != lua.LNil {
 		s.l.Push(shellParser)
-		s.l.Push(lua.LString(cmd))
+		s.l.Push(lua.LString(strings.Join(lines, "\n")))
 		err := s.l.PCall(1, 1, nil)
 		if err != nil {
 			return "", err
@@ -90,9 +90,13 @@ func (s *Shell) CommandToLua(cmd string) (string, error) {
 		return parseRet.(lua.LString).String(), nil
 	}
 
-	lua := strings.Builder{}
-	lua.WriteString(cmd)
-	return lua.String(), nil
+	cmd := lines[len(lines)-1]
+	if cmd[len(cmd)-1] == '\\' {
+		lines[len(lines)-1] = cmd[:len(cmd)-1]
+		return "", ErrNeedMore
+	}
+
+	return strings.Join(lines, "\n"), nil
 }
 
 func (s *Shell) Run(p *prompt.PromptManager) bool {
@@ -115,8 +119,9 @@ func (s *Shell) Run(p *prompt.PromptManager) bool {
 func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 	var luaCode string
 	var err error
+	lines := []string{cmd}
 	for {
-		luaCode, err = s.CommandToLua(cmd)
+		luaCode, err = s.CommandToLua(lines)
 		if err == nil {
 			break
 		}
@@ -130,7 +135,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 			os.Exit(0)
 			return 0
 		}
-		cmd += cmdAdd
+		lines = append(lines, cmdAdd)
 	}
 
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
