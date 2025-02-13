@@ -17,9 +17,8 @@ import (
 var initCode string
 
 type Shell struct {
-	l *lua.LState
-
-	shellParser *lua.LFunction
+	l   *lua.LState
+	mod *lua.LTable
 }
 
 func NewShell() *Shell {
@@ -27,7 +26,6 @@ func NewShell() *Shell {
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs: true,
 		}),
-		shellParser: nil,
 	}
 	s.luaInit()
 	return s
@@ -36,12 +34,6 @@ func NewShell() *Shell {
 func luaExit(L *lua.LState) int {
 	exitCodeL := lua.LVAsNumber(L.CheckNumber(1))
 	os.Exit(int(exitCodeL))
-	return 0
-}
-
-func (s *Shell) luaSetShellParser(L *lua.LState) int {
-	newParser := L.OptFunction(1, nil)
-	s.shellParser = newParser
 	return 0
 }
 
@@ -57,8 +49,12 @@ func (s *Shell) luaInit() {
 	lua.OpenChannel(s.l)
 	lua.OpenCoroutine(s.l)
 
-	s.l.Register("exit", luaExit)
-	s.l.Register("setShellParser", s.luaSetShellParser)
+	mod := s.l.RegisterModule("shell", map[string]lua.LGFunction{
+		"exit": luaExit,
+	}).(*lua.LTable)
+	s.l.SetGlobal("shell", mod)
+	s.mod = mod
+
 	mainMod := loader.NewLuaModule()
 	mainMod.Load(s.l)
 
@@ -78,8 +74,9 @@ func (s *Shell) luaInit() {
 var ErrNeedMore = errors.New("Need more input")
 
 func (s *Shell) CommandToLua(cmd string) (string, error) {
-	if s.shellParser != nil {
-		s.l.Push(s.shellParser)
+	shellParser := s.mod.RawGetString("parser")
+	if shellParser != nil && shellParser != lua.LNil {
+		s.l.Push(shellParser)
 		s.l.Push(lua.LString(cmd))
 		err := s.l.PCall(1, 1, nil)
 		if err != nil {
