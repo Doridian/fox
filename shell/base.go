@@ -26,6 +26,8 @@ type Shell struct {
 	rl     *readline.Instance
 }
 
+// TODO: Handle Ctrl+C
+
 func NewShell() *Shell {
 	rl, err := readline.New("?fox?> ")
 	if err != nil {
