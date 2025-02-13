@@ -39,17 +39,16 @@ func luaExit(L *lua.LState) int {
 }
 
 func (s *Shell) luaInit() {
-	lua.OpenBase(s.l)
-	lua.OpenPackage(s.l)
-	lua.OpenTable(s.l)
-	// lua.OpenIo(s.l)
-	// lua.OpenOs(s.l)
-	lua.OpenString(s.l)
-	lua.OpenMath(s.l)
-	lua.OpenDebug(s.l)
-	lua.OpenChannel(s.l)
-	lua.OpenCoroutine(s.l)
-	s.l.SetTop(0)
+	s.l.Pop(lua.OpenBase(s.l))
+	s.l.Pop(lua.OpenPackage(s.l))
+	s.l.Pop(lua.OpenTable(s.l))
+	// s.l.Pop(lua.OpenIo(s.l))
+	// s.l.Pop(lua.OpenOs(s.l))
+	s.l.Pop(lua.OpenString(s.l))
+	s.l.Pop(lua.OpenMath(s.l))
+	s.l.Pop(lua.OpenDebug(s.l))
+	s.l.Pop(lua.OpenChannel(s.l))
+	s.l.Pop(lua.OpenCoroutine(s.l))
 
 	mod := s.l.RegisterModule("shell", map[string]lua.LGFunction{
 		"exit": luaExit,
@@ -65,6 +64,10 @@ func (s *Shell) luaInit() {
 	err := s.l.DoString(initCode)
 	if err != nil {
 		log.Panicf("Error initializing shell: %v", err)
+	}
+
+	if s.l.GetTop() > 0 {
+		log.Panicf("luaInit %d left stack frames!", s.l.GetTop())
 	}
 }
 
