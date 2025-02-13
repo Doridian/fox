@@ -1,6 +1,8 @@
 package loader
 
 import (
+	"sync"
+
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/cmd"
 	"github.com/Doridian/fox/modules/duration"
@@ -16,9 +18,15 @@ import (
 const LuaName = "fox.index"
 
 type LuaModule struct {
-	gomods []*moduleProxyInt
+	gomods     []*moduleProxyInt
+	loaderLock sync.Mutex
 
 	global bool
+	loaded bool
+
+	builtins *lua.LTable
+	autoload *lua.LTable
+	globals  *lua.LTable
 }
 
 func NewLuaModule() *LuaModule {
@@ -44,39 +52,64 @@ func NewLuaModule() *LuaModule {
 	}
 }
 
+func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule) {
+	m.loaderLock.Lock()
+	defer m.loaderLock.Unlock()
+
+	pm := proxyGoMod(mod)
+	m.gomods = append(m.gomods, pm)
+	if m.loaded {
+		pm.SetAutoload(false)
+		m.preLoadMod(L, pm)
+		m.postLoadMod(L, pm)
+	}
+}
+
 func (m *LuaModule) Loader(L *lua.LState) int {
 	return loaderViaProxy(L, m, m.loaderInt)
 }
 
+func (m *LuaModule) preLoadMod(L *lua.LState, mod ModuleProxy) {
+	modules.Preload(L, mod)
+
+	mName := lua.LString(m.Name())
+	m.builtins.Append(mName)
+	if mod.Global() {
+		m.globals.Append(mName)
+	}
+	if mod.Autoload() {
+		m.autoload.Append(mName)
+	}
+}
+
+func (m *LuaModule) postLoadMod(L *lua.LState, mod ModuleProxy) {
+	if mod.Autoload() {
+		modules.Require(L, mod.Name())
+	}
+}
+
 func (m *LuaModule) loaderInt(L *lua.LState) int {
-	builtins := L.NewTable()
-	autoload := L.NewTable()
-	globals := L.NewTable()
+	m.loaderLock.Lock()
+	defer m.loaderLock.Unlock()
 
-	for _, m := range m.gomods {
-		modules.Preload(L, m)
+	m.loaded = true
 
-		mName := lua.LString(m.Name())
-		builtins.Append(mName)
-		if m.global {
-			globals.Append(mName)
-		}
-		if m.autoload {
-			autoload.Append(mName)
-		}
+	m.builtins = L.NewTable()
+	m.autoload = L.NewTable()
+	m.globals = L.NewTable()
+
+	for _, mod := range m.gomods {
+		m.preLoadMod(L, mod)
 	}
 
-	for _, m := range m.gomods {
-		if !m.autoload {
-			continue
-		}
-		modules.Require(L, m.Name())
+	for _, mod := range m.gomods {
+		m.postLoadMod(L, mod)
 	}
 
 	mod := L.NewTable()
-	mod.RawSetString("BuiltIns", builtins)
-	mod.RawSetString("AutoLoad", autoload)
-	mod.RawSetString("Globals", globals)
+	mod.RawSetString("BuiltIns", m.builtins)
+	mod.RawSetString("AutoLoad", m.autoload)
+	mod.RawSetString("Globals", m.globals)
 	L.Push(mod)
 	return 1
 }

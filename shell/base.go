@@ -82,6 +82,15 @@ func (s *Shell) signalInit() {
 	}()
 }
 
+func (s *Shell) Loader(L *lua.LState) int {
+	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
+		"exit": luaExit,
+	})
+	s.mod = mod
+	L.Push(mod)
+	return 1
+}
+
 func (s *Shell) init() {
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))
@@ -94,11 +103,8 @@ func (s *Shell) init() {
 	s.l.Pop(lua.OpenChannel(s.l))
 	s.l.Pop(lua.OpenCoroutine(s.l))
 
-	mod := s.l.RegisterModule("shell", map[string]lua.LGFunction{
-		"exit": luaExit,
-	}).(*lua.LTable)
-	s.l.SetGlobal("shell", mod)
-	s.mod = mod
+	s.l.PreloadModule("shell", s.Loader)
+	modules.Require(s.l, "shell")
 
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
@@ -130,6 +136,10 @@ func defaultShellParser(cmd string) (string, error) {
 }
 
 func (s *Shell) shellParser(cmd string) (string, error) {
+	if s.mod == nil {
+		return defaultShellParser(cmd)
+	}
+
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser == nil || shellParser == lua.LNil {
 		return defaultShellParser(cmd)
@@ -162,6 +172,10 @@ func defaultRenderPrompt(lineNo int) string {
 }
 
 func (s *Shell) renderPrompt(lineNo int) string {
+	if s.mod == nil {
+		return defaultRenderPrompt(lineNo)
+	}
+
 	renderPrompt := s.mod.RawGetString("renderPrompt")
 	if renderPrompt == nil || renderPrompt == lua.LNil {
 		return defaultRenderPrompt(lineNo)
