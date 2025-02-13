@@ -77,7 +77,7 @@ func (m *LuaModule) Name() string {
 	return LuaName
 }
 
-func (m *LuaModule) Interrupt() bool {
+func (m *LuaModule) Interrupt(all bool) bool {
 	m.awaitedCmdLock.Lock()
 	defer m.awaitedCmdLock.Unlock()
 

@@ -68,9 +68,13 @@ func (s *Shell) signalInit() {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		for range signals {
-			interrupted := s.mainMod.Interrupt()
+			interrupted := s.mainMod.Interrupt(false)
+			if interrupted {
+				continue
+			}
+
 			cancelCtx := s.cancelCtx
-			if !interrupted && cancelCtx != nil {
+			if cancelCtx != nil {
 				cancelCtx()
 			}
 		}

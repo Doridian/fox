@@ -69,6 +69,6 @@ func (m *moduleProxyInt) Base() modules.LuaModule {
 	return m.base
 }
 
-func (m *moduleProxyInt) Interrupt() bool {
-	return m.base.Interrupt()
+func (m *moduleProxyInt) Interrupt(all bool) bool {
+	return m.base.Interrupt(all)
 }

@@ -112,11 +112,15 @@ func (m *LuaModule) SetAutoload(autoload bool) {
 	}
 }
 
-func (m *LuaModule) Interrupt() bool {
+func (m *LuaModule) Interrupt(all bool) bool {
+	hit := false
 	for _, m := range m.gomods {
-		if m.base.Interrupt() {
-			return true
+		if m.base.Interrupt(all) {
+			hit = true
+			if !all {
+				break
+			}
 		}
 	}
-	return false
+	return hit
 }
