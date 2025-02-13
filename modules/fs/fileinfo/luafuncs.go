@@ -3,7 +3,7 @@ package fileinfo
 import (
 	"fmt"
 
-	"github.com/Doridian/fox/modules/time/time"
+	"github.com/Doridian/fox/modules/time"
 	lua "github.com/yuin/gopher-lua"
 )
 

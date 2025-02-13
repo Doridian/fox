@@ -3,6 +3,7 @@ package loader
 import (
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/cmd"
+	"github.com/Doridian/fox/modules/duration"
 	"github.com/Doridian/fox/modules/embed"
 	"github.com/Doridian/fox/modules/env"
 	"github.com/Doridian/fox/modules/fs"
@@ -23,6 +24,7 @@ type LuaModule struct {
 func NewLuaModule() *LuaModule {
 	gomods := []modules.LuaModule{
 		time.NewLuaModule(),
+		duration.NewLuaModule(),
 		io.NewLuaModule(),
 		fs.NewLuaModule(),
 		embed.NewLuaModule(),

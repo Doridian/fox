@@ -6,11 +6,22 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.time"
+const LuaName = "fox.duration"
 const LuaTypeName = "Duration"
 const LuaType = LuaName + ":" + LuaTypeName
 
-func Load(L *lua.LState, tbl *lua.LTable) {
+type LuaModule struct {
+}
+
+func NewLuaModule() *LuaModule {
+	return &LuaModule{}
+}
+
+func (m *LuaModule) Loader(L *lua.LState) int {
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"parse": durationParse,
+	})
+
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"nanoseconds":  durationNanoseconds,
@@ -43,9 +54,17 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 		"__le": luaLe,
 
 		"__tostring": luaToString,
-
-		"parse": durationParse,
 	})
 
-	tbl.RawSetString(LuaTypeName, mt)
+	mod.RawSetString(LuaTypeName, mt)
+	L.Push(mod)
+	return 1
+}
+
+func (m *LuaModule) Dependencies() []string {
+	return []string{}
+}
+
+func (m *LuaModule) Name() string {
+	return LuaName
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/Doridian/fox/modules/fs/direntry"
 	"github.com/Doridian/fox/modules/fs/file"
 	"github.com/Doridian/fox/modules/fs/fileinfo"
-	"github.com/Doridian/fox/modules/time/time"
+	"github.com/Doridian/fox/modules/time"
 	lua "github.com/yuin/gopher-lua"
 )
 

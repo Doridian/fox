@@ -3,7 +3,7 @@ package time
 import (
 	gotime "time"
 
-	"github.com/Doridian/fox/modules/time/duration"
+	"github.com/Doridian/fox/modules/duration"
 	lua "github.com/yuin/gopher-lua"
 )
 
