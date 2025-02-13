@@ -146,12 +146,15 @@ func (s *Shell) Run(p *prompt.PromptManager) bool {
 }
 
 // Return true to exit shell
-func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
+func (s *Shell) runOne(p *prompt.PromptManager, firstLine string) int {
 	var luaCode string
 	var err error
+
 	cmdBuilder := strings.Builder{}
-	cmdBuilder.WriteString(cmd)
-	lineNo := 2
+	cmdBuilder.WriteString(firstLine)
+
+	lineNo := 1
+
 	for {
 		luaCode, err = s.CommandToLua(cmdBuilder.String())
 		if err == nil {
@@ -162,6 +165,7 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 			return 0
 		}
 
+		lineNo++
 		cmdAdd, err := p.Prompt(s.RenderPrompt(lineNo))
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
@@ -170,7 +174,6 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 		}
 		cmdBuilder.WriteRune('\n')
 		cmdBuilder.WriteString(cmdAdd)
-		lineNo++
 	}
 
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
