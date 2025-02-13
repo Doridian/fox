@@ -1,14 +1,17 @@
 package shell
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
 
 	_ "embed"
 
+	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
@@ -19,14 +22,22 @@ var initCode string
 
 type Shell struct {
 	l     *lua.LState
+	lLock sync.Mutex
+
 	mod   *lua.LTable
 	print *lua.LFunction
 
+	ctx       context.Context
+	cancelCtx context.CancelFunc
+
+	mainMod modules.LuaModule
+
 	rlLock sync.Mutex
 	rl     *readline.Instance
+
+	signals chan os.Signal
 }
 
-// TODO: Handle Ctrl+C (SIGINT?)
 // TODO: Handle SIGTERM
 
 func NewShell() *Shell {
@@ -42,6 +53,7 @@ func NewShell() *Shell {
 		rl: rl,
 	}
 	s.luaInit()
+	s.signalInit()
 	return s
 }
 
@@ -49,6 +61,20 @@ func luaExit(L *lua.LState) int {
 	exitCodeL := lua.LVAsNumber(L.CheckNumber(1))
 	os.Exit(int(exitCodeL))
 	return 0
+}
+
+func (s *Shell) signalInit() {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+		for range signals {
+			interrupted := s.mainMod.Interrupt()
+			cancelCtx := s.cancelCtx
+			if !interrupted && cancelCtx != nil {
+				cancelCtx()
+			}
+		}
+	}()
 }
 
 func (s *Shell) luaInit() {
@@ -73,6 +99,7 @@ func (s *Shell) luaInit() {
 
 	mainMod := loader.NewLuaModule()
 	mainMod.Load(s.l)
+	s.mainMod = mainMod
 
 	err := s.l.DoString(initCode)
 	if err != nil {
@@ -205,6 +232,18 @@ func (s *Shell) runOne(firstLine string) int {
 		cmdBuilder.WriteString(cmdAdd)
 	}
 
+	s.lLock.Lock()
+	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
+	defer func() {
+		cancelCtx := s.cancelCtx
+		if cancelCtx != nil {
+			cancelCtx()
+		}
+		s.ctx = nil
+		s.cancelCtx = nil
+		s.lLock.Unlock()
+	}()
+	s.l.SetContext(s.ctx)
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 	err = s.l.DoString(luaCode)
 	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))

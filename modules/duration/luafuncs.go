@@ -50,7 +50,12 @@ func durationAbs(L *lua.LState) int {
 
 func durationSleepFor(L *lua.LState) int {
 	d, _ := Check(L, 1)
-	time.Sleep(d)
+
+	select {
+	case <-L.Context().Done():
+	case <-time.After(d):
+	}
+
 	return 0
 }
 
