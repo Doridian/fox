@@ -153,7 +153,6 @@ func (s *Shell) readLine(disp string) (string, error) {
 func (s *Shell) Run() bool {
 	res, err := s.readLine(s.renderPrompt(1))
 	if err != nil {
-		os.Stdout.Write([]byte("\n"))
 		log.Printf("Prompt aborted: %v", err)
 		return false
 	}
