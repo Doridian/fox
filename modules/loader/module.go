@@ -115,7 +115,7 @@ func (m *LuaModule) SetAutoload(autoload bool) {
 func (m *LuaModule) Interrupt(all bool) bool {
 	hit := false
 	for _, m := range m.gomods {
-		if m.base.Interrupt(all) {
+		if m.Interrupt(all) {
 			hit = true
 			if !all {
 				break
@@ -123,4 +123,10 @@ func (m *LuaModule) Interrupt(all bool) bool {
 		}
 	}
 	return hit
+}
+
+func (m *LuaModule) PrePrompt() {
+	for _, m := range m.gomods {
+		m.PrePrompt()
+	}
 }

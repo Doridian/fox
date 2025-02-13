@@ -72,3 +72,7 @@ func (m *moduleProxyInt) Base() modules.LuaModule {
 func (m *moduleProxyInt) Interrupt(all bool) bool {
 	return m.base.Interrupt(all)
 }
+
+func (m *moduleProxyInt) PrePrompt() {
+	m.base.PrePrompt()
+}

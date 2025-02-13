@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"sync"
 
 	"github.com/Doridian/fox/modules/pipe"
@@ -12,13 +13,13 @@ const LuaTypeName = "Cmd"
 const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
-	awaitedCmds    map[*Cmd]bool
-	awaitedCmdLock sync.Mutex
+	allCmds    map[*Cmd]bool
+	cmdRegLock sync.Mutex
 }
 
 func NewLuaModule() *LuaModule {
 	return &LuaModule{
-		awaitedCmds: make(map[*Cmd]bool),
+		allCmds: make(map[*Cmd]bool),
 	}
 }
 
@@ -45,6 +46,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"run":   doRun,
 		"start": doStart,
 		"wait":  doWait,
+		"kill":  doKill,
 
 		"getErrorPropagation": getErrorPropagation,
 		"errorPropagation":    setErrorPropagation,
@@ -61,6 +63,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"run":      m.runCmd,
 		"start":    m.startCmd,
 		"lookPath": lookPath,
+
+		"running": m.getRunning,
 	})
 
 	mod.RawSetString(LuaTypeName, mt)
@@ -78,37 +82,60 @@ func (m *LuaModule) Name() string {
 }
 
 func (m *LuaModule) Interrupt(all bool) bool {
-	m.awaitedCmdLock.Lock()
-	defer m.awaitedCmdLock.Unlock()
+	m.cmdRegLock.Lock()
+	defer m.cmdRegLock.Unlock()
 
 	triedKill := false
-	toDelete := make([]*Cmd, 0)
-	for cmd := range m.awaitedCmds {
-		if cmd.gocmd.Process != nil {
+	for cmd := range m.allCmds {
+		if !cmd.awaited {
+			continue
+		}
+
+		if cmd.gocmd.ProcessState == nil && cmd.gocmd.Process != nil {
 			cmd.gocmd.Process.Kill()
 			triedKill = true
 		}
-
-		if cmd.gocmd.ProcessState != nil {
-			toDelete = append(toDelete, cmd)
-		}
-	}
-
-	for _, cmd := range toDelete {
-		delete(m.awaitedCmds, cmd)
 	}
 
 	return triedKill
 }
 
-func (m *LuaModule) AwaitCmd(cmd *Cmd) {
-	m.awaitedCmdLock.Lock()
-	m.awaitedCmds[cmd] = true
-	m.awaitedCmdLock.Unlock()
+func (m *LuaModule) PrePrompt() {
+	m.cmdRegLock.Lock()
+	defer m.cmdRegLock.Unlock()
+
+	toDelete := make([]*Cmd, 0)
+	for cmd := range m.allCmds {
+		exited := cmd.gocmd.Process == nil
+		exitCode := 0
+		if cmd.gocmd.ProcessState != nil {
+			exited = true
+			exitCode = cmd.gocmd.ProcessState.ExitCode()
+		}
+
+		if !exited {
+			continue
+		}
+		toDelete = append(toDelete, cmd)
+
+		if cmd.awaited {
+			continue
+		}
+
+		if exitCode == 0 {
+			log.Printf("job %s exited", cmd.ToString())
+		} else {
+			log.Printf("job %s exited with code %d", cmd.ToString(), exitCode)
+		}
+	}
+
+	for _, cmd := range toDelete {
+		delete(m.allCmds, cmd)
+	}
 }
 
-func (m *LuaModule) StopAwaitCmd(cmd *Cmd) {
-	m.awaitedCmdLock.Lock()
-	delete(m.awaitedCmds, cmd)
-	m.awaitedCmdLock.Unlock()
+func (m *LuaModule) addCmd(cmd *Cmd) {
+	m.cmdRegLock.Lock()
+	m.allCmds[cmd] = true
+	m.cmdRegLock.Unlock()
 }

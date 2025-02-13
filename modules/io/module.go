@@ -42,3 +42,7 @@ func (m *LuaModule) Name() string {
 func (m *LuaModule) Interrupt(all bool) bool {
 	return false
 }
+
+func (m *LuaModule) PrePrompt() {
+	// no-op
+}

@@ -1,43 +1,30 @@
 package cmd
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 
 	lua "github.com/yuin/gopher-lua"
 )
 
-func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData, err error) int {
+func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData) int {
 	c.releaseStdioNoLock()
 
-	if err != nil && exitCode == 0 {
-		exitCode = 1
-	}
 	exitCodeL := lua.LNumber(exitCode)
 
 	L.SetGlobal("_LAST_EXIT_CODE", exitCodeL)
-	if c.ErrorPropagation {
-		if err == nil {
-			err = fmt.Errorf("command exited with code %d", exitCode)
-		}
-		L.RaiseError("%v", err)
+	if c.ErrorPropagation && exitCode != 0 {
+		L.RaiseError("command exited with code %d", exitCode)
 		return 0
 	}
 
 	L.Push(ud)
 	L.Push(exitCodeL)
-	if err != nil {
-		L.Push(lua.LString(err.Error()))
-	} else {
-		L.Push(lua.LNil)
-	}
-	return 3
+	return 2
 }
 
 func (c *Cmd) doWaitCmdNoLock() error {
-	c.mod.AwaitCmd(c)
-	defer c.mod.StopAwaitCmd(c)
+	c.awaited = true
 
 	pipeErr := c.waitStdio()
 	err := c.gocmd.Wait()
@@ -48,8 +35,8 @@ func (c *Cmd) doWaitCmdNoLock() error {
 }
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
-	err := c.doWaitCmdNoLock()
-	return handleCmdExitNoLock(L, c.gocmd.ProcessState.ExitCode(), c, ud, err)
+	c.doWaitCmdNoLock()
+	return handleCmdExitNoLock(L, c.gocmd.ProcessState.ExitCode(), c, ud)
 }
 
 func doWait(L *lua.LState) int {
@@ -77,7 +64,7 @@ func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(true)
 	if err != nil {
-		return handleCmdExitNoLock(L, 1, c, ud, err)
+		return handleCmdExitNoLock(L, -1, c, ud)
 	}
 	return doWaitCmdNoLock(L, c, ud)
 }
@@ -96,7 +83,7 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(false)
 	if err != nil {
-		return handleCmdExitNoLock(L, 1, c, ud, err)
+		return handleCmdExitNoLock(L, -1, c, ud)
 	}
 	L.Push(ud)
 	return 1
@@ -119,7 +106,17 @@ func (c *Cmd) prepareAndStartNoLock(defaultStdin bool) error {
 		return err
 	}
 
-	return c.gocmd.Start()
+	err = c.gocmd.Start()
+	if err != nil {
+		return err
+	}
+
+	c.mod.addCmd(c)
+	go func() {
+		c.gocmd.Wait()
+	}()
+
+	return nil
 }
 
 func (c *Cmd) ensureRan() error {
@@ -133,4 +130,18 @@ func (c *Cmd) ensureRan() error {
 	}
 
 	return c.doWaitCmdNoLock()
+}
+
+func doKill(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	if c.gocmd.Process != nil {
+		c.gocmd.Process.Kill()
+	}
+
+	L.Push(ud)
+	return 1
 }

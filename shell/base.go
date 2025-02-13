@@ -185,6 +185,8 @@ func (s *Shell) readLine(disp string) (string, error) {
 }
 
 func (s *Shell) Run() bool {
+	s.mainMod.PrePrompt()
+
 	res, err := s.readLine(s.renderPrompt(1))
 	if err != nil {
 		if errors.Is(err, readline.ErrInterrupt) {
