@@ -132,3 +132,13 @@ func rlToString(L *lua.LState) int {
 	L.Push(lua.LString(fmt.Sprintf("%s{%s}", LuaType, config.ToString(rl.GetConfig()))))
 	return 1
 }
+
+func rlClose(L *lua.LState) int {
+	rl, _ := Check(L, 1)
+	if rl == nil {
+		return 0
+	}
+
+	rl.Close()
+	return 0
+}

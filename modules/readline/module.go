@@ -35,6 +35,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"readLine":            rlReadLine,
 		"readLineWithConfig":  rlReadLineWithConfig,
 		"readLineWithDefault": rlReadLineWithDefault,
+
+		"close": rlClose,
 	}))
 	mt.RawSetString("__tostring", L.NewFunction(rlToString))
 	mod.RawSetString(LuaTypeName, mt)
