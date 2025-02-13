@@ -74,9 +74,9 @@ func (m *LuaModule) loaderInt(L *lua.LState) int {
 	}
 
 	mod := L.NewTable()
-	mod.RawSetString("builtins", builtins)
-	mod.RawSetString("autoload", autoload)
-	mod.RawSetString("globals", globals)
+	mod.RawSetString("BuiltIns", builtins)
+	mod.RawSetString("AutoLoad", autoload)
+	mod.RawSetString("Globals", globals)
 	L.Push(mod)
 	return 1
 }

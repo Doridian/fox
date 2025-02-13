@@ -9,6 +9,11 @@ import (
 	"github.com/Doridian/fox/modules/pipe"
 )
 
+const (
+	ExitCodeInternalShellError   = -10001
+	ExitCodeProcessCouldNotStart = -10002
+)
+
 type Cmd struct {
 	stdout      *pipe.Pipe
 	closeStdout bool

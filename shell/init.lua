@@ -1,6 +1,6 @@
-local config_home = env["XDG_CONFIG_HOME"]
+local config_home = Env["XDG_CONFIG_HOME"]
 if (not config_home) or config_home == "" then
-    config_home = env["HOME"] .. "/.config"
+    config_home = Env["HOME"] .. "/.config"
 end
 local lua_base = config_home .. "/fox/lua"
 _G.LUA_BASE = lua_base

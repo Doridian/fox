@@ -22,6 +22,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"readFile": luaReadFile,
 		"doFile":   luaDoFile,
 		"loadFile": luaLoadFile,
+		"openFile": luaOpenFile,
 
 		"readDir": luaReadDir,
 	}, mod)

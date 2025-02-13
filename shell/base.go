@@ -12,6 +12,7 @@ import (
 	_ "embed"
 
 	"github.com/Doridian/fox/modules"
+	"github.com/Doridian/fox/modules/cmd"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
@@ -257,7 +258,7 @@ func (s *Shell) runOne(firstLine string) int {
 
 	if err != nil {
 		if exitCode == 0 {
-			exitCode = -10001
+			exitCode = cmd.ExitCodeInternalShellError
 		}
 		log.Printf("Internal error running command: %v", err)
 		return exitCode

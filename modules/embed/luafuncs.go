@@ -4,6 +4,7 @@ import (
 	goembed "embed"
 
 	"github.com/Doridian/fox/modules/fs/direntry"
+	"github.com/Doridian/fox/modules/fs/file"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -27,6 +28,21 @@ func luaReadFile(L *lua.LState) int {
 
 	L.Push(lua.LString(string(data)))
 	return 1
+}
+
+func luaOpenFile(L *lua.LState) int {
+	name := L.CheckString(1)
+	if name == "" {
+		L.ArgError(1, "empty file name")
+		return 0
+	}
+
+	f, err := root.Open(name)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+	return file.PushNew(L, f)
 }
 
 func luaLoadFile(L *lua.LState) int {

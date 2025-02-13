@@ -37,12 +37,12 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"string": luaString,
 	}))
 
-	mt.RawSetString("nanosecond", ToUserdata(L, time.Nanosecond))
-	mt.RawSetString("microsecond", ToUserdata(L, time.Microsecond))
-	mt.RawSetString("millisecond", ToUserdata(L, time.Millisecond))
-	mt.RawSetString("second", ToUserdata(L, time.Second))
-	mt.RawSetString("minute", ToUserdata(L, time.Minute))
-	mt.RawSetString("hour", ToUserdata(L, time.Hour))
+	mt.RawSetString("Nanosecond", ToUserdata(L, time.Nanosecond))
+	mt.RawSetString("Microsecond", ToUserdata(L, time.Microsecond))
+	mt.RawSetString("Millisecond", ToUserdata(L, time.Millisecond))
+	mt.RawSetString("Second", ToUserdata(L, time.Second))
+	mt.RawSetString("Minute", ToUserdata(L, time.Minute))
+	mt.RawSetString("Hour", ToUserdata(L, time.Hour))
 
 	L.SetFuncs(mt, map[string]lua.LGFunction{
 		"__add": luaAdd,

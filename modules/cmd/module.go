@@ -24,6 +24,20 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"new":      m.newCmd,
+		"run":      m.runCmd,
+		"start":    m.startCmd,
+		"lookPath": lookPath,
+
+		"running": m.getRunning,
+	})
+
+	exitCodes := L.NewTable()
+	exitCodes.RawSetString("InternalShellError", lua.LNumber(ExitCodeInternalShellError))
+	exitCodes.RawSetString("ProcessCouldNotStart", lua.LNumber(ExitCodeProcessCouldNotStart))
+	mod.RawSetString("ExitCodes", exitCodes)
+
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"getDir": getDir,
@@ -57,16 +71,6 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"__tostring": cmdToString,
 		"__call":     doRun,
 	})
-
-	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"new":      m.newCmd,
-		"run":      m.runCmd,
-		"start":    m.startCmd,
-		"lookPath": lookPath,
-
-		"running": m.getRunning,
-	})
-
 	mod.RawSetString(LuaTypeName, mt)
 
 	L.Push(mod)

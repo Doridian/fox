@@ -58,7 +58,7 @@ func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(true)
 	if err != nil {
-		return handleCmdExitNoLock(L, -10002, c, ud)
+		return handleCmdExitNoLock(L, ExitCodeProcessCouldNotStart, c, ud)
 	}
 	return doWaitCmdNoLock(L, c, ud)
 }
@@ -77,7 +77,7 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 
 	err := c.prepareAndStartNoLock(false)
 	if err != nil {
-		return handleCmdExitNoLock(L, -10002, c, ud)
+		return handleCmdExitNoLock(L, ExitCodeProcessCouldNotStart, c, ud)
 	}
 	L.Push(ud)
 	return 1
