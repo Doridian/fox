@@ -95,9 +95,6 @@ func (s *Shell) init() {
 	s.l.Pop(lua.OpenChannel(s.l))
 	s.l.Pop(lua.OpenCoroutine(s.l))
 
-	s.l.PreloadModule("shell", s.Loader)
-	modules.Require(s.l, "shell")
-
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
 	mainMod := loader.NewLuaModule()
