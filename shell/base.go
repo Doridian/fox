@@ -18,6 +18,8 @@ var initCode string
 
 type ShellManager struct {
 	l *lua.LState
+
+	shellParser *lua.LFunction
 }
 
 func NewShellManager() *ShellManager {
@@ -25,6 +27,7 @@ func NewShellManager() *ShellManager {
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs: true,
 		}),
+		shellParser: nil,
 	}
 	s.luaInit()
 	return s
@@ -33,6 +36,12 @@ func NewShellManager() *ShellManager {
 func luaExit(L *lua.LState) int {
 	exitCodeL := lua.LVAsNumber(L.CheckNumber(1))
 	os.Exit(int(exitCodeL))
+	return 0
+}
+
+func (s *ShellManager) luaSetShellParser(L *lua.LState) int {
+	newParser := L.OptFunction(1, nil)
+	s.shellParser = newParser
 	return 0
 }
 
@@ -49,6 +58,7 @@ func (s *ShellManager) luaInit() {
 	lua.OpenCoroutine(s.l)
 
 	s.l.Register("exit", luaExit)
+	s.l.Register("setShellParser", s.luaSetShellParser)
 	mainMod := loader.NewLuaModule()
 	mainMod.Load(s.l)
 
@@ -68,6 +78,21 @@ func (s *ShellManager) luaInit() {
 var ErrNeedMore = errors.New("Need more input")
 
 func (s *ShellManager) CommandToLua(cmd string) (string, error) {
+	if s.shellParser != nil {
+		s.l.Push(s.shellParser)
+		s.l.Push(lua.LString(cmd))
+		err := s.l.PCall(1, 1, nil)
+		if err != nil {
+			return "", err
+		}
+		parseRet := s.l.Get(-1)
+		s.l.Pop(1)
+		if parseRet == lua.LTrue {
+			return "", ErrNeedMore
+		}
+		return parseRet.(lua.LString).String(), nil
+	}
+
 	lua := strings.Builder{}
 	lua.WriteString(cmd)
 	return lua.String(), nil
