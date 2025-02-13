@@ -17,8 +17,9 @@ import (
 var initCode string
 
 type Shell struct {
-	l   *lua.LState
-	mod *lua.LTable
+	l     *lua.LState
+	mod   *lua.LTable
+	print *lua.LFunction
 }
 
 func NewShell() *Shell {
@@ -48,6 +49,7 @@ func (s *Shell) luaInit() {
 	lua.OpenDebug(s.l)
 	lua.OpenChannel(s.l)
 	lua.OpenCoroutine(s.l)
+	s.l.SetTop(0)
 
 	mod := s.l.RegisterModule("shell", map[string]lua.LGFunction{
 		"exit": luaExit,
@@ -55,12 +57,14 @@ func (s *Shell) luaInit() {
 	s.l.SetGlobal("shell", mod)
 	s.mod = mod
 
+	s.print = s.l.GetGlobal("print").(*lua.LFunction)
+
 	mainMod := loader.NewLuaModule()
 	mainMod.Load(s.l)
 
 	err := s.l.DoString(initCode)
 	if err != nil {
-		log.Fatalf("Error initializing shell: %v", err)
+		log.Panicf("Error initializing shell: %v", err)
 	}
 }
 
@@ -145,11 +149,11 @@ func (s *Shell) Run(p *prompt.PromptManager) bool {
 func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 	var luaCode string
 	var err error
-	cmdB := strings.Builder{}
-	cmdB.WriteString(cmd)
+	cmdBuilder := strings.Builder{}
+	cmdBuilder.WriteString(cmd)
 	lineNo := 2
 	for {
-		luaCode, err = s.CommandToLua(cmdB.String())
+		luaCode, err = s.CommandToLua(cmdBuilder.String())
 		if err == nil {
 			break
 		}
@@ -164,8 +168,8 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 			os.Exit(0)
 			return 0
 		}
-		cmdB.WriteRune('\n')
-		cmdB.WriteString(cmdAdd)
+		cmdBuilder.WriteRune('\n')
+		cmdBuilder.WriteString(cmdAdd)
 		lineNo++
 	}
 
@@ -177,13 +181,14 @@ func (s *Shell) runOne(p *prompt.PromptManager, cmd string) int {
 		if exitCode == 0 {
 			exitCode = 1
 		}
-		log.Printf("Error running command (code %d): %v", exitCode, err)
+		log.Printf("Internal error running command: %v", err)
 		return exitCode
 	}
 
 	retC := s.l.GetTop()
 	if retC > 0 {
-		s.l.Pop(retC)
+		s.l.Insert(s.print, 0)
+		s.l.Call(retC, 0)
 	}
 
 	return exitCode
