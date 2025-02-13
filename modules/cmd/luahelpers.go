@@ -9,7 +9,7 @@ func ToUserdata(L *lua.LState, cmd *Cmd) *lua.LUserData {
 	return ud
 }
 
-func Push(L *lua.LState, cmd *Cmd) int {
+func PushNew(L *lua.LState, cmd *Cmd) int {
 	if cmd == nil {
 		L.Push(lua.LNil)
 		return 1

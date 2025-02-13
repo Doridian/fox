@@ -11,7 +11,7 @@ func ToUserdata(L *lua.LState, f interface{}) *lua.LUserData {
 	return ud
 }
 
-func Push(L *lua.LState, f interface{}) int {
+func PushNew(L *lua.LState, f interface{}) int {
 	if f == nil {
 		L.Push(lua.LNil)
 		return 1

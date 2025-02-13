@@ -43,7 +43,7 @@ func fiModTime(L *lua.LState) int {
 		return 0
 	}
 
-	return time.Push(L, fi.ModTime())
+	return time.PushNew(L, fi.ModTime())
 }
 
 func fiIsDir(L *lua.LState) int {

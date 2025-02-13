@@ -9,7 +9,7 @@ func ToUserdata(L *lua.LState, pipe *Pipe) *lua.LUserData {
 	return ud
 }
 
-func Push(L *lua.LState, pipe *Pipe) int {
+func PushNew(L *lua.LState, pipe *Pipe) int {
 	if pipe == nil {
 		L.Push(lua.LNil)
 		return 1

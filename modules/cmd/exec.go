@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
 	lua "github.com/yuin/gopher-lua"
 )
@@ -87,7 +89,19 @@ func doStart(L *lua.LState) int {
 }
 
 func (c *Cmd) prepareAndStartNoLock() error {
-	if err := c.setupStdio(); err != nil {
+	var err error
+
+	path := c.gocmd.Args[0]
+	if c.AutoLookPath && !strings.ContainsRune(path, '/') {
+		path, err = exec.LookPath(path)
+		if err != nil {
+			return err
+		}
+	}
+	c.gocmd.Path = path
+
+	err = c.setupStdio()
+	if err != nil {
 		return err
 	}
 

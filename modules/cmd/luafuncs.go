@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 
 	lua "github.com/yuin/gopher-lua"
@@ -29,6 +30,34 @@ func setErrorPropagation(L *lua.LState) int {
 	val := L.CheckBool(2)
 	c.lock.Lock()
 	c.ErrorPropagation = val
+	c.lock.Unlock()
+
+	L.Push(ud)
+	return 1
+}
+
+func getAutoLookPath(L *lua.LState) int {
+	c, _ := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	c.lock.RLock()
+	val := lua.LBool(c.AutoLookPath)
+	c.lock.RUnlock()
+	L.Push(val)
+	return 1
+}
+
+func setAutoLookPath(L *lua.LState) int {
+	c, ud := Check(L, 1)
+	if c == nil {
+		return 0
+	}
+
+	val := L.CheckBool(2)
+	c.lock.Lock()
+	c.AutoLookPath = val
 	c.lock.Unlock()
 
 	L.Push(ud)
@@ -100,7 +129,6 @@ func setCmd(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	c.gocmd.Path = args[0]
 	c.gocmd.Args = args
 	c.lock.Unlock()
 
@@ -161,4 +189,25 @@ func cmdToString(L *lua.LState) int {
 	}
 	L.Push(lua.LString(c.ToString()))
 	return 1
+}
+
+func lookPath(L *lua.LState) int {
+	cmd := L.CheckString(1)
+	path, err := exec.LookPath(cmd)
+	if err != nil {
+		L.Push(lua.LNil)
+		L.Push(lua.LString(err.Error()))
+		return 2
+	}
+
+	L.Push(lua.LString(path))
+	return 1
+}
+
+func newCmd(L *lua.LState) int {
+	c := &Cmd{
+		gocmd:        &exec.Cmd{},
+		AutoLookPath: true,
+	}
+	return PushNew(L, c)
 }

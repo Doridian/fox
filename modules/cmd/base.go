@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/Doridian/fox/modules/pipe"
-	lua "github.com/yuin/gopher-lua"
 )
 
 type Cmd struct {
@@ -20,14 +19,8 @@ type Cmd struct {
 
 	lock             sync.RWMutex
 	gocmd            *exec.Cmd
+	AutoLookPath     bool
 	ErrorPropagation bool
-}
-
-func newCmd(L *lua.LState) int {
-	return Push(L, &Cmd{
-		gocmd:            &exec.Cmd{},
-		ErrorPropagation: false,
-	})
 }
 
 func (c *Cmd) ToString() string {

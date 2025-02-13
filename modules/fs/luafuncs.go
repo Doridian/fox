@@ -22,7 +22,7 @@ func doStat(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	return fileinfo.Push(L, fi)
+	return fileinfo.PushNew(L, fi)
 }
 
 func doLStat(L *lua.LState) int {
@@ -37,7 +37,7 @@ func doLStat(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	return fileinfo.Push(L, fi)
+	return fileinfo.PushNew(L, fi)
 }
 
 func doReadDir(L *lua.LState) int {
@@ -132,5 +132,5 @@ func doOpen(L *lua.LState) int {
 		return 0
 	}
 
-	return file.Push(L, f)
+	return file.PushNew(L, f)
 }

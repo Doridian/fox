@@ -13,7 +13,7 @@ func ToUserdata(L *lua.LState, f fs.File) *lua.LUserData {
 	return ud
 }
 
-func Push(L *lua.LState, f fs.File) int {
+func PushNew(L *lua.LState, f fs.File) int {
 	if f == nil {
 		L.Push(lua.LNil)
 		return 1

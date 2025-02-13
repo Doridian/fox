@@ -13,7 +13,7 @@ func ToUserdata(L *lua.LState, d time.Duration) *lua.LUserData {
 	return ud
 }
 
-func Push(L *lua.LState, d time.Duration) int {
+func PushNew(L *lua.LState, d time.Duration) int {
 	L.Push(ToUserdata(L, d))
 	return 1
 }

@@ -45,7 +45,7 @@ func durationNanoseconds(L *lua.LState) int {
 
 func durationAbs(L *lua.LState) int {
 	d, _ := Check(L, 1)
-	return Push(L, d.Abs())
+	return PushNew(L, d.Abs())
 }
 
 func durationSleepFor(L *lua.LState) int {
@@ -78,30 +78,30 @@ func luaLe(L *lua.LState) int {
 func luaAdd(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	d2, _ := CheckAllowNumber(L, 2)
-	return Push(L, (d + d2))
+	return PushNew(L, (d + d2))
 }
 
 func luaSub(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	d2, _ := CheckAllowNumber(L, 2)
-	return Push(L, (d - d2))
+	return PushNew(L, (d - d2))
 }
 
 func luaMul(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	d2, _ := CheckAllowNumber(L, 2)
-	return Push(L, (d * d2))
+	return PushNew(L, (d * d2))
 }
 
 func luaDiv(L *lua.LState) int {
 	d, _ := Check(L, 1)
 	d2, _ := CheckAllowNumber(L, 2)
-	return Push(L, (d / d2))
+	return PushNew(L, (d / d2))
 }
 
 func luaUnm(L *lua.LState) int {
 	d, _ := Check(L, 1)
-	return Push(L, -d)
+	return PushNew(L, -d)
 }
 
 func luaString(L *lua.LState) int {
@@ -123,5 +123,5 @@ func durationParse(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	return Push(L, d)
+	return PushNew(L, d)
 }

@@ -128,12 +128,12 @@ func timeNotAfter(L *lua.LState) int {
 
 func timeUTC(L *lua.LState) int {
 	t, _ := Check(L, 1)
-	return Push(L, t.UTC())
+	return PushNew(L, t.UTC())
 }
 
 func timeLocal(L *lua.LState) int {
 	t, _ := Check(L, 1)
-	return Push(L, t.Local())
+	return PushNew(L, t.Local())
 }
 
 func timeAddDate(L *lua.LState) int {
@@ -141,25 +141,25 @@ func timeAddDate(L *lua.LState) int {
 	years := L.CheckInt(2)
 	months := L.CheckInt(3)
 	days := L.CheckInt(4)
-	return Push(L, t.AddDate(years, months, days))
+	return PushNew(L, t.AddDate(years, months, days))
 }
 
 func timeAddDuration(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	d, _ := duration.Check(L, 2)
-	return Push(L, t.Add(d))
+	return PushNew(L, t.Add(d))
 }
 
 func timeSubDuration(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	d, _ := duration.Check(L, 2)
-	return Push(L, t.Add(-d))
+	return PushNew(L, t.Add(-d))
 }
 
 func timeDelta(L *lua.LState) int {
 	t, _ := Check(L, 1)
 	t2, _ := Check(L, 2)
-	return duration.Push(L, t.Sub(t2))
+	return duration.PushNew(L, t.Sub(t2))
 }
 
 func timeEq(L *lua.LState) int {
@@ -195,17 +195,17 @@ func luaFormat(L *lua.LState) int {
 }
 
 func timeNow(L *lua.LState) int {
-	return Push(L, gotime.Now())
+	return PushNew(L, gotime.Now())
 }
 
 func timeSince(L *lua.LState) int {
 	t, _ := Check(L, 1)
-	return duration.Push(L, gotime.Since(t))
+	return duration.PushNew(L, gotime.Since(t))
 }
 
 func timeUntil(L *lua.LState) int {
 	t, _ := Check(L, 1)
-	return duration.Push(L, gotime.Until(t))
+	return duration.PushNew(L, gotime.Until(t))
 }
 
 func timeParse(L *lua.LState) int {
@@ -216,5 +216,5 @@ func timeParse(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	return Push(L, t)
+	return PushNew(L, t)
 }

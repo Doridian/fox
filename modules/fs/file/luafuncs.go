@@ -18,7 +18,7 @@ func fileStat(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	return fileinfo.Push(L, fi)
+	return fileinfo.PushNew(L, fi)
 }
 
 func fileToString(L *lua.LState) int {

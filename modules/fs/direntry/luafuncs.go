@@ -48,7 +48,7 @@ func deInfo(L *lua.LState) int {
 		L.RaiseError("%v", err.Error())
 		return 0
 	}
-	return fileinfo.Push(L, fi)
+	return fileinfo.PushNew(L, fi)
 }
 
 func deToString(L *lua.LState) int {

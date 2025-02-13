@@ -76,8 +76,8 @@ func (p *Pipe) Creator() interface{} {
 	return p.creator
 }
 
-func (p *Pipe) Push(L *lua.LState) int {
-	return Push(L, p)
+func (p *Pipe) PushNew(L *lua.LState) int {
+	return PushNew(L, p)
 }
 
 func (p *Pipe) ToString() string {

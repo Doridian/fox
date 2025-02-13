@@ -16,7 +16,7 @@ func getStdin(L *lua.LState) int {
 	c.lock.RLock()
 	val := c.stdin
 	c.lock.RUnlock()
-	return val.Push(L)
+	return val.PushNew(L)
 }
 
 func setStdin(L *lua.LState) int {
@@ -60,7 +60,7 @@ func acquireStdinPipe(L *lua.LState) int {
 	if c.stdin != nil && !c.stdin.IsNull() && c.stdin.CanWrite() {
 		p := c.stdin
 		c.lock.Unlock()
-		return p.Push(L)
+		return p.PushNew(L)
 	}
 
 	stdinPipe, err := c.gocmd.StdinPipe()
@@ -74,7 +74,7 @@ func acquireStdinPipe(L *lua.LState) int {
 	c.stdin = p
 	c.closeStdin = true
 	c.lock.Unlock()
-	return p.Push(L)
+	return p.PushNew(L)
 }
 
 func getStderr(L *lua.LState) int {
@@ -86,7 +86,7 @@ func getStderr(L *lua.LState) int {
 	c.lock.RLock()
 	val := c.stderr
 	c.lock.RUnlock()
-	return val.Push(L)
+	return val.PushNew(L)
 }
 
 func setStderr(L *lua.LState) int {
@@ -130,7 +130,7 @@ func acquireStderrPipe(L *lua.LState) int {
 	if c.stderr != nil && !c.stderr.IsNull() && c.stderr.CanRead() {
 		p := c.stderr
 		c.lock.Unlock()
-		return p.Push(L)
+		return p.PushNew(L)
 	}
 
 	stderrPipe, err := c.gocmd.StderrPipe()
@@ -144,7 +144,7 @@ func acquireStderrPipe(L *lua.LState) int {
 	c.stderr = p
 	c.closeStderr = true
 	c.lock.Unlock()
-	return p.Push(L)
+	return p.PushNew(L)
 }
 
 func getStdout(L *lua.LState) int {
@@ -156,7 +156,7 @@ func getStdout(L *lua.LState) int {
 	c.lock.RLock()
 	val := c.stdout
 	c.lock.RUnlock()
-	return val.Push(L)
+	return val.PushNew(L)
 }
 
 func setStdout(L *lua.LState) int {
@@ -200,7 +200,7 @@ func acquireStdoutPipe(L *lua.LState) int {
 	if c.stdout != nil && !c.stdout.IsNull() && c.stdout.CanRead() {
 		p := c.stdout
 		c.lock.Unlock()
-		return p.Push(L)
+		return p.PushNew(L)
 	}
 
 	stdoutPipe, err := c.gocmd.StdoutPipe()
@@ -213,7 +213,7 @@ func acquireStdoutPipe(L *lua.LState) int {
 	c.stdout = p
 	c.closeStdout = true
 	c.lock.Unlock()
-	return p.Push(L)
+	return p.PushNew(L)
 }
 
 func (c *Cmd) setupStdio() error {

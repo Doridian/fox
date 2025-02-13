@@ -42,6 +42,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 		"getErrorPropagation": getErrorPropagation,
 		"errorPropagation":    setErrorPropagation,
+		"getAutoLookPath":     getAutoLookPath,
+		"autoLookPath":        setAutoLookPath,
 	}))
 	L.SetFuncs(mt, map[string]lua.LGFunction{
 		"__tostring": cmdToString,
@@ -49,7 +51,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	})
 
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"new": newCmd,
+		"new":      newCmd,
+		"lookPath": lookPath,
 	})
 
 	mod.RawSetString(LuaTypeName, mt)
