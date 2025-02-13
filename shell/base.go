@@ -64,13 +64,6 @@ func (s *Shell) luaInit() {
 	}
 }
 
-// if .. then .. end
-// while .. do .. end
-// repeat .. until ..
-// for .. do .. end
-// .. = ..
-// ( .. )
-
 var ErrNeedMore = errors.New("Need more input")
 
 func defaultShellParser(cmd string) (string, error) {
