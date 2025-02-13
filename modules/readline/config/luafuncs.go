@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -186,6 +184,6 @@ func cfgToString(L *lua.LState) int {
 	if cfg == nil {
 		return 0
 	}
-	L.Push(lua.LString(fmt.Sprintf("%s", LuaType)))
+	L.Push(lua.LString(ToString(cfg)))
 	return 1
 }

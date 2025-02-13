@@ -11,6 +11,7 @@ import (
 	"github.com/Doridian/fox/modules/fs"
 	"github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/pipe"
+	"github.com/Doridian/fox/modules/readline"
 	"github.com/Doridian/fox/modules/time"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -39,6 +40,7 @@ func NewLuaModule() *LuaModule {
 		env.NewLuaModule(),
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),
+		readline.NewLuaModule(),
 	}
 
 	gomodsProxied := make([]*moduleProxyInt, 0, len(gomods))

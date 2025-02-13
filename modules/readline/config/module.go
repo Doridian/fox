@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+
+	goreadline "github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -30,4 +33,11 @@ func Load(L *lua.LState, tbl *lua.LTable) {
 	}))
 	mt.RawSetString("__tostring", L.NewFunction(cfgToString))
 	tbl.RawSetString(LuaTypeName, mt)
+}
+
+func ToString(cfg *goreadline.Config) string {
+	if cfg == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("%s{\"%s\"}", LuaType, cfg.Prompt)
 }

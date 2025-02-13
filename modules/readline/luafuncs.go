@@ -70,11 +70,65 @@ func rlGetConfig(L *lua.LState) int {
 	return config.PushNew(L, rl.GetConfig())
 }
 
+func rlReadLineWithConfig(L *lua.LState) int {
+	rl, _ := Check(L, 1)
+	if rl == nil {
+		return 0
+	}
+	cfg, _ := config.Check(L, 2)
+
+	val, err := rl.ReadLineWithConfig(cfg)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	L.Push(lua.LString(val))
+	return 1
+}
+
+func rlReadLine(L *lua.LState) int {
+	rl, _ := Check(L, 1)
+	if rl == nil {
+		return 0
+	}
+
+	val, err := rl.ReadLine()
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	L.Push(lua.LString(val))
+	return 1
+}
+
+func rlReadLineWithDefault(L *lua.LState) int {
+	rl, _ := Check(L, 1)
+	if rl == nil {
+		return 0
+	}
+	def := L.CheckString(2)
+	if def == "" {
+		L.ArgError(2, "default value must not be empty")
+		return 0
+	}
+
+	val, err := rl.ReadLineWithDefault(def)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	L.Push(lua.LString(val))
+	return 1
+}
+
 func rlToString(L *lua.LState) int {
 	rl, _ := Check(L, 1)
 	if rl == nil {
 		return 0
 	}
-	L.Push(lua.LString(fmt.Sprintf("%s", LuaType)))
+	L.Push(lua.LString(fmt.Sprintf("%s{%s}", LuaType, config.ToString(rl.GetConfig()))))
 	return 1
 }
