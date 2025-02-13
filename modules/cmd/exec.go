@@ -21,7 +21,7 @@ func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData,
 		if err == nil {
 			err = fmt.Errorf("command exited with code %d", exitCode)
 		}
-		L.RaiseError("%s", err.Error())
+		L.RaiseError("%v", err)
 		return 0
 	}
 

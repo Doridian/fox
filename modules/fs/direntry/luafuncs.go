@@ -45,7 +45,7 @@ func deInfo(L *lua.LState) int {
 
 	fi, err := de.Info()
 	if err != nil {
-		L.RaiseError("%v", err.Error())
+		L.RaiseError("%v", err)
 		return 0
 	}
 	return fileinfo.PushNew(L, fi)
