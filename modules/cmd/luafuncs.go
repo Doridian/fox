@@ -254,18 +254,10 @@ func newCmd(L *lua.LState) int {
 
 func runCmd(L *lua.LState) int {
 	c, ud := newCmdInt(L)
-	if c == nil {
-		return 0
-	}
-
 	return c.doRun(L, ud)
 }
 
 func startCmd(L *lua.LState) int {
 	c, ud := newCmdInt(L)
-	if c == nil {
-		return 0
-	}
-
 	return c.doStart(L, ud)
 }
