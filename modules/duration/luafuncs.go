@@ -115,3 +115,13 @@ func luaToString(L *lua.LState) int {
 	L.Push(lua.LString(fmt.Sprintf("%s{%s}", LuaType, d.String())))
 	return 1
 }
+
+func durationParse(L *lua.LState) int {
+	dStr := L.CheckString(1)
+	d, err := time.ParseDuration(dStr)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+	return Push(L, d)
+}
