@@ -111,7 +111,7 @@ func (s *ShellManager) Run(p *prompt.PromptManager, cmd string) int {
 			log.Printf("Error parsing command: %v", err)
 			return 0
 		}
-		cmdAdd, err := p.Prompt("f.x> ")
+		cmdAdd, err := p.Prompt("fo+> ")
 		if err != nil {
 			log.Printf("Prompt aborted: %v", err)
 			os.Exit(0)
