@@ -15,8 +15,6 @@ package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
 shell.parsers = {}
-shell.commands = {}
-
 function shell.parsers.lua(cmd)
     local cmdLen = cmd:len()
     if cmd:sub(cmdLen - 1, cmdLen) == "\n\n" then
@@ -25,6 +23,7 @@ function shell.parsers.lua(cmd)
     return true
 end
 
+shell.commands = {}
 function shell.parsers.cmd(cmd)
     return false
 end
