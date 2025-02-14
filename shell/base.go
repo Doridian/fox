@@ -230,6 +230,8 @@ func (s *Shell) startLuaLock() {
 }
 
 func (s *Shell) endLuaLock(err error) int {
+	defer s.lLock.Unlock()
+
 	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
 
 	if err == nil {
@@ -246,7 +248,6 @@ func (s *Shell) endLuaLock(err error) int {
 	}
 	s.ctx = nil
 	s.cancelCtx = nil
-	s.lLock.Unlock()
 
 	if err != nil {
 		if exitCode == 0 {
