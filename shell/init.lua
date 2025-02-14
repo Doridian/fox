@@ -1,3 +1,6 @@
+local shell = require("fox.shell")
+local Env = require("fox.Env")
+
 local config_home = Env["XDG_CONFIG_HOME"]
 if (not config_home) or config_home == "" then
     config_home = Env["HOME"] .. "/.config"
@@ -13,7 +16,7 @@ if not ok then
     print("Error loading user init.lua: " .. tostring(err))
 end
 
-shell.parsers = {}
+shell.parsers = shell.parsers or {}
 function shell.parsers.lua(cmd)
     cmdLen = cmd:len()
     cmdLastTwo = cmd:sub(cmdLen - 1, cmdLen)

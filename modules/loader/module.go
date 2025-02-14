@@ -19,12 +19,13 @@ import (
 const LuaName = "fox.index"
 
 type ModuleConfig struct {
-	Global   bool
-	Autoload bool
+	Global     bool
+	Autoload   bool
+	GlobalName string
 }
 
-func DefaultLuaModuleConfig() ModuleConfig {
-	return ModuleConfig{
+func DefaultConfig() *ModuleConfig {
+	return &ModuleConfig{
 		Global:   true,
 		Autoload: true,
 	}
@@ -64,16 +65,16 @@ func NewLuaModule() *LuaModule {
 }
 
 func (m *LuaModule) AddModuleDefault(L *lua.LState, mod modules.LuaModule) {
-	m.AddModule(L, mod, DefaultLuaModuleConfig())
+	m.AddModule(L, mod, DefaultConfig())
 }
 
-func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg ModuleConfig) {
+func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg *ModuleConfig) {
 	m.loaderLock.Lock()
 	defer m.loaderLock.Unlock()
 
 	inst := &ModuleInstance{
 		mod: mod,
-		cfg: cfg,
+		cfg: *cfg,
 	}
 	m.gomods = append(m.gomods, inst)
 	if m.loaded {

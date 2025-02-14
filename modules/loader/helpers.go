@@ -27,13 +27,15 @@ func (i *ModuleInstance) loaderProxy(L *lua.LState) int {
 	}
 
 	modL := L.Get(-1)
-
-	modVarName := i.mod.Name()
-	modDotIdx := strings.LastIndex(modVarName, ".")
-	if modDotIdx != -1 {
-		modVarName = modVarName[modDotIdx+1:]
-	}
-	L.SetGlobal(modVarName, modL)
+	L.SetGlobal(i.globalName(), modL)
 
 	return retC
+}
+
+func (i *ModuleInstance) globalName() string {
+	if i.cfg.GlobalName != "" {
+		return i.cfg.GlobalName
+	}
+
+	return strings.TrimPrefix(i.mod.Name(), "fox.")
 }
