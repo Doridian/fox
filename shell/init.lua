@@ -26,7 +26,7 @@ end
 shell.commands = {}
 function shell.parsers.cmd(cmd)
     local parsed = shell.defaultShellParser(cmd)
-    if (not parsed) or parsed == true then
+    if parsed == true or parsed == "" then
         return parsed
     end
 
