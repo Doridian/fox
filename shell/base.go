@@ -64,6 +64,9 @@ func (s *Shell) Loader(L *lua.LState) int {
 		"exit":              luaExit,
 		"readlineConfig":    s.luaSetReadlineConfig,
 		"getReadlineConfig": s.luaGetReadlineConfig,
+
+		"defaultShellParser":  luaDefaultShellParser,
+		"defaultRenderPrompt": luaDefaultRenderPrompt,
 	})
 	s.mod = mod
 	L.Push(mod)
@@ -113,6 +116,21 @@ func defaultShellParser(cmd string) (string, error) {
 	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
 }
 
+func luaDefaultShellParser(L *lua.LState) int {
+	cmd := L.CheckString(1)
+	parsed, err := defaultShellParser(cmd)
+	if err != nil {
+		if errors.Is(err, ErrNeedMore) {
+			L.Push(lua.LTrue)
+			return 1
+		}
+		L.RaiseError("Error parsing command: %v", err)
+		return 0
+	}
+	L.Push(lua.LString(parsed))
+	return 1
+}
+
 func (s *Shell) shellParser(cmd string) (string, error) {
 	if s.mod == nil {
 		return defaultShellParser(cmd)
@@ -147,6 +165,12 @@ func defaultRenderPrompt(lineNo int) string {
 		return "fox> "
 	}
 	return "fo+> "
+}
+
+func luaDefaultRenderPrompt(L *lua.LState) int {
+	lineNo := L.CheckInt(1)
+	L.Push(lua.LString(defaultRenderPrompt(lineNo)))
+	return 1
 }
 
 func (s *Shell) renderPrompt(lineNo int) string {
