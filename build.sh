@@ -1,4 +1,5 @@
 #!/bin/sh
-set -e
-go build -o ~/.local/bin/fox .
+set -ex
+go generate ./...
+go build -o ~/.local/bin/fox ./cmd
 exec fox

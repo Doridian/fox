@@ -2,4 +2,4 @@
 *.exe
 *.dll
 .vscode
-
+*.generated.go
