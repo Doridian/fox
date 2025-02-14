@@ -40,19 +40,8 @@ func New() *Shell {
 	return s
 }
 
-func (s *Shell) interruptOne() {
-	if s.mainMod.Interrupt(false) {
-		return
-	}
-
-	cancelCtx := s.cancelCtx
-	if cancelCtx != nil {
-		cancelCtx()
-	}
-}
-
-func (s *Shell) interruptAll() {
-	s.mainMod.Interrupt(true)
+func (s *Shell) sendInterrupt() {
+	s.mainMod.Interrupt()
 
 	cancelCtx := s.cancelCtx
 	if cancelCtx != nil {
@@ -65,7 +54,7 @@ func (s *Shell) signalInit() {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		for range signals {
-			s.interruptAll()
+			s.sendInterrupt()
 		}
 	}()
 }

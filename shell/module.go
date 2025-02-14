@@ -34,7 +34,7 @@ func (s *Shell) Dependencies() []string {
 	return []string{}
 }
 
-func (s *Shell) Interrupt(all bool) bool {
+func (s *Shell) Interrupt() bool {
 	return false
 }
 

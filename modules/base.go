@@ -8,7 +8,7 @@ type LuaModule interface {
 	Name() string
 	Dependencies() []string
 	Loader(l *lua.LState) int
-	Interrupt(all bool) bool // Return true if you took the Interrupt (stops trying to stop other things unless all is true)
+	Interrupt() bool // Return true if you took the Interrupt (stops trying to stop other things unless all is true)
 	PrePrompt()
 }
 

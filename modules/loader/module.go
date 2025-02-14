@@ -116,14 +116,11 @@ func (m *LuaModule) Name() string {
 	return LuaName
 }
 
-func (m *LuaModule) Interrupt(all bool) bool {
+func (m *LuaModule) Interrupt() bool {
 	hit := false
 	for _, inst := range m.gomods {
-		if inst.mod.Interrupt(all) {
+		if inst.mod.Interrupt() {
 			hit = true
-			if !all {
-				break
-			}
 		}
 	}
 	return hit
