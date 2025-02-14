@@ -15,7 +15,7 @@ package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
 shell.parsers = {}
-function shell.parsers.lua(cmd)
+function shell.parsers.lua(cmd, lineNo)
     local cmdLen = cmd:len()
     if cmd:sub(cmdLen - 1, cmdLen) == "\n\n" then
         return cmd
@@ -24,8 +24,8 @@ function shell.parsers.lua(cmd)
 end
 
 shell.commands = {}
-function shell.parsers.cmd(cmd)
-    local parsed, promptOverride = shell.defaultShellParser(cmd)
+function shell.parsers.cmd(cmd, lineNo)
+    local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
     if (not parsed) or parsed == true or parsed == "" then
         return parsed, promptOverride
     end
@@ -35,12 +35,12 @@ function shell.parsers.cmd(cmd)
 end
 shell.parsers.default = shell.parsers.cmd
 
-function shell.parser(cmd)
+function shell.parser(cmd, lineNo)
     if cmd:sub(1, 1) == "!" then
         local newLine = cmd:find("\n", 1, true)
         local cmdPrefix = cmd:sub(2, newLine - 1)
         if shell.parsers[cmdPrefix] then
-            return shell.parsers[cmdPrefix](cmd:sub(newLine + 1))
+            return shell.parsers[cmdPrefix](cmd:sub(newLine + 1), lineNo)
         end
 
         print("Unknown parser " .. cmdPrefix)
@@ -49,7 +49,7 @@ function shell.parser(cmd)
 
     local defParser = shell.parsers.default
     if defParser then
-        return defParser(cmd)
+        return defParser(cmd, lineNo)
     end
     return false
 end

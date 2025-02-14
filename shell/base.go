@@ -128,7 +128,7 @@ func luaDefaultShellParser(L *lua.LState) int {
 	return 2
 }
 
-func (s *Shell) shellParser(cmd string) (string, bool, *string) {
+func (s *Shell) shellParser(cmd string, lineNo int) (string, bool, *string) {
 	if s.mod == nil {
 		return defaultShellParser(cmd)
 	}
@@ -142,7 +142,8 @@ func (s *Shell) shellParser(cmd string) (string, bool, *string) {
 	defer s.endLuaLock(false, nil)
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
-	err := s.l.PCall(1, 2, nil)
+	s.l.Push(lua.LNumber(lineNo))
+	err := s.l.PCall(2, 2, nil)
 	if err != nil {
 		log.Printf("Error in Lua shell.parser: %v", err)
 		return defaultShellParser(cmd)
@@ -299,9 +300,9 @@ func (s *Shell) runPromptOne() (bool, error) {
 		}
 		cmdBuilder.WriteString(cmdAdd)
 		cmdBuilder.WriteRune('\n')
-		lineNo++
 
-		luaCode, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String())
+		luaCode, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String(), lineNo)
+		lineNo++
 	}
 
 	return true, s.RunString(luaCode)
