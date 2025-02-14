@@ -10,7 +10,6 @@ import (
 
 	_ "embed"
 
-	"github.com/Doridian/fox/modules/cmd"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
@@ -96,7 +95,7 @@ func (s *Shell) init() {
 	s.signalInit()
 
 	s.startLuaLock()
-	defer s.endLuaLock(nil)
+	defer s.endLuaLock(false, nil)
 	err = s.l.DoString(initCode)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
@@ -125,7 +124,7 @@ func (s *Shell) shellParser(cmd string) (string, error) {
 	}
 
 	s.startLuaLock()
-	defer s.endLuaLock(nil)
+	defer s.endLuaLock(false, nil)
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
 	err := s.l.PCall(1, 1, nil)
@@ -161,7 +160,7 @@ func (s *Shell) renderPrompt(lineNo int) string {
 	}
 
 	s.startLuaLock()
-	defer s.endLuaLock(nil)
+	defer s.endLuaLock(false, nil)
 	s.l.Push(renderPrompt)
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
@@ -186,40 +185,31 @@ func (s *Shell) readLine(disp string) (string, error) {
 	return s.rl.ReadLine()
 }
 
-func (s *Shell) RunScript(file string) int {
+func (s *Shell) RunFile(file string) error {
 	s.startLuaLock()
 	err := s.l.DoFile(file)
-	return s.endLuaLock(err)
+	s.endLuaLock(err == nil, err)
+	return err
 }
 
-func (s *Shell) RunString(code string) int {
+func (s *Shell) RunString(code string) error {
 	if code == "" || code == "\n" {
-		return 0
+		return nil
 	}
 
 	s.startLuaLock()
 	err := s.l.DoString(code)
-	return s.endLuaLock(err)
+	s.endLuaLock(err == nil, err)
+	return err
 }
 
-func (s *Shell) RunPrompt() bool {
-	s.mainMod.PrePrompt()
-
-	res, err := s.readLine(s.renderPrompt(1))
-	if err != nil {
-		if errors.Is(err, readline.ErrInterrupt) {
-			return true
-		}
-		log.Printf("Prompt aborted: %v", err)
-		return false
+func (s *Shell) RunPrompt() error {
+	var err error
+	running := true
+	for running {
+		running, err = s.runPromptOne()
 	}
-	if res != "" {
-		exitCode := s.runPromptInt(res)
-		if exitCode != 0 {
-			log.Printf("Exit code: %v", exitCode)
-		}
-	}
-	return true
+	return err
 }
 
 func (s *Shell) startLuaLock() {
@@ -229,12 +219,10 @@ func (s *Shell) startLuaLock() {
 	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 }
 
-func (s *Shell) endLuaLock(err error) int {
+func (s *Shell) endLuaLock(printStack bool, err error) {
 	defer s.lLock.Unlock()
 
-	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
-
-	if err == nil {
+	if printStack {
 		retC := s.l.GetTop()
 		if retC > 0 {
 			s.l.Insert(s.print, 0)
@@ -250,49 +238,39 @@ func (s *Shell) endLuaLock(err error) int {
 	s.cancelCtx = nil
 
 	if err != nil {
-		if exitCode == 0 {
-			exitCode = cmd.ExitCodeInternalShellError
-		}
 		log.Printf("Lua error: %v", err)
-		return exitCode
 	}
-
-	return exitCode
 }
 
-func (s *Shell) runPromptInt(firstLine string) int {
+func (s *Shell) runPromptOne() (bool, error) {
 	var luaCode string
-	var err error
+
+	s.mainMod.PrePrompt()
 
 	cmdBuilder := strings.Builder{}
-	cmdBuilder.WriteString(firstLine)
-
 	lineNo := 1
-
 	for {
+		cmdAdd, err := s.readLine(s.renderPrompt(lineNo))
+		if err != nil {
+			if errors.Is(err, readline.ErrInterrupt) {
+				return true, err
+			}
+			log.Printf("Prompt aborted: %v", err)
+			return false, err
+		}
+		cmdBuilder.WriteString(cmdAdd)
 		cmdBuilder.WriteRune('\n')
+		lineNo++
 
 		luaCode, err = s.shellParser(cmdBuilder.String())
 		if err == nil {
 			break
 		}
 		if err != ErrNeedMore {
-			log.Printf("Error parsing command: %v", err)
-			return 0
+			log.Printf("Internal error parsing command: %v", err)
+			return false, err
 		}
-
-		lineNo++
-		cmdAdd, err := s.readLine(s.renderPrompt(lineNo))
-		if err != nil {
-			if errors.Is(err, readline.ErrInterrupt) {
-				return 0
-			}
-			log.Printf("Prompt aborted: %v", err)
-			os.Exit(0)
-			return 0
-		}
-		cmdBuilder.WriteString(cmdAdd)
 	}
 
-	return s.RunString(luaCode)
+	return true, s.RunString(luaCode)
 }

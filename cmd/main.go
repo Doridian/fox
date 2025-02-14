@@ -8,6 +8,12 @@ import (
 	_ "github.com/Doridian/fox/modules/loader/builtins"
 )
 
+var continuePtr = flag.Bool("c", false, "Continue after running script")
+
+func handleError() {
+
+}
+
 func main() {
 	flag.Parse()
 
@@ -15,12 +21,11 @@ func main() {
 
 	runScript := flag.Arg(0)
 	if runScript != "" {
-		s.RunScript(runScript)
-		return
+		s.RunFile(runScript)
+		if !*continuePtr {
+			return
+		}
 	}
 
-	running := true
-	for running {
-		running = s.RunPrompt()
-	}
+	s.RunPrompt()
 }

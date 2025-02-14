@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ExitCodeInternalShellError   = -10001
+	ExitCodeLuaError             = -10001
 	ExitCodeProcessCouldNotStart = -10002
 )
 

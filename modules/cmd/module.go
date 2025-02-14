@@ -36,7 +36,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	})
 
 	exitCodes := L.NewTable()
-	exitCodes.RawSetString("InternalShellError", lua.LNumber(ExitCodeInternalShellError))
+	exitCodes.RawSetString("LuaError", lua.LNumber(ExitCodeLuaError))
 	exitCodes.RawSetString("ProcessCouldNotStart", lua.LNumber(ExitCodeProcessCouldNotStart))
 	mod.RawSetString("ExitCodes", exitCodes)
 
