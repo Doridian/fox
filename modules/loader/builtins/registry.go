@@ -1,4 +1,4 @@
-package all
+package builtins
 
 import (
 	_ "github.com/Doridian/fox/modules/cmd"
