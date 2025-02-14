@@ -96,6 +96,7 @@ func (s *Shell) init() {
 	s.signalInit()
 
 	s.startLuaLock()
+	defer s.endLuaLock(nil)
 	err = s.l.DoString(initCode)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
@@ -104,7 +105,6 @@ func (s *Shell) init() {
 	if s.l.GetTop() > 0 {
 		log.Fatalf("luaInit %d left stack frames!", s.l.GetTop())
 	}
-	s.endLuaLock(nil)
 }
 
 func defaultShellParser(cmd string) (string, error) {
