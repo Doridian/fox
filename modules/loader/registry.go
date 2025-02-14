@@ -10,7 +10,7 @@ var ctors []*ModuleCtor
 var ctorLock sync.Mutex
 
 func AddModuleDefault(ctor func() modules.LuaModule) {
-	AddModule(ctor, DefaultConfig())
+	AddModule(ctor, ModuleConfig{})
 }
 
 func AddModule(ctor func() modules.LuaModule, cfg ModuleConfig) {

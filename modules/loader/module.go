@@ -11,21 +11,40 @@ import (
 const LuaName = "fox.loader"
 
 type ModuleConfig struct {
-	Global     bool
-	AutoLoad   bool
+	Global     *bool
+	AutoLoad   *bool
 	GlobalName string
 }
 
-var defaultModuleConfig = ModuleConfig{
+type DefaultModuleConfig struct {
+	Global   bool
+	AutoLoad bool
+}
+
+func (c *ModuleConfig) IsGlobal() bool {
+	if c.Global != nil {
+		return *c.Global
+	}
+	return defaultModuleConfig.Global
+}
+
+func (c *ModuleConfig) IsAutoLoad() bool {
+	if c.AutoLoad != nil {
+		return *c.AutoLoad
+	}
+	return defaultModuleConfig.AutoLoad
+}
+
+var defaultModuleConfig = DefaultModuleConfig{
 	Global:   false,
 	AutoLoad: true,
 }
 
-func DefaultConfig() ModuleConfig {
+func DefaultConfig() DefaultModuleConfig {
 	return defaultModuleConfig
 }
 
-func SetDefaultConfig(cfg ModuleConfig) {
+func SetDefaultConfig(cfg DefaultModuleConfig) {
 	defaultModuleConfig = cfg
 }
 
@@ -48,13 +67,13 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 
 	mName := lua.LString(inst.mod.Name())
 	m.builtins.Append(mName)
-	if inst.cfg.AutoLoad {
+	if inst.cfg.IsAutoLoad() {
 		m.autoload.Append(mName)
 	}
 }
 
 func (m *LuaModule) ManualRegisterModuleDefault(mod modules.LuaModule) error {
-	return m.ManualRegisterModule(mod, DefaultConfig())
+	return m.ManualRegisterModule(mod, ModuleConfig{})
 }
 
 func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg ModuleConfig) error {
@@ -88,7 +107,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		}
 
 		for _, inst := range m.gomods {
-			if inst.cfg.AutoLoad {
+			if inst.cfg.IsAutoLoad() {
 				modules.Require(L, inst.mod.Name())
 			}
 		}
@@ -110,11 +129,11 @@ func (m *LuaModule) Load(L *lua.LState) {
 	m.builtins = L.NewTable()
 	m.autoload = L.NewTable()
 
+	t := true
 	m.preLoadMod(L, &ModuleInstance{
 		mod: m,
 		cfg: ModuleConfig{
-			Global:   true,
-			AutoLoad: true,
+			AutoLoad: &t,
 		},
 	})
 	modules.Require(L, m.Name())

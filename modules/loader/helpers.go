@@ -20,7 +20,7 @@ type ModuleCtor struct {
 func (i *ModuleInstance) loaderProxy(L *lua.LState) int {
 	modules.RequireDependencies(L, i.mod)
 	retC := i.mod.Loader(L)
-	if retC < 1 || !i.cfg.Global {
+	if retC < 1 || !i.cfg.IsGlobal() {
 		return retC
 	}
 
