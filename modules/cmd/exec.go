@@ -12,7 +12,9 @@ func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData)
 
 	exitCodeL := lua.LNumber(exitCode)
 
-	L.SetGlobal("_LAST_EXIT_CODE", exitCodeL)
+	if c.foreground {
+		L.SetGlobal("_LAST_EXIT_CODE", exitCodeL)
+	}
 	if c.ErrorPropagation && exitCode != 0 {
 		L.RaiseError("command exited with code %d", exitCode)
 		return 0
