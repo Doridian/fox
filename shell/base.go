@@ -28,7 +28,6 @@ func New() *Shell {
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
 	}
-	rl.EnableHistory()
 
 	s := &Shell{
 		l: lua.NewState(lua.Options{
@@ -38,6 +37,7 @@ func New() *Shell {
 		rl: rl,
 	}
 	s.init()
+
 	return s
 }
 
@@ -96,8 +96,8 @@ func (s *Shell) init() {
 	s.signalInit()
 
 	s.startLuaLock()
-	defer s.endLuaLock()
 	err = s.l.DoString(initCode)
+	s.endLuaLock(nil)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
 	}
@@ -128,7 +128,7 @@ func (s *Shell) shellParser(cmd string) (string, error) {
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
 	err := s.l.PCall(1, 1, nil)
-	s.endLuaLock()
+	s.endLuaLock(nil)
 	if err != nil {
 		log.Printf("Error in Lua shell.parser: %v", err)
 		return defaultShellParser(cmd)
@@ -164,7 +164,7 @@ func (s *Shell) renderPrompt(lineNo int) string {
 	defer s.l.Push(renderPrompt)
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
-	s.endLuaLock()
+	s.endLuaLock(nil)
 	if err != nil {
 		log.Printf("Error in Lua shell.renderPrompt: %v", err)
 		return defaultRenderPrompt(lineNo)
@@ -186,7 +186,13 @@ func (s *Shell) readLine(disp string) (string, error) {
 	return s.rl.ReadLine()
 }
 
-func (s *Shell) Run() bool {
+func (s *Shell) RunScript(file string) int {
+	s.startLuaLock()
+	err := s.l.DoFile(file)
+	return s.endLuaLock(err)
+}
+
+func (s *Shell) RunPrompt() bool {
 	s.mainMod.PrePrompt()
 
 	res, err := s.readLine(s.renderPrompt(1))
@@ -198,7 +204,7 @@ func (s *Shell) Run() bool {
 		return false
 	}
 	if res != "" {
-		exitCode := s.runOne(res)
+		exitCode := s.runPromptInt(res)
 		if exitCode != 0 {
 			log.Printf("Exit code: %v", exitCode)
 		}
@@ -210,9 +216,10 @@ func (s *Shell) startLuaLock() {
 	s.lLock.Lock()
 	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
 	s.l.SetContext(s.ctx)
+	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 }
 
-func (s *Shell) endLuaLock() {
+func (s *Shell) endLuaLock(err error) int {
 	cancelCtx := s.cancelCtx
 	if cancelCtx != nil {
 		cancelCtx()
@@ -220,10 +227,27 @@ func (s *Shell) endLuaLock() {
 	s.ctx = nil
 	s.cancelCtx = nil
 	s.lLock.Unlock()
+
+	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
+
+	if err != nil {
+		if exitCode == 0 {
+			exitCode = cmd.ExitCodeInternalShellError
+		}
+		log.Printf("Lua error: %v", err)
+		return exitCode
+	}
+
+	retC := s.l.GetTop()
+	if retC > 0 {
+		s.l.Insert(s.print, 0)
+		s.l.Call(retC, 0)
+	}
+
+	return exitCode
 }
 
-// Return true to exit shell
-func (s *Shell) runOne(firstLine string) int {
+func (s *Shell) runPromptInt(firstLine string) int {
 	var luaCode string
 	var err error
 
@@ -262,24 +286,6 @@ func (s *Shell) runOne(firstLine string) int {
 	}
 
 	s.startLuaLock()
-	defer s.endLuaLock()
-	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 	err = s.l.DoString(luaCode)
-	exitCode := int(lua.LVAsNumber(s.l.GetGlobal("_LAST_EXIT_CODE")))
-
-	if err != nil {
-		if exitCode == 0 {
-			exitCode = cmd.ExitCodeInternalShellError
-		}
-		log.Printf("Lua error: %v", err)
-		return exitCode
-	}
-
-	retC := s.l.GetTop()
-	if retC > 0 {
-		s.l.Insert(s.print, 0)
-		s.l.Call(retC, 0)
-	}
-
-	return exitCode
+	return s.endLuaLock(err)
 }
