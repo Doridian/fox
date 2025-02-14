@@ -3,6 +3,8 @@ package duration
 import (
 	"time"
 
+	"github.com/Doridian/fox/modules"
+	"github.com/Doridian/fox/modules/loader"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -13,7 +15,7 @@ const LuaType = LuaName + ":" + LuaTypeName
 type LuaModule struct {
 }
 
-func NewLuaModule() *LuaModule {
+func newLuaModule() modules.LuaModule {
 	return &LuaModule{}
 }
 
@@ -77,4 +79,8 @@ func (m *LuaModule) Interrupt(all bool) bool {
 
 func (m *LuaModule) PrePrompt() {
 	// no-op
+}
+
+func init() {
+	loader.AddModuleDefault(newLuaModule)
 }

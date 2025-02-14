@@ -10,18 +10,16 @@ import (
 type ModuleInstance struct {
 	mod modules.LuaModule
 	cfg ModuleConfig
+}
 
-	loader lua.LGFunction
+type ModuleCtor struct {
+	ctor func() modules.LuaModule
+	cfg  ModuleConfig
 }
 
 func (i *ModuleInstance) loaderProxy(L *lua.LState) int {
 	modules.RequireDependencies(L, i.mod)
-	var retC int
-	if i.loader != nil {
-		retC = i.loader(L)
-	} else {
-		retC = i.mod.Loader(L)
-	}
+	retC := i.mod.Loader(L)
 	if retC < 1 || !i.cfg.Global {
 		return retC
 	}

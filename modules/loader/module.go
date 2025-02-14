@@ -4,19 +4,10 @@ import (
 	"sync"
 
 	"github.com/Doridian/fox/modules"
-	"github.com/Doridian/fox/modules/cmd"
-	"github.com/Doridian/fox/modules/duration"
-	"github.com/Doridian/fox/modules/embed"
-	"github.com/Doridian/fox/modules/env"
-	"github.com/Doridian/fox/modules/fs"
-	"github.com/Doridian/fox/modules/io"
-	"github.com/Doridian/fox/modules/pipe"
-	"github.com/Doridian/fox/modules/readline"
-	"github.com/Doridian/fox/modules/time"
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.index"
+const LuaName = "fox.loader"
 
 type ModuleConfig struct {
 	Global     bool
@@ -39,51 +30,10 @@ type LuaModule struct {
 
 	builtins *lua.LTable
 	autoload *lua.LTable
-	globals  *lua.LTable
 }
 
 func NewLuaModule() *LuaModule {
-	m := &LuaModule{}
-
-	gomods := []modules.LuaModule{
-		time.NewLuaModule(),
-		duration.NewLuaModule(),
-		io.NewLuaModule(),
-		fs.NewLuaModule(),
-		embed.NewLuaModule(),
-		pipe.NewLuaModule(),
-		cmd.NewLuaModule(),
-		readline.NewLuaModule(),
-	}
-
-	for _, mod := range gomods {
-		m.AddModuleDefault(mod)
-	}
-
-	cfg := DefaultConfig()
-	cfg.GlobalName = "Env"
-	m.AddModule(env.NewLuaModule(), cfg)
-
-	return m
-}
-
-func (m *LuaModule) AddModuleDefault(mod modules.LuaModule) {
-	m.AddModule(mod, DefaultConfig())
-}
-
-func (m *LuaModule) AddModule(mod modules.LuaModule, cfg *ModuleConfig) {
-	if m.loaded {
-		panic("Cannot add modules after loading")
-	}
-
-	m.loaderLock.Lock()
-	defer m.loaderLock.Unlock()
-
-	inst := &ModuleInstance{
-		mod: mod,
-		cfg: *cfg,
-	}
-	m.gomods = append(m.gomods, inst)
+	return &LuaModule{}
 }
 
 func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
@@ -91,12 +41,24 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 
 	mName := lua.LString(inst.mod.Name())
 	m.builtins.Append(mName)
-	if inst.cfg.Global {
-		m.globals.Append(mName)
-	}
 	if inst.cfg.AutoLoad {
 		m.autoload.Append(mName)
 	}
+}
+
+func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg *ModuleConfig) {
+	if m.loaded {
+		panic("Cannot manually register modules after the loader has been loaded")
+	}
+
+	if cfg == nil {
+		cfg = DefaultConfig()
+	}
+
+	m.gomods = append(m.gomods, &ModuleInstance{
+		mod: mod,
+		cfg: *cfg,
+	})
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
@@ -104,6 +66,15 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	defer m.loaderLock.Unlock()
 
 	if !m.loaded {
+		ctorLock.Lock()
+		for _, ctor := range ctors {
+			m.gomods = append(m.gomods, &ModuleInstance{
+				mod: ctor.ctor(),
+				cfg: ctor.cfg,
+			})
+		}
+		ctorLock.Unlock()
+
 		for _, inst := range m.gomods {
 			m.preLoadMod(L, inst)
 		}
@@ -119,7 +90,6 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.NewTable()
 	mod.RawSetString("BuiltIns", m.builtins)
 	mod.RawSetString("AutoLoad", m.autoload)
-	mod.RawSetString("Globals", m.globals)
 	L.Push(mod)
 	return 1
 }
@@ -131,7 +101,6 @@ func (m *LuaModule) Dependencies() []string {
 func (m *LuaModule) Load(L *lua.LState) {
 	m.builtins = L.NewTable()
 	m.autoload = L.NewTable()
-	m.globals = L.NewTable()
 
 	m.preLoadMod(L, &ModuleInstance{
 		mod: m,

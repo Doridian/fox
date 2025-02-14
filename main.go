@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/Doridian/fox/shell"
+
+	_ "github.com/Doridian/fox/modules/loader/builtins"
 )
 
 func main() {

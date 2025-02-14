@@ -1,7 +1,9 @@
 package embed
 
 import (
+	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/fs"
+	"github.com/Doridian/fox/modules/loader"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -10,7 +12,7 @@ const LuaName = "fox.embed"
 type LuaModule struct {
 }
 
-func NewLuaModule() *LuaModule {
+func newLuaModule() modules.LuaModule {
 	return &LuaModule{}
 }
 
@@ -54,4 +56,10 @@ func (m *LuaModule) Interrupt(all bool) bool {
 
 func (m *LuaModule) PrePrompt() {
 	// no-op
+}
+
+func init() {
+	cfg := loader.DefaultConfig()
+	cfg.GlobalName = "Env"
+	loader.AddModule(newLuaModule, cfg)
 }

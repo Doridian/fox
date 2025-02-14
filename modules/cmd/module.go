@@ -4,6 +4,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/Doridian/fox/modules"
+	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -17,7 +19,7 @@ type LuaModule struct {
 	cmdRegLock sync.Mutex
 }
 
-func NewLuaModule() *LuaModule {
+func newLuaModule() modules.LuaModule {
 	return &LuaModule{
 		allCmds: make(map[*Cmd]bool),
 	}
@@ -142,4 +144,8 @@ func (m *LuaModule) addCmd(cmd *Cmd) {
 	m.cmdRegLock.Lock()
 	m.allCmds[cmd] = true
 	m.cmdRegLock.Unlock()
+}
+
+func init() {
+	loader.AddModuleDefault(newLuaModule)
 }
