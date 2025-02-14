@@ -27,7 +27,19 @@ func (i *ModuleInstance) loaderProxy(L *lua.LState) int {
 	}
 
 	modL := L.Get(-1)
-	L.SetGlobal(i.globalName(), modL)
+	gName := i.globalName()
+
+	gLastDot := strings.LastIndex(gName, ".")
+	if gLastDot <= 0 {
+		L.SetGlobal(gName, modL)
+		return retC
+	}
+
+	gTbl := gName[:gLastDot]
+	gName = gName[gLastDot+1:]
+
+	tbl := L.FindTable(L.G.Global, gTbl, 1).(*lua.LTable)
+	tbl.RawSetString(gName, modL)
 
 	return retC
 }
