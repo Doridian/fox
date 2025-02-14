@@ -1,3 +1,3 @@
 package builtins
 
-//go:generate go run ./gen/runner.go
+//go:generate go run ./generator/main.go
