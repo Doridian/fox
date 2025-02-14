@@ -35,11 +35,6 @@ func (s *Shell) Dependencies() []string {
 }
 
 func (s *Shell) Interrupt(all bool) bool {
-	cancelCtx := s.cancelCtx
-	if cancelCtx != nil {
-		cancelCtx()
-		return true
-	}
 	return false
 }
 

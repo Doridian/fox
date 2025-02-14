@@ -40,12 +40,32 @@ func New() *Shell {
 	return s
 }
 
+func (s *Shell) interruptOne() {
+	if s.mainMod.Interrupt(false) {
+		return
+	}
+
+	cancelCtx := s.cancelCtx
+	if cancelCtx != nil {
+		cancelCtx()
+	}
+}
+
+func (s *Shell) interruptAll() {
+	s.mainMod.Interrupt(true)
+
+	cancelCtx := s.cancelCtx
+	if cancelCtx != nil {
+		cancelCtx()
+	}
+}
+
 func (s *Shell) signalInit() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		for range signals {
-			s.mainMod.Interrupt(false)
+			s.interruptAll()
 		}
 	}()
 }
@@ -258,7 +278,7 @@ func (s *Shell) runOne(firstLine string) int {
 		if exitCode == 0 {
 			exitCode = cmd.ExitCodeInternalShellError
 		}
-		log.Printf("Internal error running command: %v", err)
+		log.Printf("Lua error: %v", err)
 		return exitCode
 	}
 

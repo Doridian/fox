@@ -83,7 +83,14 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 	return 1
 }
 
-func (c *Cmd) prepareAndStartNoLock(defaultStdin bool) error {
+func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
+	if foreground {
+		c.foreground = true
+	}
+	if c.gocmd.Process != nil {
+		return nil
+	}
+
 	var err error
 
 	path := c.gocmd.Args[0]
@@ -95,7 +102,7 @@ func (c *Cmd) prepareAndStartNoLock(defaultStdin bool) error {
 	}
 	c.gocmd.Path = path
 
-	err = c.setupStdio(defaultStdin)
+	err = c.setupStdio(foreground)
 	if err != nil {
 		return err
 	}

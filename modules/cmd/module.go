@@ -93,7 +93,7 @@ func (m *LuaModule) Interrupt(all bool) bool {
 
 	triedKill := false
 	for cmd := range m.allCmds {
-		if !cmd.awaited {
+		if !cmd.foreground {
 			continue
 		}
 
@@ -124,7 +124,7 @@ func (m *LuaModule) PrePrompt() {
 		}
 		toDelete = append(toDelete, cmd)
 
-		if cmd.awaited {
+		if cmd.foreground {
 			continue
 		}
 
