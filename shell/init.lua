@@ -1,24 +1,22 @@
 local shell = require("fox.shell")
 local Env = require("fox.env")
 
-local config_home = Env["XDG_CONFIG_HOME"]
-if (not config_home) or config_home == "" then
-    config_home = Env["HOME"] .. "/.config"
+local configHome = Env["XDG_CONFIG_HOME"]
+if (not configHome) or configHome == "" then
+    configHome = Env["HOME"] .. "/.config"
 end
 
-local fox_base = config_home .. "/fox"
-local lua_base = fox_base .. "/lua"
-_G.LuaBaseDir = lua_base
-_G.BaseDir = fox_base
+local baseDir = configHome .. "/fox"
+_G.BaseDir = baseDir
 
 local readlineConfig = shell.getReadlineConfig()
-readlineConfig:historyFile(fox_base .. "/history")
+readlineConfig:historyFile(baseDir .. "/history")
 shell.readlineConfig(readlineConfig)
 
-package.path = lua_base .. "/modules/?.lua;" .. lua_base .. "/modules/?/init.lua"
+package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-local ok, err = pcall(dofile, lua_base .. "/init.lua")
+local ok, err = pcall(dofile, baseDir .. "/init.lua")
 if not ok then
     print("Error loading user init.lua: " .. tostring(err))
 end
