@@ -1,20 +1,14 @@
-package main
+package fox
 
 import (
 	"flag"
 
 	"github.com/Doridian/fox/shell"
-
-	_ "github.com/Doridian/fox/modules/loader/builtins"
 )
 
 var continuePtr = flag.Bool("c", false, "Continue after running script")
 
-func handleError() {
-
-}
-
-func main() {
+func Main() {
 	flag.Parse()
 
 	s := shell.New()
