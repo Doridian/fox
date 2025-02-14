@@ -57,10 +57,14 @@ func NewLuaModule() *LuaModule {
 	m := &LuaModule{}
 
 	for _, mod := range gomods {
-		m.AddModule(nil, mod, DefaultLuaModuleConfig())
+		m.AddModuleDefault(nil, mod)
 	}
 
 	return m
+}
+
+func (m *LuaModule) AddModuleDefault(L *lua.LState, mod modules.LuaModule) {
+	m.AddModule(L, mod, DefaultLuaModuleConfig())
 }
 
 func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg ModuleConfig) {
