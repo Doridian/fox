@@ -16,8 +16,7 @@ package.cpath = ""
 
 shell.parsers = {}
 function shell.parsers.lua(cmd, lineNo)
-    local cmdLen = cmd:len()
-    if cmd:sub(cmdLen - 1, cmdLen) == "\n\n" then
+    if cmd:sub(#cmd - 1, #cmd) == "\n\n" then
         return cmd
     end
     return true
