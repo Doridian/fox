@@ -26,7 +26,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 		"readDir": doReadDir,
 
-		"open": doOpen,
+		"open":     doOpen,
+		"remove":   doRemove,
+		"mkdir":    doMkdir,
+		"mkdirAll": doMkdirAll,
 	})
 	file.Load(L, mod)
 	fileinfo.Load(L, mod)

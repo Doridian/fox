@@ -1,5 +1,6 @@
 local shell = require("fox.shell")
 local Env = require("fox.env")
+local fs = require("fox.fs")
 
 local configHome = Env["XDG_CONFIG_HOME"]
 if (not configHome) or configHome == "" then
@@ -8,6 +9,7 @@ end
 
 local baseDir = configHome .. "/fox"
 _G.BaseDir = baseDir
+fs.mkdirAll(baseDir)
 
 local readlineConfig = shell.getReadlineConfig()
 readlineConfig:historyFile(baseDir .. "/history")

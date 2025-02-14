@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -19,6 +20,10 @@ func doStat(L *lua.LState) int {
 
 	fi, err := os.Stat(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			L.Push(lua.LNil)
+			return 1
+		}
 		L.RaiseError("%v", err)
 		return 0
 	}
@@ -34,6 +39,10 @@ func doLStat(L *lua.LState) int {
 
 	fi, err := os.Lstat(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			L.Push(lua.LNil)
+			return 1
+		}
 		L.RaiseError("%v", err)
 		return 0
 	}
@@ -133,4 +142,52 @@ func doOpen(L *lua.LState) int {
 	}
 
 	return file.PushNew(L, f)
+}
+
+func doRemove(L *lua.LState) int {
+	path := L.CheckString(1)
+	if path == "" {
+		L.ArgError(1, "non-empty path expected")
+		return 0
+	}
+
+	err := os.Remove(path)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	return 0
+}
+
+func doMkdir(L *lua.LState) int {
+	path := L.CheckString(1)
+	if path == "" {
+		L.ArgError(1, "non-empty path expected")
+		return 0
+	}
+
+	err := os.Mkdir(path, os.FileMode(L.OptInt(2, 0777)))
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	return 0
+}
+
+func doMkdirAll(L *lua.LState) int {
+	path := L.CheckString(1)
+	if path == "" {
+		L.ArgError(1, "non-empty path expected")
+		return 0
+	}
+
+	err := os.MkdirAll(path, os.FileMode(L.OptInt(2, 0777)))
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	return 0
 }
