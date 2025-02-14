@@ -85,7 +85,7 @@ func (s *Shell) init() {
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
 	mainMod := loader.NewLuaModule()
-	err := mainMod.ManualRegisterModule(s, nil)
+	err := mainMod.ManualRegisterModuleDefault(s)
 	if err != nil {
 		log.Fatalf("Error registering shell as module: %v", err)
 	}

@@ -16,11 +16,17 @@ type ModuleConfig struct {
 	GlobalName string
 }
 
-func DefaultConfig() *ModuleConfig {
-	return &ModuleConfig{
-		Global:   true,
-		AutoLoad: true,
-	}
+var defaultModuleConfig = ModuleConfig{
+	Global:   false,
+	AutoLoad: true,
+}
+
+func DefaultConfig() ModuleConfig {
+	return defaultModuleConfig
+}
+
+func SetDefaultConfig(cfg ModuleConfig) {
+	defaultModuleConfig = cfg
 }
 
 type LuaModule struct {
@@ -47,18 +53,18 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 	}
 }
 
-func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg *ModuleConfig) error {
+func (m *LuaModule) ManualRegisterModuleDefault(mod modules.LuaModule) error {
+	return m.ManualRegisterModule(mod, DefaultConfig())
+}
+
+func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg ModuleConfig) error {
 	if m.loaded {
 		return errors.New("Cannot manually register modules after the loader has been loaded")
 	}
 
-	if cfg == nil {
-		cfg = DefaultConfig()
-	}
-
 	m.gomods = append(m.gomods, &ModuleInstance{
 		mod: mod,
-		cfg: *cfg,
+		cfg: cfg,
 	})
 	return nil
 }
