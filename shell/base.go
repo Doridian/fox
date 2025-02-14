@@ -28,6 +28,7 @@ func New() *Shell {
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
 	}
+	rl.EnableHistory()
 
 	s := &Shell{
 		l: lua.NewState(lua.Options{
@@ -62,8 +63,8 @@ func (s *Shell) signalInit() {
 func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":              luaExit,
-		"readLineConfig":    s.luaSetReadLineConfig,
-		"getReadLineConfig": s.luaGetReadLineConfig,
+		"readlineConfig":    s.luaSetReadlineConfig,
+		"getReadlineConfig": s.luaGetReadlineConfig,
 	})
 	s.mod = mod
 	L.Push(mod)

@@ -18,6 +18,20 @@ func newReadline(L *lua.LState) int {
 	return PushNew(L, rl)
 }
 
+func newReadlineFromConfig(L *lua.LState) int {
+	cfg, _ := config.Check(L, 1)
+	if cfg == nil {
+		return 0
+	}
+
+	rl, err := goreadline.NewFromConfig(cfg)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+	return PushNew(L, rl)
+}
+
 func rlSetDefault(L *lua.LState) int {
 	rl, ud := Check(L, 1)
 	if rl == nil {

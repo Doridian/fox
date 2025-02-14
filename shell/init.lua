@@ -5,8 +5,15 @@ local config_home = Env["XDG_CONFIG_HOME"]
 if (not config_home) or config_home == "" then
     config_home = Env["HOME"] .. "/.config"
 end
-local lua_base = config_home .. "/fox/lua"
-_G.LUA_BASE = lua_base
+
+local fox_base = config_home .. "/fox"
+local lua_base = fox_base .. "/lua"
+_G.LuaBaseDir = lua_base
+_G.BaseDir = fox_base
+
+local readlineConfig = shell.getReadlineConfig()
+readlineConfig:historyFile(fox_base .. "/history")
+shell.readlineConfig(readlineConfig)
 
 package.path = lua_base .. "/modules/?.lua;" .. lua_base .. "/modules/?/init.lua"
 package.cpath = ""

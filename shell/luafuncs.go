@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/Doridian/fox/modules/readline/config"
+	goreadline "github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -13,17 +14,25 @@ func luaExit(L *lua.LState) int {
 	return 0
 }
 
-func (s *Shell) luaSetReadLineConfig(L *lua.LState) int {
+func (s *Shell) luaSetReadlineConfig(L *lua.LState) int {
 	cfg, _ := config.Check(L, 1)
 	if cfg == nil {
 		return 0
 	}
 
-	s.rl.SetConfig(cfg)
+	rl, err := goreadline.NewFromConfig(cfg)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	s.rlLock.Lock()
+	defer s.rlLock.Unlock()
+	s.rl = rl
 	return 0
 }
 
-func (s *Shell) luaGetReadLineConfig(L *lua.LState) int {
+func (s *Shell) luaGetReadlineConfig(L *lua.LState) int {
 	config.PushNew(L, s.rl.GetConfig())
 	return 1
 }

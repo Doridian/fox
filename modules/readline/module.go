@@ -8,7 +8,7 @@ import (
 )
 
 const LuaName = "fox.readline"
-const LuaTypeName = "ReadLine"
+const LuaTypeName = "Readline"
 const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
@@ -20,7 +20,8 @@ func newLuaModule() modules.LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"new": newReadline,
+		"new":           newReadline,
+		"newFromConfig": newReadlineFromConfig,
 	})
 
 	config.Load(L, mod)
