@@ -86,7 +86,10 @@ func (s *Shell) init() {
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
 	mainMod := loader.NewLuaModule()
-	mainMod.ManualRegisterModule(s, nil)
+	err := mainMod.ManualRegisterModule(s, nil)
+	if err != nil {
+		log.Fatalf("Error registering shell as module: %v", err)
+	}
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
 
@@ -94,13 +97,13 @@ func (s *Shell) init() {
 
 	s.startLuaLock()
 	defer s.endLuaLock()
-	err := s.l.DoString(initCode)
+	err = s.l.DoString(initCode)
 	if err != nil {
-		log.Panicf("Error initializing shell: %v", err)
+		log.Fatalf("Error initializing shell: %v", err)
 	}
 
 	if s.l.GetTop() > 0 {
-		log.Panicf("luaInit %d left stack frames!", s.l.GetTop())
+		log.Fatalf("luaInit %d left stack frames!", s.l.GetTop())
 	}
 }
 

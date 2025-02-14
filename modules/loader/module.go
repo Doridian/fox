@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/Doridian/fox/modules"
@@ -46,9 +47,9 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 	}
 }
 
-func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg *ModuleConfig) {
+func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg *ModuleConfig) error {
 	if m.loaded {
-		panic("Cannot manually register modules after the loader has been loaded")
+		return errors.New("Cannot manually register modules after the loader has been loaded")
 	}
 
 	if cfg == nil {
@@ -59,6 +60,7 @@ func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg *ModuleConfi
 		mod: mod,
 		cfg: *cfg,
 	})
+	return nil
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
