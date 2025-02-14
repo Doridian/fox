@@ -23,18 +23,6 @@ function shell.parsers.lua(cmd, lineNo)
     return true
 end
 
-shell.commands = {}
-function shell.parsers.cmd(cmd, lineNo)
-    local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
-    if (not parsed) or parsed == true or parsed == "" then
-        return parsed, promptOverride
-    end
-
-    -- TODO: Parse CLI-like language
-    return parsed
-end
-shell.parsers.default = shell.parsers.cmd
-
 function shell.parser(cmd, lineNo)
     if cmd:sub(1, 1) == "!" then
         local newLine = cmd:find("\n", 1, true)
@@ -68,3 +56,6 @@ if fs.stat(initLua) then
         print("Error loading user init.lua: " .. tostring(err))
     end
 end
+
+require("fox.embed.cmdparser")
+shell.parsers.default = shell.parsers.cmd
