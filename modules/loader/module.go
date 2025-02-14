@@ -86,19 +86,6 @@ func (m *LuaModule) AddModule(mod modules.LuaModule, cfg *ModuleConfig) {
 	m.gomods = append(m.gomods, inst)
 }
 
-func (m *LuaModule) Loader(L *lua.LState) int {
-	inst := &ModuleInstance{
-		mod: m,
-		cfg: ModuleConfig{
-			Global:   true,
-			AutoLoad: false,
-		},
-		loader: m.loaderInt,
-	}
-
-	return inst.loaderProxy(L)
-}
-
 func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 	L.PreloadModule(inst.mod.Name(), inst.loaderProxy)
 
@@ -112,24 +99,21 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 	}
 }
 
-func (m *LuaModule) loaderInt(L *lua.LState) int {
+func (m *LuaModule) Loader(L *lua.LState) int {
 	m.loaderLock.Lock()
 	defer m.loaderLock.Unlock()
 
-	m.loaded = true
-
-	m.builtins = L.NewTable()
-	m.autoload = L.NewTable()
-	m.globals = L.NewTable()
-
-	for _, inst := range m.gomods {
-		m.preLoadMod(L, inst)
-	}
-
-	for _, inst := range m.gomods {
-		if inst.cfg.AutoLoad {
-			modules.Require(L, inst.mod.Name())
+	if !m.loaded {
+		for _, inst := range m.gomods {
+			m.preLoadMod(L, inst)
 		}
+
+		for _, inst := range m.gomods {
+			if inst.cfg.AutoLoad {
+				modules.Require(L, inst.mod.Name())
+			}
+		}
+		m.loaded = true
 	}
 
 	mod := L.NewTable()
@@ -145,7 +129,17 @@ func (m *LuaModule) Dependencies() []string {
 }
 
 func (m *LuaModule) Load(L *lua.LState) {
-	L.PreloadModule(m.Name(), m.Loader)
+	m.builtins = L.NewTable()
+	m.autoload = L.NewTable()
+	m.globals = L.NewTable()
+
+	m.preLoadMod(L, &ModuleInstance{
+		mod: m,
+		cfg: ModuleConfig{
+			Global:   true,
+			AutoLoad: true,
+		},
+	})
 	modules.Require(L, m.Name())
 }
 
