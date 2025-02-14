@@ -76,7 +76,7 @@ func (s *Shell) init() {
 	s.print = s.l.GetGlobal("print").(*lua.LFunction)
 
 	mainMod := loader.NewLuaModule()
-	mainMod.AddModule(s.l, s)
+	mainMod.AddModule(s.l, s, loader.DefaultLuaModuleConfig())
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
 

@@ -7,33 +7,28 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-type ModuleProxy interface {
-	modules.LuaModule
+type ModuleInstance struct {
+	mod modules.LuaModule
+	cfg ModuleConfig
 
-	Global() bool
-	SetGlobal(bool)
-	Autoload() bool
-	SetAutoload(bool)
+	loader lua.LGFunction
 }
 
-type ModuleProxyWithBase interface {
-	modules.LuaModule
-
-	Global() bool
-	SetGlobal(bool)
-	Base() modules.LuaModule
-}
-
-func loaderViaProxy(L *lua.LState, m ModuleProxy, baseLoader lua.LGFunction) int {
-	modules.RequireDependencies(L, m)
-	retC := baseLoader(L)
-	if retC < 1 || !m.Global() {
+func (i *ModuleInstance) loaderProxy(L *lua.LState) int {
+	modules.RequireDependencies(L, i.mod)
+	var retC int
+	if i.loader != nil {
+		retC = i.loader(L)
+	} else {
+		retC = i.mod.Loader(L)
+	}
+	if retC < 1 || !i.cfg.Global {
 		return retC
 	}
 
 	modL := L.Get(-1)
 
-	modVarName := m.Name()
+	modVarName := i.mod.Name()
 	modDotIdx := strings.LastIndex(modVarName, ".")
 	if modDotIdx != -1 {
 		modVarName = modVarName[modDotIdx+1:]

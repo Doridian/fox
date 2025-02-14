@@ -12,10 +12,6 @@ type LuaModule interface {
 	PrePrompt()
 }
 
-func Preload(L *lua.LState, m LuaModule) {
-	L.PreloadModule(m.Name(), m.Loader)
-}
-
 func RequireDependencies(L *lua.LState, m LuaModule) {
 	for _, dep := range m.Dependencies() {
 		Require(L, dep)

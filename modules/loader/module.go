@@ -18,11 +18,22 @@ import (
 
 const LuaName = "fox.index"
 
+type ModuleConfig struct {
+	Global   bool
+	Autoload bool
+}
+
+func DefaultLuaModuleConfig() ModuleConfig {
+	return ModuleConfig{
+		Global:   true,
+		Autoload: true,
+	}
+}
+
 type LuaModule struct {
-	gomods     []*moduleProxyInt
+	gomods     []*ModuleInstance
 	loaderLock sync.Mutex
 
-	global bool
 	loaded bool
 
 	builtins *lua.LTable
@@ -43,50 +54,52 @@ func NewLuaModule() *LuaModule {
 		readline.NewLuaModule(),
 	}
 
-	gomodsProxied := make([]*moduleProxyInt, 0, len(gomods))
-	for _, m := range gomods {
-		gomodsProxied = append(gomodsProxied, proxyGoMod(m))
+	m := &LuaModule{}
+
+	for _, mod := range gomods {
+		m.AddModule(nil, mod, DefaultLuaModuleConfig())
 	}
 
-	return &LuaModule{
-		gomods: gomodsProxied,
-		global: true,
-	}
+	return m
 }
 
-func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule) {
+func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg ModuleConfig) {
 	m.loaderLock.Lock()
 	defer m.loaderLock.Unlock()
 
-	pm := proxyGoMod(mod)
-	m.gomods = append(m.gomods, pm)
+	inst := &ModuleInstance{
+		mod: mod,
+		cfg: cfg,
+	}
+	m.gomods = append(m.gomods, inst)
 	if m.loaded {
-		pm.SetAutoload(false)
-		m.preLoadMod(L, pm)
-		m.postLoadMod(L, pm)
+		m.preLoadMod(L, inst)
 	}
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
-	return loaderViaProxy(L, m, m.loaderInt)
+	inst := &ModuleInstance{
+		mod: m,
+		cfg: ModuleConfig{
+			Global:   true,
+			Autoload: false,
+		},
+		loader: m.loaderInt,
+	}
+
+	return inst.loaderProxy(L)
 }
 
-func (m *LuaModule) preLoadMod(L *lua.LState, mod ModuleProxy) {
-	modules.Preload(L, mod)
+func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
+	L.PreloadModule(inst.mod.Name(), inst.loaderProxy)
 
-	mName := lua.LString(m.Name())
+	mName := lua.LString(inst.mod.Name())
 	m.builtins.Append(mName)
-	if mod.Global() {
+	if inst.cfg.Global {
 		m.globals.Append(mName)
 	}
-	if mod.Autoload() {
+	if inst.cfg.Autoload {
 		m.autoload.Append(mName)
-	}
-}
-
-func (m *LuaModule) postLoadMod(L *lua.LState, mod ModuleProxy) {
-	if mod.Autoload() {
-		modules.Require(L, mod.Name())
 	}
 }
 
@@ -100,12 +113,14 @@ func (m *LuaModule) loaderInt(L *lua.LState) int {
 	m.autoload = L.NewTable()
 	m.globals = L.NewTable()
 
-	for _, mod := range m.gomods {
-		m.preLoadMod(L, mod)
+	for _, inst := range m.gomods {
+		m.preLoadMod(L, inst)
 	}
 
-	for _, mod := range m.gomods {
-		m.postLoadMod(L, mod)
+	for _, inst := range m.gomods {
+		if inst.cfg.Autoload {
+			modules.Require(L, inst.mod.Name())
+		}
 	}
 
 	mod := L.NewTable()
@@ -121,7 +136,7 @@ func (m *LuaModule) Dependencies() []string {
 }
 
 func (m *LuaModule) Load(L *lua.LState) {
-	modules.Preload(L, m)
+	L.PreloadModule(m.Name(), m.Loader)
 	modules.Require(L, m.Name())
 }
 
@@ -129,28 +144,10 @@ func (m *LuaModule) Name() string {
 	return LuaName
 }
 
-func (m *LuaModule) Global() bool {
-	return m.global
-}
-
-func (m *LuaModule) SetGlobal(global bool) {
-	m.global = global
-}
-
-func (m *LuaModule) Autoload() bool {
-	return true
-}
-
-func (m *LuaModule) SetAutoload(autoload bool) {
-	if !autoload {
-		panic("cannot disable autoload for the loader module")
-	}
-}
-
 func (m *LuaModule) Interrupt(all bool) bool {
 	hit := false
-	for _, m := range m.gomods {
-		if m.Interrupt(all) {
+	for _, inst := range m.gomods {
+		if inst.mod.Interrupt(all) {
 			hit = true
 			if !all {
 				break
@@ -161,7 +158,7 @@ func (m *LuaModule) Interrupt(all bool) bool {
 }
 
 func (m *LuaModule) PrePrompt() {
-	for _, m := range m.gomods {
-		m.PrePrompt()
+	for _, inst := range m.gomods {
+		inst.mod.PrePrompt()
 	}
 }
