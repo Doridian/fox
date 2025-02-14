@@ -1,5 +1,5 @@
 local shell = require("fox.shell")
-local Env = require("fox.Env")
+local Env = require("fox.env")
 
 local config_home = Env["XDG_CONFIG_HOME"]
 if (not config_home) or config_home == "" then

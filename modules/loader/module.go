@@ -20,14 +20,14 @@ const LuaName = "fox.index"
 
 type ModuleConfig struct {
 	Global     bool
-	Autoload   bool
+	AutoLoad   bool
 	GlobalName string
 }
 
 func DefaultConfig() *ModuleConfig {
 	return &ModuleConfig{
 		Global:   true,
-		Autoload: true,
+		AutoLoad: true,
 	}
 }
 
@@ -43,32 +43,39 @@ type LuaModule struct {
 }
 
 func NewLuaModule() *LuaModule {
+	m := &LuaModule{}
+
 	gomods := []modules.LuaModule{
 		time.NewLuaModule(),
 		duration.NewLuaModule(),
 		io.NewLuaModule(),
 		fs.NewLuaModule(),
 		embed.NewLuaModule(),
-		env.NewLuaModule(),
 		pipe.NewLuaModule(),
 		cmd.NewLuaModule(),
 		readline.NewLuaModule(),
 	}
 
-	m := &LuaModule{}
-
 	for _, mod := range gomods {
-		m.AddModuleDefault(nil, mod)
+		m.AddModuleDefault(mod)
 	}
+
+	cfg := DefaultConfig()
+	cfg.GlobalName = "Env"
+	m.AddModule(env.NewLuaModule(), cfg)
 
 	return m
 }
 
-func (m *LuaModule) AddModuleDefault(L *lua.LState, mod modules.LuaModule) {
-	m.AddModule(L, mod, DefaultConfig())
+func (m *LuaModule) AddModuleDefault(mod modules.LuaModule) {
+	m.AddModule(mod, DefaultConfig())
 }
 
-func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg *ModuleConfig) {
+func (m *LuaModule) AddModule(mod modules.LuaModule, cfg *ModuleConfig) {
+	if m.loaded {
+		panic("Cannot add modules after loading")
+	}
+
 	m.loaderLock.Lock()
 	defer m.loaderLock.Unlock()
 
@@ -77,9 +84,6 @@ func (m *LuaModule) AddModule(L *lua.LState, mod modules.LuaModule, cfg *ModuleC
 		cfg: *cfg,
 	}
 	m.gomods = append(m.gomods, inst)
-	if m.loaded {
-		m.preLoadMod(L, inst)
-	}
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
@@ -87,7 +91,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		mod: m,
 		cfg: ModuleConfig{
 			Global:   true,
-			Autoload: false,
+			AutoLoad: false,
 		},
 		loader: m.loaderInt,
 	}
@@ -103,7 +107,7 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 	if inst.cfg.Global {
 		m.globals.Append(mName)
 	}
-	if inst.cfg.Autoload {
+	if inst.cfg.AutoLoad {
 		m.autoload.Append(mName)
 	}
 }
@@ -123,7 +127,7 @@ func (m *LuaModule) loaderInt(L *lua.LState) int {
 	}
 
 	for _, inst := range m.gomods {
-		if inst.cfg.Autoload {
+		if inst.cfg.AutoLoad {
 			modules.Require(L, inst.mod.Name())
 		}
 	}
