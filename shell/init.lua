@@ -25,7 +25,13 @@ end
 
 shell.commands = {}
 function shell.parsers.cmd(cmd)
-    return false
+    local parsed = shell.defaultShellParser(cmd)
+    if (not parsed) or parsed == true then
+        return parsed
+    end
+
+    -- TODO: Parse CLI-like language
+    return parsed
 end
 shell.parsers.default = shell.parsers.cmd
 

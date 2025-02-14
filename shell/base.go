@@ -110,7 +110,7 @@ func (s *Shell) init() {
 }
 
 func defaultShellParser(cmd string) (string, error) {
-	if cmd[len(cmd)-1] == '\\' {
+	if cmd[len(cmd)-2:] == "\\\n" {
 		return "", ErrNeedMore
 	}
 	return strings.ReplaceAll(cmd, "\\\n", "\n"), nil
