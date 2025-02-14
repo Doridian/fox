@@ -70,7 +70,7 @@ func acquireStdinPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewWritePipe(c, "stdin", stdinPipe)
+	p := pipe.NewPipe(c, "stdin", c.gocmd.Stdin, stdinPipe, stdinPipe)
 	c.stdin = p
 	c.closeStdin = true
 	c.lock.Unlock()
@@ -140,7 +140,7 @@ func acquireStderrPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewReadPipe(c, "stderr", stderrPipe)
+	p := pipe.NewPipe(c, "stdout", stderrPipe, c.gocmd.Stderr, stderrPipe)
 	c.stderr = p
 	c.closeStderr = true
 	c.lock.Unlock()
@@ -209,7 +209,7 @@ func acquireStdoutPipe(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	p := pipe.NewReadPipe(c, "stdout", stdoutPipe)
+	p := pipe.NewPipe(c, "stdout", stdoutPipe, c.gocmd.Stdout, stdoutPipe)
 	c.stdout = p
 	c.closeStdout = true
 	c.lock.Unlock()

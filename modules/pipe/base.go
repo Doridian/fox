@@ -15,40 +15,43 @@ type Pipe struct {
 	creator     PipeCreator
 	description string
 
-	forwardClose bool
-	isNull       bool
-	rc           io.ReadCloser
-	wc           io.WriteCloser
+	isNull bool
+	cl     io.Closer
+	rd     io.Reader
+	wr     io.Writer
 }
 
 func NewReadPipe(creator PipeCreator, description string, rc io.ReadCloser) *Pipe {
 	return &Pipe{
-		creator:      creator,
-		description:  description,
-		rc:           rc,
-		forwardClose: true,
+		creator:     creator,
+		description: description,
+		rd:          rc,
+		cl:          rc,
+	}
+}
+
+func NewPipe(creator PipeCreator, description string, rd io.Reader, wr io.Writer, cl io.Closer) *Pipe {
+	return &Pipe{
+		creator:     creator,
+		description: description,
+		rd:          rd,
+		wr:          wr,
+		cl:          cl,
 	}
 }
 
 func NewWritePipe(creator PipeCreator, description string, wc io.WriteCloser) *Pipe {
 	return &Pipe{
-		creator:      creator,
-		description:  description,
-		wc:           wc,
-		forwardClose: true,
+		creator:     creator,
+		description: description,
+		wr:          wc,
+		cl:          wc,
 	}
 }
 
 func (p *Pipe) Close() {
-	if !p.forwardClose {
-		return
-	}
-
-	if p.rc != nil {
-		p.rc.Close()
-	}
-	if p.wc != nil {
-		p.wc.Close()
+	if p.cl != nil {
+		p.cl.Close()
 	}
 }
 
@@ -57,19 +60,19 @@ func (p *Pipe) IsNull() bool {
 }
 
 func (p *Pipe) CanRead() bool {
-	return p.rc != nil || p.isNull
+	return p.rd != nil || p.isNull
 }
 
 func (p *Pipe) CanWrite() bool {
-	return p.wc != nil || p.isNull
+	return p.wr != nil || p.isNull
 }
 
-func (p *Pipe) GetReader() io.ReadCloser {
-	return p.rc
+func (p *Pipe) GetReader() io.Reader {
+	return p.rd
 }
 
-func (p *Pipe) GetWriter() io.WriteCloser {
-	return p.wc
+func (p *Pipe) GetWriter() io.Writer {
+	return p.wr
 }
 
 func (p *Pipe) Creator() interface{} {
@@ -86,10 +89,10 @@ func (p *Pipe) ToString() string {
 	}
 
 	mode := ""
-	if p.rc != nil {
+	if p.rd != nil {
 		mode += "r"
 	}
-	if p.wc != nil {
+	if p.wr != nil {
 		mode += "w"
 	}
 

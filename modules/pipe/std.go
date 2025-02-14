@@ -17,27 +17,23 @@ var osPipeCreator = FixedPipeCreator{
 }
 
 var stderrPipe = Pipe{
-	creator:      &osPipeCreator,
-	wc:           os.Stderr,
-	description:  "stderr",
-	forwardClose: false,
+	creator:     &osPipeCreator,
+	wr:          os.Stderr,
+	description: "stderr",
 }
 
 var stdoutPipe = Pipe{
-	creator:      &osPipeCreator,
-	wc:           os.Stdout,
-	description:  "stdout",
-	forwardClose: false,
+	creator:     &osPipeCreator,
+	wr:          os.Stdout,
+	description: "stdout",
 }
 
 var stdinPipe = Pipe{
-	creator:      &osPipeCreator,
-	rc:           os.Stdin,
-	description:  "stdin",
-	forwardClose: false,
+	creator:     &osPipeCreator,
+	rd:          os.Stdin,
+	description: "stdin",
 }
 
 var nullPipe = Pipe{
-	isNull:       true,
-	forwardClose: false,
+	isNull: true,
 }
