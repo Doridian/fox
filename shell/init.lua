@@ -11,10 +11,6 @@ local baseDir = configHome .. "/fox"
 _G.BaseDir = baseDir
 fs.mkdirAll(baseDir)
 
-local readlineConfig = shell.getReadlineConfig()
-readlineConfig:historyFile(baseDir .. "/history")
-shell.readlineConfig(readlineConfig)
-
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
@@ -41,6 +37,13 @@ function shell.parser(cmd)
 
     return false
 end
+
+function shell.setHistoryFile(file)
+    local readlineConfig = shell.getReadlineConfig()
+    readlineConfig:historyFile(file)
+    shell.readlineConfig(readlineConfig)
+end
+shell.setHistoryFile(baseDir .. "/history")
 
 local initLua = baseDir .. "/init.lua"
 if fs.stat(initLua) then
