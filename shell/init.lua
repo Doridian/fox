@@ -43,7 +43,10 @@ function shell.parser(cmd)
     return false
 end
 
-local ok, err = pcall(dofile, baseDir .. "/init.lua")
-if not ok then
-    print("Error loading user init.lua: " .. tostring(err))
+local initLua = baseDir .. "/init.lua"
+if fs.stat(initLua) then
+    local ok, err = pcall(dofile, initLua)
+    if not ok then
+        print("Error loading user init.lua: " .. tostring(err))
+    end
 end
