@@ -18,11 +18,6 @@ shell.readlineConfig(readlineConfig)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-local ok, err = pcall(dofile, baseDir .. "/init.lua")
-if not ok then
-    print("Error loading user init.lua: " .. tostring(err))
-end
-
 shell.parsers = shell.parsers or {}
 function shell.parsers.lua(cmd)
     cmdLen = cmd:len()
@@ -46,4 +41,9 @@ function shell.parser(cmd)
     end
 
     return false
+end
+
+local ok, err = pcall(dofile, baseDir .. "/init.lua")
+if not ok then
+    print("Error loading user init.lua: " .. tostring(err))
 end
