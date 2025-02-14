@@ -8,7 +8,7 @@ import (
 )
 
 var continuePtr = flag.Bool("c", false, "Continue after running script")
-var gomodsGlobal = flag.Bool("gomods-global", false, "Register go modules as globals")
+var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
 var gomodsAutoLoad = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
 func Main() {
