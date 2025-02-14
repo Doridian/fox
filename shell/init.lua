@@ -14,7 +14,9 @@ fs.mkdirAll(baseDir)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-shell.parsers = shell.parsers or {}
+shell.parsers = {}
+shell.commands = {}
+
 function shell.parsers.lua(cmd)
     local cmdLen = cmd:len()
     if cmd:sub(cmdLen - 1, cmdLen) == "\n\n" then
@@ -22,6 +24,11 @@ function shell.parsers.lua(cmd)
     end
     return true
 end
+
+function shell.parsers.cmd(cmd)
+    return false
+end
+shell.parsers.default = shell.parsers.cmd
 
 function shell.parser(cmd)
     if cmd:sub(1, 1) == "!" then
@@ -35,6 +42,10 @@ function shell.parser(cmd)
         return ""
     end
 
+    local defParser = shell.parsers.default
+    if defParser then
+        return defParser(cmd)
+    end
     return false
 end
 
