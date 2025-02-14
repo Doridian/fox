@@ -25,9 +25,9 @@ end
 
 shell.commands = {}
 function shell.parsers.cmd(cmd)
-    local parsed = shell.defaultShellParser(cmd)
+    local parsed, promptOverride = shell.defaultShellParser(cmd)
     if (not parsed) or parsed == true or parsed == "" then
-        return parsed
+        return parsed, promptOverride
     end
 
     -- TODO: Parse CLI-like language

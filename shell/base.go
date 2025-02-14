@@ -109,25 +109,26 @@ func (s *Shell) init() {
 	}
 }
 
-func defaultShellParser(cmd string) (string, bool) {
+func defaultShellParser(cmd string) (string, bool, *string) {
 	if strings.HasSuffix(cmd, "\\\n") {
-		return "", true
+		return "", true, nil
 	}
-	return strings.ReplaceAll(cmd, "\\\n", "\n"), false
+	return strings.ReplaceAll(cmd, "\\\n", "\n"), false, nil
 }
 
 func luaDefaultShellParser(L *lua.LState) int {
 	cmd := L.CheckString(1)
-	parsed, needMore := defaultShellParser(cmd)
+	parsed, needMore, _ := defaultShellParser(cmd)
 	if needMore {
 		L.Push(lua.LTrue)
-		return 1
+	} else {
+		L.Push(lua.LString(parsed))
 	}
-	L.Push(lua.LString(parsed))
-	return 1
+	L.Push(lua.LNil)
+	return 2
 }
 
-func (s *Shell) shellParser(cmd string) (string, bool) {
+func (s *Shell) shellParser(cmd string) (string, bool, *string) {
 	if s.mod == nil {
 		return defaultShellParser(cmd)
 	}
@@ -141,19 +142,28 @@ func (s *Shell) shellParser(cmd string) (string, bool) {
 	defer s.endLuaLock(false, nil)
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
-	err := s.l.PCall(1, 1, nil)
+	err := s.l.PCall(1, 2, nil)
 	if err != nil {
 		log.Printf("Error in Lua shell.parser: %v", err)
 		return defaultShellParser(cmd)
 	}
-	parseRet := s.l.Get(-1)
-	s.l.Pop(1)
-	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
-		return defaultShellParser(cmd)
-	} else if parseRet == lua.LTrue {
-		return "", true
+	parseRet := s.l.Get(-2)
+	promptOverride := s.l.Get(-1)
+	s.l.Pop(2)
+
+	var promptOverrideRes *string
+	if promptOverride != nil && promptOverride != lua.LNil {
+		str := lua.LVAsString(promptOverride)
+		promptOverrideRes = &str
 	}
-	return lua.LVAsString(parseRet), false
+
+	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
+		cmd, needMore, _ := defaultShellParser(cmd)
+		return cmd, needMore, promptOverrideRes
+	} else if parseRet == lua.LTrue {
+		return "", true, promptOverrideRes
+	}
+	return lua.LVAsString(parseRet), false, promptOverrideRes
 }
 
 func defaultRenderPrompt(lineNo int) string {
@@ -270,8 +280,16 @@ func (s *Shell) runPromptOne() (bool, error) {
 	cmdBuilder := strings.Builder{}
 	lineNo := 1
 	needMore := true
+
+	var nextPromptOverride *string
+	var nextPrompt string
 	for needMore {
-		cmdAdd, err := s.readLine(s.renderPrompt(lineNo))
+		if nextPromptOverride != nil {
+			nextPrompt = *nextPromptOverride
+		} else {
+			nextPrompt = s.renderPrompt(lineNo)
+		}
+		cmdAdd, err := s.readLine(nextPrompt)
 		if err != nil {
 			if errors.Is(err, readline.ErrInterrupt) {
 				return true, err
@@ -283,7 +301,7 @@ func (s *Shell) runPromptOne() (bool, error) {
 		cmdBuilder.WriteRune('\n')
 		lineNo++
 
-		luaCode, needMore = s.shellParser(cmdBuilder.String())
+		luaCode, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String())
 	}
 
 	return true, s.RunString(luaCode)
