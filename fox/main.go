@@ -27,7 +27,7 @@ func setRunFunc(strVal string, newFunc func(string) error) error {
 	return nil
 }
 
-var continuePtr = flag.Bool("k", false, "Keep running after script")
+var continuePtr = flag.Bool("k", false, "Keep running after command/code/file")
 var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
 var gomodsAutoLoad = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
