@@ -6,7 +6,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.env"
+const LuaName = "go:fox.env"
 
 type LuaModule struct {
 }

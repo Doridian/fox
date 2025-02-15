@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.duration"
+const LuaName = "go:fox.duration"
 const LuaTypeName = "Duration"
 const LuaType = LuaName + ":" + LuaTypeName
 

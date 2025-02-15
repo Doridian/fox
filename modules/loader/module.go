@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.loader"
+const LuaName = "go:fox.loader"
 
 type ModuleConfig struct {
 	Global     *bool

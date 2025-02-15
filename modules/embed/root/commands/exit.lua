@@ -1,4 +1,4 @@
-local shell = require("fox.shell")
+local shell = require("go:fox.shell")
 
 local M = {}
 

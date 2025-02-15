@@ -7,7 +7,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "fox.embed"
+const LuaName = "go:fox.embed"
 
 type LuaModule struct {
 }
@@ -29,7 +29,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"readDir": luaReadDir,
 	}, mod)
 	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
-	mod.RawSetString("prefix", lua.LString(LuaName))
+	mod.RawSetString("prefix", lua.LString("embed:"))
 
 	loadersL := L.GetField(L.GetField(L.Get(lua.EnvironIndex), "package"), "loaders")
 	if loadersL == nil || loadersL == lua.LNil {
