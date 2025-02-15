@@ -29,7 +29,7 @@ func setRunFunc(strVal string, newFunc func(string) error) error {
 
 var continuePtr = flag.Bool("k", false, "Keep running after command/code/file")
 var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
-var gomodsAutoLoad = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
+var gomodsAutoload = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
 var forceContinue = false
 
@@ -60,7 +60,7 @@ func Main() error {
 
 	cfg := loader.DefaultConfig()
 	cfg.Global = *gomodsGlobal
-	cfg.AutoLoad = *gomodsAutoLoad
+	cfg.Autoload = *gomodsAutoload
 	loader.SetDefaultConfig(cfg)
 
 	s.Init(flag.Args())

@@ -12,13 +12,13 @@ const LuaName = "fox.loader"
 
 type ModuleConfig struct {
 	Global     *bool
-	AutoLoad   *bool
+	Autoload   *bool
 	GlobalName string
 }
 
 type DefaultModuleConfig struct {
 	Global   bool
-	AutoLoad bool
+	Autoload bool
 }
 
 func (c *ModuleConfig) IsGlobal() bool {
@@ -28,16 +28,16 @@ func (c *ModuleConfig) IsGlobal() bool {
 	return defaultModuleConfig.Global
 }
 
-func (c *ModuleConfig) IsAutoLoad() bool {
-	if c.AutoLoad != nil {
-		return *c.AutoLoad
+func (c *ModuleConfig) IsAutoload() bool {
+	if c.Autoload != nil {
+		return *c.Autoload
 	}
-	return defaultModuleConfig.AutoLoad
+	return defaultModuleConfig.Autoload
 }
 
 var defaultModuleConfig = DefaultModuleConfig{
 	Global:   false,
-	AutoLoad: true,
+	Autoload: true,
 }
 
 func DefaultConfig() DefaultModuleConfig {
@@ -67,7 +67,7 @@ func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
 
 	mName := lua.LString(inst.mod.Name())
 	m.builtins.Append(mName)
-	if inst.cfg.IsAutoLoad() {
+	if inst.cfg.IsAutoload() {
 		m.autoload.Append(mName)
 	}
 }
@@ -107,7 +107,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		}
 
 		for _, inst := range m.gomods {
-			if inst.cfg.IsAutoLoad() {
+			if inst.cfg.IsAutoload() {
 				modules.Require(L, inst.mod.Name())
 			}
 		}
@@ -115,8 +115,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	}
 
 	mod := L.NewTable()
-	mod.RawSetString("BuiltIns", m.builtins)
-	mod.RawSetString("AutoLoad", m.autoload)
+	mod.RawSetString("Builtins", m.builtins)
+	mod.RawSetString("Autoload", m.autoload)
 	L.Push(mod)
 	return 1
 }
@@ -133,7 +133,7 @@ func (m *LuaModule) Load(L *lua.LState) {
 	m.preLoadMod(L, &ModuleInstance{
 		mod: m,
 		cfg: ModuleConfig{
-			AutoLoad: &t,
+			Autoload: &t,
 		},
 	})
 	modules.Require(L, m.Name())
