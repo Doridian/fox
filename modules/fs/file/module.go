@@ -6,7 +6,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.fs"
+const LuaName = "go:fs"
 const LuaTypeName = "File"
 const LuaType = LuaName + ":" + LuaTypeName
 

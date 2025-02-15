@@ -7,7 +7,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.readline"
+const LuaName = "go:readline"
 const LuaTypeName = "Config"
 const LuaType = LuaName + ":" + LuaTypeName
 

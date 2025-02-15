@@ -47,6 +47,6 @@ func (i *ModuleInstance) globalName() string {
 		return i.cfg.GlobalName
 	}
 
-	i.cfg.GlobalName = strings.TrimPrefix(strings.TrimPrefix(i.mod.Name(), "go:"), "fox.")
+	i.cfg.GlobalName = strings.TrimPrefix(i.mod.Name(), "go:")
 	return i.cfg.GlobalName
 }

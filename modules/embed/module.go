@@ -7,7 +7,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.embed"
+const LuaName = "go:embed"
 
 type LuaModule struct {
 }

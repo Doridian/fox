@@ -10,7 +10,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.shell"
+const LuaName = "go:shell"
 
 type Shell struct {
 	args []string

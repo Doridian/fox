@@ -1,6 +1,6 @@
-local shell = require("go:fox.shell")
-local Env = require("go:fox.env")
-local fs = require("go:fox.fs")
+local shell = require("go:shell")
+local Env = require("go:env")
+local fs = require("go:fs")
 
 local configHome = Env["XDG_CONFIG_HOME"]
 if (not configHome) or configHome == "" then

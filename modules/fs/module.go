@@ -10,7 +10,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.fs"
+const LuaName = "go:fs"
 
 type LuaModule struct {
 }

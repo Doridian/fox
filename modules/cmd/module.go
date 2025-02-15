@@ -10,7 +10,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:fox.cmd"
+const LuaName = "go:cmd"
 const LuaTypeName = "Cmd"
 const LuaType = LuaName + ":" + LuaTypeName
 
