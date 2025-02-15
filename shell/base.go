@@ -3,6 +3,7 @@ package shell
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -33,7 +34,8 @@ func New() *Shell {
 			SkipOpenLibs:        true,
 			IncludeGoStackTrace: true,
 		}),
-		rl: rl,
+		rl:         rl,
+		ShowErrors: true,
 	}
 
 	return s
@@ -79,9 +81,16 @@ func (s *Shell) Loader(L *lua.LState) int {
 	return 1
 }
 
-func (s *Shell) Init(args []string) {
+func (s *Shell) MustInit(args []string) {
+	err := s.Init(args)
+	if err != nil {
+		log.Fatalf("Error initializing shell: %v", err)
+	}
+}
+
+func (s *Shell) Init(args []string) error {
 	if s.args != nil {
-		panic("Shell already initialized!")
+		return errors.New("Shell already initialized!")
 	}
 	s.args = args
 
@@ -101,7 +110,7 @@ func (s *Shell) Init(args []string) {
 	mainMod := loader.NewLuaModule()
 	err := mainMod.ManualRegisterModuleDefault(s)
 	if err != nil {
-		log.Fatalf("Error registering shell as module: %v", err)
+		return fmt.Errorf("Error registering shell as module: %w", err)
 	}
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
@@ -112,12 +121,14 @@ func (s *Shell) Init(args []string) {
 	defer s.endLuaLock(false, nil)
 	err = s.l.DoString(initCode)
 	if err != nil {
-		log.Fatalf("Error initializing shell: %v", err)
+		return fmt.Errorf("Error initializing shell: %v", err)
 	}
 
 	if s.l.GetTop() > 0 {
-		log.Fatalf("luaInit %d left stack frames!", s.l.GetTop())
+		return fmt.Errorf("luaInit %d left stack frames!", s.l.GetTop())
 	}
+
+	return nil
 }
 
 func defaultShellParser(cmd string) (string, bool, *string) {
@@ -160,7 +171,9 @@ func (s *Shell) shellParser(cmd string, lineNo int) (string, bool, *string) {
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(2, 2, nil)
 	if err != nil {
-		log.Printf("Error in Lua shell.parser: %v", err)
+		if s.ShowErrors {
+			log.Printf("Error in Lua shell.parser: %v", err)
+		}
 		return "", false, nil
 	}
 	parseRet := s.l.Get(-2)
@@ -211,7 +224,9 @@ func (s *Shell) renderPrompt(lineNo int) string {
 	s.l.Push(lua.LNumber(lineNo))
 	err := s.l.PCall(1, 1, nil)
 	if err != nil {
-		log.Printf("Error in Lua shell.renderPrompt: %v", err)
+		if s.ShowErrors {
+			log.Printf("Error in Lua shell.renderPrompt: %v", err)
+		}
 		return defaultRenderPrompt(lineNo)
 	}
 	parseRet := s.l.Get(-1)
@@ -316,7 +331,7 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 	s.ctx = nil
 	s.cancelCtx = nil
 
-	if err != nil {
+	if s.ShowErrors && err != nil {
 		log.Printf("Lua error: %v", err)
 	}
 }
@@ -343,7 +358,10 @@ func (s *Shell) runPromptOne() (bool, error) {
 			if errors.Is(err, readline.ErrInterrupt) {
 				return true, err
 			}
-			log.Printf("Prompt aborted: %v", err)
+			err = fmt.Errorf("Prompt aborted: %w", err)
+			if s.ShowErrors {
+				log.Println(err.Error())
+			}
 			return false, err
 		}
 		cmdBuilder.WriteString(cmdAdd)

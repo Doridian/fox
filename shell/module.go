@@ -30,6 +30,8 @@ type Shell struct {
 	rl     *readline.Instance
 
 	signals chan os.Signal
+
+	ShowErrors bool
 }
 
 func (s *Shell) Dependencies() []string {

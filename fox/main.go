@@ -68,14 +68,14 @@ func Main() error {
 		if runFunc != nil {
 			log.Fatalf("cannont run in non-shell mode without at least one argument")
 		}
-		s.Init(flag.Args())
+		s.MustInit(flag.Args())
 		return s.RunPrompt()
 	}
 
 	if flag.NArg() > 1 {
-		s.Init(flag.Args()[1:])
+		s.MustInit(flag.Args()[1:])
 	} else {
-		s.Init([]string{})
+		s.MustInit([]string{})
 	}
 
 	if flag.NArg() > 0 {
