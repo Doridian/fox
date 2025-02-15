@@ -50,12 +50,12 @@ func luaLoaderInt(L *lua.LState, prefix string) int {
 		fixedPath := strings.ReplaceAll(path, "?", fixedName)
 		data, err := root.ReadFile(fixedPath)
 		if err != nil {
-			errStrBuilder.WriteString(fmt.Sprintf("embedded module %s read error: %v\n", fixedPath, err))
+			errStrBuilder.WriteString(fmt.Sprintf("embed: module \"%s\" read error: %v\n", fixedPath, err))
 			continue
 		}
 		lf, err := L.LoadString(string(data))
 		if err != nil {
-			errStrBuilder.WriteString(fmt.Sprintf("embedded module %s load error: %v\n", fixedPath, err))
+			errStrBuilder.WriteString(fmt.Sprintf("embed: module \"%s\" load error: %v\n", fixedPath, err))
 			continue
 		}
 		L.Push(lf)
