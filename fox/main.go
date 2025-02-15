@@ -39,6 +39,7 @@ func shellRunNoop(_ string) error {
 }
 
 func Main() error {
+	var err error
 	s := shell.New()
 
 	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {
@@ -53,8 +54,6 @@ func Main() error {
 	flag.BoolFunc("s", "First arg is just passed to a shell", func(val string) error {
 		return setRunFunc(val, shellRunNoop)
 	})
-
-	var err error
 
 	flag.Parse()
 
