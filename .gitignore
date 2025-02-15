@@ -1,3 +1,6 @@
 *.exe
 *.dll
 .vscode
+/src
+/pkg
+*.pkg.tar*
