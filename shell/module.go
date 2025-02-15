@@ -13,6 +13,8 @@ import (
 const LuaName = "fox.shell"
 
 type Shell struct {
+	args []string
+
 	l     *lua.LState
 	lLock sync.Mutex
 

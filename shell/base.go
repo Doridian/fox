@@ -22,7 +22,7 @@ var ErrNeedMore = errors.New("Need more input")
 
 // TODO: Handle SIGTERM
 
-func New() *Shell {
+func New(args []string) *Shell {
 	rl, err := readline.New("?fox?> ")
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
@@ -33,7 +33,8 @@ func New() *Shell {
 			SkipOpenLibs:        true,
 			IncludeGoStackTrace: true,
 		}),
-		rl: rl,
+		rl:   rl,
+		args: args,
 	}
 	s.init()
 
@@ -60,6 +61,11 @@ func (s *Shell) signalInit() {
 }
 
 func (s *Shell) Loader(L *lua.LState) int {
+	argsL := s.l.NewTable()
+	for _, arg := range s.args {
+		argsL.Append(lua.LString(arg))
+	}
+
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":              luaExit,
 		"readlineConfig":    s.luaSetReadlineConfig,
@@ -68,6 +74,7 @@ func (s *Shell) Loader(L *lua.LState) int {
 		"defaultShellParser":  luaDefaultShellParser,
 		"defaultRenderPrompt": luaDefaultRenderPrompt,
 	})
+	mod.RawSetString("args", argsL)
 	s.mod = mod
 	L.Push(mod)
 	return 1
@@ -238,10 +245,10 @@ func (s *Shell) RunString(code string) error {
 	return err
 }
 
-func (s *Shell) RunCommand(cmd string, args []string) error {
+func (s *Shell) RunCommand(cmd string) error {
 	s.startLuaLock()
 	argsL := s.l.NewTable()
-	for _, arg := range args {
+	for _, arg := range s.args {
 		argsL.Append(lua.LString(arg))
 	}
 

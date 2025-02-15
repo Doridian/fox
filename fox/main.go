@@ -21,11 +21,11 @@ func Main() error {
 	cfg.AutoLoad = *gomodsAutoLoad
 	loader.SetDefaultConfig(cfg)
 
-	s := shell.New()
+	s := shell.New(flag.Args())
 
 	command := *commandPtr
 	if command != "" {
-		return s.RunCommand(command, flag.Args())
+		return s.RunCommand(command)
 	}
 
 	runScript := flag.Arg(0)
