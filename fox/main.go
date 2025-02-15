@@ -1,6 +1,7 @@
 package fox
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"strconv"
@@ -24,7 +25,10 @@ func setEvalType(s string, newType int) error {
 		return err
 	}
 	if !v {
-		return nil
+		return errors.New("flag must be true")
+	}
+	if evalType != EvalUnset {
+		return errors.New("eval type already set (only at most one of -c, -e, -f can be set)")
 	}
 	evalType = newType
 	return nil
@@ -41,7 +45,7 @@ func Main() error {
 	flag.BoolFunc("e", "First arg is code to evaluate", func(s string) error {
 		return setEvalType(s, EvalAsString)
 	})
-	flag.BoolFunc("f", "First arg is file to run", func(s string) error {
+	flag.BoolFunc("f", "First arg is file to run (default)", func(s string) error {
 		return setEvalType(s, EvalAsFile)
 	})
 
