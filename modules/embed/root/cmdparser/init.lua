@@ -3,6 +3,14 @@ local Env = require("fox.env")
 
 shell.commands = {}
 
+local function fetchVar(varType, varName)
+    if varType == "$" then
+        return Env[varName] or ""
+    elseif varType == "%" then
+        return tostring(_G[varName])
+    end
+end
+
 -- return true to indicate that glob processing mode should be enabled
 local function interpolateVars(str, escapeGlobs)
     local i = 1
@@ -33,11 +41,7 @@ local function interpolateVars(str, escapeGlobs)
             varEnd = #str + 1
         end
         varTmp = str:sub(varStart + 1, varEnd - 1)
-        if varType == "$" then
-            varTmp = Env[varTmp] or ""
-        elseif varType == "%" then
-            varTmp = tostring(_G[varTmp])
-        end
+        varTmp = fetchVar(varType, varTmp)
 
         retStr = retStr .. varTmp
         if hasGlobs then
