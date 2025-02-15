@@ -26,20 +26,20 @@ func readFileFromLua(L *lua.LState) []byte {
 func luaLoaderInt(L *lua.LState, prefix string) int {
 	name := L.CheckString(1)
 	if name == "" {
-		return util.PushNil(L)
+		return util.RetNil(L)
 	}
 	mod := L.CheckTable(lua.UpvalueIndex(1))
 	if mod == nil {
-		return util.PushNil(L)
+		return util.RetNil(L)
 	}
 	pathStr := lua.LVAsString(L.GetField(mod, "path"))
 	if pathStr == "" {
-		return util.PushNil(L)
+		return util.RetNil(L)
 	}
 
 	fixedName := name
 	if prefix != "" && !strings.HasPrefix(fixedName, prefix) {
-		return util.PushNil(L)
+		return util.RetNil(L)
 	}
 	fixedName = strings.ReplaceAll(fixedName, ".", "/")
 	fixedName = strings.TrimPrefix(fixedName[len(prefix):], "/")
@@ -69,5 +69,5 @@ func luaLoaderInt(L *lua.LState, prefix string) int {
 		return 1
 	}
 
-	return util.PushNil(L)
+	return util.RetNil(L)
 }
