@@ -34,6 +34,8 @@ var continuePtr = flag.Bool("k", false, "Keep running after command/code/file")
 var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
 var gomodsAutoload = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
+var skipArg0 = false
+
 func shellRunNoop(_ string) error {
 	return nil
 }
@@ -47,6 +49,7 @@ func Main() error {
 		return setRunFunc(val, s.RunCommand)
 	})
 	flag.BoolFunc("e", "First arg is code to evaluate", func(val string) error {
+		skipArg0 = true
 		return setRunFunc(val, s.RunString)
 	})
 	flag.BoolFunc("f", "First arg is file to run", func(val string) error {
@@ -72,10 +75,10 @@ func Main() error {
 		return s.RunPrompt()
 	}
 
-	if flag.NArg() > 1 {
+	if skipArg0 {
 		s.MustInit(flag.Args()[1:])
 	} else {
-		s.MustInit([]string{})
+		s.MustInit(flag.Args())
 	}
 
 	if flag.NArg() > 0 {

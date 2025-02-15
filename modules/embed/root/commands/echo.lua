@@ -2,7 +2,7 @@ local shell = require("fox.shell")
 
 local M = {}
 
-function M.run(...)
+function M.run(_, ...)
     print(...)
 end
 

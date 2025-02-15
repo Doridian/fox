@@ -2,7 +2,7 @@ local shell = require("fox.shell")
 
 local M = {}
 
-function M.run(code)
+function M.run(_, code)
     shell.exit(tonumber(code))
 end
 
