@@ -10,13 +10,6 @@ import (
 	"github.com/Doridian/fox/shell"
 )
 
-const (
-	EvalUnset = iota
-	EvalAsFile
-	EvalAsString
-	EvalAsCommand
-)
-
 var runFunc func(string) error
 
 func setRunFunc(strVal string, newFunc func(string) error) error {
