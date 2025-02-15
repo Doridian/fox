@@ -1,3 +1,4 @@
+local cmd = require("fox.cmd")
 local fs = require("fox.fs")
 local Env = require("fox.env")
 local shell = require("fox.shell")
@@ -16,21 +17,23 @@ local M = {}
 
 M.cmds = cmds
 
-local function runCmd(args)
-    local cmd = args[1]
-    if not cmd then
+local function loadCmd(args)
+    local cmdName = args[1]
+    if not cmdName then
         return
     end
 
-    local luaCmd = cmds.get(cmd)
+    local luaCmd = cmds.get(cmdName)
     if luaCmd then
         table.remove(args, 1)
-        return luaCmd(unpack(args))
+        return function()
+            luaCmd(unpack(args))
+        end
     end
 end
 
-function M.parser(cmd, lineNo)
-    local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
+function M.parser(str, lineNo)
+    local parsed, promptOverride = shell.defaultShellParser(str, lineNo)
     if (not parsed) or parsed == true or parsed == "" then
         return parsed, promptOverride
     end
@@ -127,7 +130,14 @@ function M.parser(cmd, lineNo)
         print("ARG", k, v)
     end
 
-    local exitCode = tonumber(runCmd(args) or 0)
+    local cmdFunc = loadCmd(args)
+    if not cmdFunc then
+        local sCmd = cmd.new(args)
+        cmdFunc = function()
+            return sCmd:run()
+        end
+    end
+    local exitCode = tonumber(cmdFunc() or 0)
     return "_G._LAST_EXIT_CODE = " .. tostring(exitCode)
 end
 
