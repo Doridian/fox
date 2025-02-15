@@ -138,6 +138,10 @@ func (s *Shell) shellParser(cmd string, lineNo int) (string, bool, *string) {
 		return defaultShellParser(cmd)
 	}
 
+	if strings.HasPrefix(cmd, "--[[DEFAULT]]") {
+		return defaultShellParser(cmd)
+	}
+
 	s.startLuaLock()
 	defer s.endLuaLock(false, nil)
 	s.l.Push(shellParser)
@@ -146,7 +150,7 @@ func (s *Shell) shellParser(cmd string, lineNo int) (string, bool, *string) {
 	err := s.l.PCall(2, 2, nil)
 	if err != nil {
 		log.Printf("Error in Lua shell.parser: %v", err)
-		return defaultShellParser(cmd)
+		return "", false, nil
 	}
 	parseRet := s.l.Get(-2)
 	promptOverride := s.l.Get(-1)
