@@ -1,10 +1,13 @@
 local fs = require("fox.fs")
 local Env = require("fox.env")
+local shell = require("fox.shell")
 local vars = require("fox.embed.cmdparser.vars")
 
-shell.commands = {}
+local M = {}
 
-function shell.parsers.cmd(cmd, lineNo)
+M.commands = {}
+
+function M.parser(cmd, lineNo)
     local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
     if (not parsed) or parsed == true or parsed == "" then
         return parsed, promptOverride
@@ -105,3 +108,5 @@ function shell.parsers.cmd(cmd, lineNo)
     -- TODO: Parse CLI-like language
     return ""
 end
+
+return M

@@ -56,5 +56,8 @@ if fs.stat(initLua) then
     end
 end
 
-require("fox.embed.cmdparser")
+local cmdparser = require("fox.embed.cmdparser")
+shell.parsers.cmd = cmdparser.parser
+shell.commands = cmdparser.commands
+
 shell.parsers.default = shell.parsers.cmd
