@@ -35,9 +35,9 @@ if fs.stat(initLua) then
 end
 
 shell.commandSearch = {
-    "fox.embed.commands",
-    "fox.commands",
     "commands",
+    "go:commands",
+    "embed:commands",
 }
 function shell.runCommand(cmd)
     for _, prefix in pairs(shell.commandSearch) do

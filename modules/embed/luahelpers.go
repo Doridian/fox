@@ -2,7 +2,6 @@ package embed
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	lua "github.com/yuin/gopher-lua"
@@ -34,39 +33,42 @@ func luaLoaderInt(L *lua.LState, prefix string) int {
 	}
 	pathStr := lua.LVAsString(L.GetField(mod, "path"))
 	if pathStr == "" {
-		return 0
+		L.Push(lua.LString("embed.path is not set"))
+		return 1
 	}
 
-	fixedName := strings.ReplaceAll(name, ".", "/")
-
+	fixedName := name
 	if prefix != "" {
-		fixedPrefix := strings.ReplaceAll(prefix, ".", "/")
-		if !strings.HasSuffix(fixedPrefix, "/") {
-			fixedPrefix += "/"
+		if !strings.HasPrefix(fixedName, prefix) {
+			L.Push(lua.LString(fmt.Sprintf("embed: module (%s) does not match prefix (%s)", fixedName, prefix)))
+			return 1
 		}
-		if !strings.HasPrefix(fixedName, fixedPrefix) {
-			return 0
-		}
-		fixedName = fixedName[len(fixedPrefix):]
 	}
+	fixedName = strings.ReplaceAll(fixedName, ".", "/")
+	fixedName = strings.TrimPrefix(fixedName[len(prefix):], "/")
+
+	errStrBuilder := &strings.Builder{}
 
 	paths := strings.Split(pathStr, ";")
 	for _, path := range paths {
 		fixedPath := strings.ReplaceAll(path, "?", fixedName)
 		data, err := root.ReadFile(fixedPath)
 		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			L.Push(lua.LString(fmt.Sprintf("embedded module %s read error: %v", fixedPath, err)))
-			return 1
+			errStrBuilder.WriteString(fmt.Sprintf("embedded module %s read error: %v\n", fixedPath, err))
+			continue
 		}
 		lf, err := L.LoadString(string(data))
 		if err != nil {
-			L.Push(lua.LString(fmt.Sprintf("embedded module %s load error: %v", fixedPath, err)))
-			return 1
+			errStrBuilder.WriteString(fmt.Sprintf("embedded module %s load error: %v\n", fixedPath, err))
+			continue
 		}
 		L.Push(lf)
+		return 1
+	}
+
+	errStr := errStrBuilder.String()
+	if len(errStr) > 0 {
+		L.Push(lua.LString(errStr))
 		return 1
 	}
 
