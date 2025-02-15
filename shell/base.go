@@ -22,7 +22,7 @@ var ErrNeedMore = errors.New("Need more input")
 
 // TODO: Handle SIGTERM
 
-func New(args []string) *Shell {
+func New() *Shell {
 	rl, err := readline.New("?fox?> ")
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
@@ -33,10 +33,8 @@ func New(args []string) *Shell {
 			SkipOpenLibs:        true,
 			IncludeGoStackTrace: true,
 		}),
-		rl:   rl,
-		args: args,
+		rl: rl,
 	}
-	s.init()
 
 	return s
 }
@@ -61,11 +59,6 @@ func (s *Shell) signalInit() {
 }
 
 func (s *Shell) Loader(L *lua.LState) int {
-	argsL := s.l.NewTable()
-	for _, arg := range s.args {
-		argsL.Append(lua.LString(arg))
-	}
-
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":              luaExit,
 		"readlineConfig":    s.luaSetReadlineConfig,
@@ -74,13 +67,24 @@ func (s *Shell) Loader(L *lua.LState) int {
 		"defaultShellParser":  luaDefaultShellParser,
 		"defaultRenderPrompt": luaDefaultRenderPrompt,
 	})
-	mod.RawSetString("args", argsL)
 	s.mod = mod
+	if s.args != nil {
+		argsL := s.l.NewTable()
+		for _, arg := range s.args {
+			argsL.Append(lua.LString(arg))
+		}
+		s.mod.RawSetString("args", argsL)
+	}
 	L.Push(mod)
 	return 1
 }
 
-func (s *Shell) init() {
+func (s *Shell) Init(args []string) {
+	if s.args != nil {
+		panic("Shell already initialized!")
+	}
+	s.args = args
+
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))
 	s.l.Pop(lua.OpenTable(s.l))
@@ -227,7 +231,19 @@ func (s *Shell) readLine(disp string) (string, error) {
 	return s.rl.ReadLine()
 }
 
+func (s *Shell) ensureInited() {
+	if s.args == nil {
+		panic("Shell not initialized!")
+	}
+}
+
+var ErrShellNotInited = errors.New("Shell not initialized!")
+
 func (s *Shell) RunFile(file string) error {
+	if s.args == nil {
+		return ErrShellNotInited
+	}
+
 	s.startLuaLock()
 	err := s.l.DoFile(file)
 	s.endLuaLock(err == nil, err)
@@ -235,6 +251,10 @@ func (s *Shell) RunFile(file string) error {
 }
 
 func (s *Shell) RunString(code string) error {
+	if s.args == nil {
+		return ErrShellNotInited
+	}
+
 	if code == "" || code == "\n" {
 		return nil
 	}
@@ -246,22 +266,24 @@ func (s *Shell) RunString(code string) error {
 }
 
 func (s *Shell) RunCommand(cmd string) error {
-	s.startLuaLock()
-	argsL := s.l.NewTable()
-	for _, arg := range s.args {
-		argsL.Append(lua.LString(arg))
+	if s.args == nil {
+		return ErrShellNotInited
 	}
 
+	s.startLuaLock()
 	s.l.Push(s.mod.RawGetString("runCommand"))
 	s.l.Push(lua.LString(cmd))
-	s.l.Push(argsL)
-	err := s.l.PCall(2, 0, nil)
+	err := s.l.PCall(1, 0, nil)
 	s.endLuaLock(false, err)
 
 	return err
 }
 
 func (s *Shell) RunPrompt() error {
+	if s.args == nil {
+		return ErrShellNotInited
+	}
+
 	var err error
 	running := true
 	for running {

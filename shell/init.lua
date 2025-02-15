@@ -37,12 +37,13 @@ end
 shell.commandSearch = {
     "fox.embed.commands",
     "fox.commands",
+    "commands",
 }
-function shell.runCommand(cmd, args)
+function shell.runCommand(cmd)
     for _, prefix in ipairs(shell.commandSearch) do
         local status, command = pcall(require, prefix .. "." .. cmd)
         if status then
-            return command.run(unpack(args))
+            return command.run(unpack(shell.args))
         end
     end
     error("No such command: " .. cmd)
