@@ -33,16 +33,12 @@ func luaLoaderInt(L *lua.LState, prefix string) int {
 	}
 	pathStr := lua.LVAsString(L.GetField(mod, "path"))
 	if pathStr == "" {
-		L.Push(lua.LString("embed.path is not set"))
-		return 1
+		return 0
 	}
 
 	fixedName := name
-	if prefix != "" {
-		if !strings.HasPrefix(fixedName, prefix) {
-			L.Push(lua.LString(fmt.Sprintf("embed: module (%s) does not match prefix (%s)", fixedName, prefix)))
-			return 1
-		}
+	if prefix != "" && !strings.HasPrefix(fixedName, prefix) {
+		return 0
 	}
 	fixedName = strings.ReplaceAll(fixedName, ".", "/")
 	fixedName = strings.TrimPrefix(fixedName[len(prefix):], "/")
