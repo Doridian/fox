@@ -8,6 +8,8 @@ local cmds = require("fox.embed.cmdparser.cmds")
     TODO:
     - Implement a stack of stdios for redirection to work
     - Implement a way for Lua's print to respect stdout changes (likely implement custom print)
+    - Need to :wait() for cmd processes that produce input for lua stuff before running it
+        - Likely change runCmd -> loadCmd
 ]]
 
 local M = {}
