@@ -3,6 +3,7 @@ package fox
 import (
 	"errors"
 	"flag"
+	"log"
 	"os"
 	"strconv"
 
@@ -11,6 +12,7 @@ import (
 )
 
 var runFunc func(string) error
+var runFuncSet bool
 
 func setRunFunc(strVal string, newFunc func(string) error) error {
 	boolVal, err := strconv.ParseBool(strVal)
@@ -20,9 +22,10 @@ func setRunFunc(strVal string, newFunc func(string) error) error {
 	if !boolVal {
 		return errors.New("flag must be true")
 	}
-	if runFunc != nil {
+	if runFuncSet {
 		return errors.New("First arg type already set (only at most one of -c, -e, -f, -s can be set)")
 	}
+	runFuncSet = true
 	runFunc = newFunc
 	return nil
 }
@@ -31,10 +34,7 @@ var continuePtr = flag.Bool("k", false, "Keep running after command/code/file")
 var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
 var gomodsAutoload = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
-var forceContinue = false
-
 func shellRunNoop(_ string) error {
-	forceContinue = true
 	return nil
 }
 
@@ -42,6 +42,7 @@ func Main() error {
 	var err error
 	s := shell.New()
 
+	forceShell := false
 	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {
 		return setRunFunc(val, s.RunCommand)
 	})
@@ -52,7 +53,8 @@ func Main() error {
 		return setRunFunc(val, s.RunFile)
 	})
 	flag.BoolFunc("s", "First arg is just passed to a shell", func(val string) error {
-		return setRunFunc(val, shellRunNoop)
+		forceShell = true
+		return setRunFunc(val, nil)
 	})
 
 	flag.Parse()
@@ -62,14 +64,26 @@ func Main() error {
 	cfg.Autoload = *gomodsAutoload
 	loader.SetDefaultConfig(cfg)
 
-	s.Init(flag.Args())
+	if forceShell || flag.NArg() == 0 {
+		if runFunc != nil {
+			log.Fatalf("cannont run in non-shell mode without at least one argument")
+		}
+		s.Init(flag.Args())
+		return s.RunPrompt()
+	}
+
+	if flag.NArg() > 1 {
+		s.Init(flag.Args()[1:])
+	} else {
+		s.Init([]string{})
+	}
 
 	if flag.NArg() > 0 {
 		if runFunc == nil {
 			runFunc = s.RunCommand
 		}
 		err = runFunc(flag.Arg(0))
-		if !forceContinue && !*continuePtr {
+		if !forceShell && !*continuePtr {
 			return err
 		}
 	}
