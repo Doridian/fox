@@ -41,9 +41,9 @@ shell.commandSearch = {
 }
 function shell.runCommand(cmd)
     for _, prefix in ipairs(shell.commandSearch) do
-        local status, command = pcall(require, prefix .. "." .. cmd)
-        if status then
-            return command.run(unpack(shell.args))
+        local ok, mod = pcall(require, prefix .. "." .. cmd)
+        if ok then
+            return mod.run(unpack(shell.args))
         end
     end
     error("No such command: " .. cmd)
