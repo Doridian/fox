@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Doridian/fox/util"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -25,48 +26,48 @@ func readFileFromLua(L *lua.LState) []byte {
 func luaLoaderInt(L *lua.LState, prefix string) int {
 	name := L.CheckString(1)
 	if name == "" {
-		return 0
+		return util.PushNil(L)
 	}
 	mod := L.CheckTable(lua.UpvalueIndex(1))
 	if mod == nil {
-		return 0
+		return util.PushNil(L)
 	}
 	pathStr := lua.LVAsString(L.GetField(mod, "path"))
 	if pathStr == "" {
-		return 0
+		return util.PushNil(L)
 	}
 
 	fixedName := name
 	if prefix != "" && !strings.HasPrefix(fixedName, prefix) {
-		return 0
+		return util.PushNil(L)
 	}
 	fixedName = strings.ReplaceAll(fixedName, ".", "/")
 	fixedName = strings.TrimPrefix(fixedName[len(prefix):], "/")
 
-	errStrBuilder := &strings.Builder{}
+	errArr := []string{}
 
 	paths := strings.Split(pathStr, ";")
 	for _, path := range paths {
 		fixedPath := strings.ReplaceAll(path, "?", fixedName)
 		data, err := root.ReadFile(fixedPath)
 		if err != nil {
-			errStrBuilder.WriteString(fmt.Sprintf("embed: module \"%s\" read error: %v\n", fixedPath, err))
+			errArr = append(errArr, fmt.Sprintf("embed: module \"%s\" read error: %v", fixedPath, err))
 			continue
 		}
 		lf, err := L.LoadString(string(data))
 		if err != nil {
-			errStrBuilder.WriteString(fmt.Sprintf("embed: module \"%s\" load error: %v\n", fixedPath, err))
+			errArr = append(errArr, fmt.Sprintf("embed: module \"%s\" load error: %v", fixedPath, err))
 			continue
 		}
 		L.Push(lf)
 		return 1
 	}
 
-	errStr := errStrBuilder.String()
+	errStr := strings.Join(errArr, "\n\t")
 	if len(errStr) > 0 {
 		L.Push(lua.LString(errStr))
 		return 1
 	}
 
-	return 0
+	return util.PushNil(L)
 }
