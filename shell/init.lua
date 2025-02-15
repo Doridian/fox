@@ -40,7 +40,7 @@ shell.commandSearch = {
     "commands",
 }
 function shell.runCommand(cmd)
-    for _, prefix in ipairs(shell.commandSearch) do
+    for _, prefix in pairs(shell.commandSearch) do
         local ok, mod = pcall(require, prefix .. "." .. cmd)
         if ok then
             return mod.run(unpack(shell.args))
