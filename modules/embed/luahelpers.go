@@ -37,18 +37,18 @@ func luaLoaderInt(L *lua.LState, prefix string) int {
 		return util.RetNil(L)
 	}
 
-	fixedName := name
-	if prefix != "" && !strings.HasPrefix(fixedName, prefix) {
+	if prefix != "" && !strings.HasPrefix(name, prefix) {
 		return util.RetNil(L)
 	}
-	fixedName = strings.ReplaceAll(fixedName, ".", "/")
-	fixedName = strings.TrimPrefix(fixedName[len(prefix):], "/")
+	fileName := name[len(prefix):]
+	fileName = strings.ReplaceAll(fileName, ".", "/")
+	fileName = strings.TrimPrefix(fileName, "/")
 
 	errArr := []string{}
 
 	paths := strings.Split(pathStr, ";")
 	for _, path := range paths {
-		fixedPath := strings.ReplaceAll(path, "?", fixedName)
+		fixedPath := strings.ReplaceAll(path, "?", fileName)
 		data, err := root.ReadFile(fixedPath)
 		if err != nil {
 			errArr = append(errArr, fmt.Sprintf("embed: module \"%s\" read error: %v", fixedPath, err))
