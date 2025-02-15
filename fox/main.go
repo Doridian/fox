@@ -71,9 +71,7 @@ func Main() error {
 			err = s.RunString(arg0)
 		case EvalAsCommand:
 			err = s.RunCommand(arg0)
-		default:
-			fallthrough
-		case EvalAsFile:
+		case EvalUnset, EvalAsFile:
 			err = s.RunFile(arg0)
 		}
 		if !*continuePtr {
