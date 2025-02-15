@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fox.Main()
+	fox.MainWithExit()
 }

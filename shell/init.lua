@@ -14,30 +14,8 @@ fs.mkdirAll(baseDir)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-shell.parsers = {}
-function shell.parsers.lua(cmd, lineNo)
-    if cmd:sub(#cmd - 1, #cmd) == "\n\n" then
-        return cmd
-    end
-    return true
-end
-
 function shell.parser(cmd, lineNo)
-    if cmd:sub(1, 1) == "!" then
-        local newLine = cmd:find("\n", 1, true)
-        local cmdPrefix = cmd:sub(2, newLine - 1)
-        if shell.parsers[cmdPrefix] then
-            return shell.parsers[cmdPrefix](cmd:sub(newLine + 1), lineNo)
-        end
-
-        print("Unknown parser " .. cmdPrefix)
-        return ""
-    end
-
-    local defParser = shell.parsers.default
-    if defParser then
-        return defParser(cmd, lineNo)
-    end
+    -- TODO: syntax-aware lua end finding
     return false
 end
 
@@ -56,8 +34,16 @@ if fs.stat(initLua) then
     end
 end
 
-local cmdparser = require("fox.embed.cmdparser")
-shell.parsers.cmd = cmdparser.parser
-shell.commands = cmdparser.commands
-
-shell.parsers.default = shell.parsers.cmd
+shell.commandSearch = {
+    "fox.embed.commands",
+    "fox.commands",
+}
+function shell.runCommand(cmd, args)
+    for _, prefix in ipairs(shell.commandSearch) do
+        local status, command = pcall(require, prefix .. "." .. cmd)
+        if status then
+            return command.run(unpack(args))
+        end
+    end
+    error("No such command: " .. cmd)
+end

@@ -4,7 +4,6 @@ local M = {}
 
 function M.run(code)
     shell.exit(code)
-    return code
 end
 M.name = "exit"
 

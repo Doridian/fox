@@ -238,6 +238,22 @@ func (s *Shell) RunString(code string) error {
 	return err
 }
 
+func (s *Shell) RunCommand(cmd string, args []string) error {
+	s.startLuaLock()
+	argsL := s.l.NewTable()
+	for _, arg := range args {
+		argsL.Append(lua.LString(arg))
+	}
+
+	s.l.Push(s.mod.RawGetString("runCommand"))
+	s.l.Push(lua.LString(cmd))
+	s.l.Push(argsL)
+	err := s.l.PCall(2, 0, nil)
+	s.endLuaLock(false, err)
+
+	return err
+}
+
 func (s *Shell) RunPrompt() error {
 	var err error
 	running := true
@@ -251,7 +267,6 @@ func (s *Shell) startLuaLock() {
 	s.lLock.Lock()
 	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
 	s.l.SetContext(s.ctx)
-	s.l.SetGlobal("_LAST_EXIT_CODE", lua.LNumber(0))
 }
 
 func (s *Shell) endLuaLock(printStack bool, err error) {

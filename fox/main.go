@@ -2,16 +2,18 @@ package fox
 
 import (
 	"flag"
+	"os"
 
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/shell"
 )
 
-var continuePtr = flag.Bool("c", false, "Continue after running script")
+var continuePtr = flag.Bool("k", false, "Keep running after script")
 var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as globals")
 var gomodsAutoLoad = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
+var commandPtr = flag.String("c", "", "Command to run")
 
-func Main() {
+func Main() error {
 	flag.Parse()
 
 	cfg := loader.DefaultConfig()
@@ -21,13 +23,24 @@ func Main() {
 
 	s := shell.New()
 
+	command := *commandPtr
+	if command != "" {
+		return s.RunCommand(command, flag.Args())
+	}
+
 	runScript := flag.Arg(0)
 	if runScript != "" {
-		s.RunFile(runScript)
+		err := s.RunFile(runScript)
 		if !*continuePtr {
-			return
+			return err
 		}
 	}
 
-	s.RunPrompt()
+	return s.RunPrompt()
+}
+
+func MainWithExit() {
+	if Main() != nil {
+		os.Exit(1)
+	}
 }
