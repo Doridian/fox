@@ -2,10 +2,30 @@ local fs = require("fox.fs")
 local Env = require("fox.env")
 local shell = require("fox.shell")
 local vars = require("fox.embed.cmdparser.vars")
+local cmds = require("fox.embed.cmdparser.cmds")
+
+--[[
+    TODO:
+    - Implement a stack of stdios for redirection to work
+    - Implement a way for Lua's print to respect stdout changes (likely implement custom print)
+]]
 
 local M = {}
 
-M.commands = {}
+M.cmds = cmds
+
+local function runCmd(args)
+    local cmd = args[1]
+    if not cmd then
+        return
+    end
+
+    local luaCmd = cmds.get(cmd)
+    if luaCmd then
+        table.remove(args, 1)
+        return luaCmd(unpack(args))
+    end
+end
 
 function M.parser(cmd, lineNo)
     local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
@@ -105,8 +125,8 @@ function M.parser(cmd, lineNo)
         print("ARG", k, v)
     end
 
-    -- TODO: Parse CLI-like language
-    return ""
+    local exitCode = tonumber(runCmd(args) or 0)
+    return "_G._LAST_EXIT_CODE = " .. tostring(exitCode)
 end
 
 return M
