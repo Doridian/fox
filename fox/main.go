@@ -41,13 +41,13 @@ func shellRunNoop(_ string) error {
 func Main() error {
 	s := shell.New()
 
-	flag.BoolFunc("c", "First arg is an internal command", func(val string) error {
+	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {
 		return setRunFunc(val, s.RunCommand)
 	})
 	flag.BoolFunc("e", "First arg is code to evaluate", func(val string) error {
 		return setRunFunc(val, s.RunString)
 	})
-	flag.BoolFunc("f", "First arg is file to run (default)", func(val string) error {
+	flag.BoolFunc("f", "First arg is file to run", func(val string) error {
 		return setRunFunc(val, s.RunFile)
 	})
 	flag.BoolFunc("s", "First arg is just passed to a shell", func(val string) error {
@@ -67,7 +67,7 @@ func Main() error {
 
 	if flag.NArg() > 0 {
 		if runFunc == nil {
-			runFunc = s.RunFile
+			runFunc = s.RunCommand
 		}
 		err = runFunc(flag.Arg(0))
 		if !forceContinue && !*continuePtr {
