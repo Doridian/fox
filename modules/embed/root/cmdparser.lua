@@ -1,6 +1,13 @@
 
 shell.commands = {}
 
+local function interpolateVars(str)
+    return str
+end
+
+local function globStar(arg)
+end
+
 function shell.parsers.cmd(cmd, lineNo)
     local parsed, promptOverride = shell.defaultShellParser(cmd, lineNo)
     if (not parsed) or parsed == true or parsed == "" then
@@ -9,32 +16,27 @@ function shell.parsers.cmd(cmd, lineNo)
 
     local i = 1
     local args = {}
-    local curArg
+    local buf = {}
     local nextControlIdx, nextControl, quoteEndIdx
-    local function bufArg(quoted)
-        if not curArg then
-            curArg = {
-                value = "",
-                quoted = false,
-            }
-        end
-        if quoted then
-            curArg.quoted = true
-        end
-
+    local function bufArg(container)
+        local sub
         if nextControlIdx then
-            curArg.value = curArg.value .. parsed:sub(i, nextControlIdx - 1)
+            sub = parsed:sub(i, nextControlIdx - 1)
             i = nextControlIdx + 1
         else
-            curArg.value = curArg.value .. parsed:sub(i)
+            sub = parsed:sub(i)
             i = #parsed + 1
         end
+        if container ~= "'" then
+            sub = interpolateVars(sub)
+        end
+        table.insert(buf, sub)
     end
-    local function pushArg(quoted)
-        bufArg(quoted)
-        if curArg.value ~= "" then
-            table.insert(args, curArg)
-            curArg = nil
+    local function pushArg(container)
+        bufArg(container)
+        if #buf > 0 then
+            table.insert(args, buf)
+            buf = {}
         end
     end
     while i <= #parsed do
@@ -53,7 +55,7 @@ function shell.parsers.cmd(cmd, lineNo)
 
             bufArg()
             nextControlIdx = quoteEndIdx
-            bufArg(true)
+            bufArg(nextControl)
         else
             pushArg()
         end

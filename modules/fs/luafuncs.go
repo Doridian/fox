@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 
 	"github.com/Doridian/fox/modules/fs/direntry"
 	"github.com/Doridian/fox/modules/fs/file"
@@ -190,4 +192,37 @@ func doMkdirAll(L *lua.LState) int {
 	}
 
 	return 0
+}
+
+func doGlob(L *lua.LState) int {
+	pattern := L.CheckString(1)
+	if pattern == "" {
+		L.ArgError(1, "non-empty pattern expected")
+		return 0
+	}
+
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
+
+	ret := L.CreateTable(len(matches), 0)
+	for _, match := range matches {
+		ret.Append(lua.LString(match))
+	}
+	L.Push(ret)
+	return 1
+}
+
+func doGlobEscape(L *lua.LState) int {
+	str := L.CheckString(1)
+	if str == "" {
+		L.ArgError(1, "non-empty str expected")
+		return 0
+	}
+
+	// TODO: Better alternative
+	L.Push(lua.LString(regexp.QuoteMeta(str)))
+	return 1
 }
