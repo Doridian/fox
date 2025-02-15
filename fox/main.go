@@ -58,14 +58,15 @@ func Main() error {
 	cfg.AutoLoad = *gomodsAutoLoad
 	loader.SetDefaultConfig(cfg)
 
+	fullArgs := flag.Args()
 	args := []string{}
-	if flag.NArg() > 1 {
-		args = flag.Args()[1:]
+	if len(fullArgs) > 1 {
+		args = fullArgs[1:]
 	}
 	s := shell.New(args)
 
-	if flag.NArg() > 0 {
-		arg0 := flag.Arg(0)
+	if len(fullArgs) > 0 {
+		arg0 := fullArgs[0]
 		switch evalType {
 		case EvalAsString:
 			err = s.RunString(arg0)
