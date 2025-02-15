@@ -32,7 +32,7 @@ local function interpolateVars(str, escapeGlobs)
             varStart = varStart + 1
             varEnd = str:find("}", varStart + 1, true)
             if not varEnd then
-                error("Unclosed variable ${}")
+                return nil, "Unclosed variable ${}"
             end
         else
             varEnd = str:find("[^%w_]", varStart + 1)
@@ -91,6 +91,12 @@ function shell.parsers.cmd(cmd, lineNo)
         subEscaped = sub
         if container ~= "'" then
             sub, subEscaped, foundGlobs = interpolateVars(sub, not container)
+            if not sub then
+                -- subEscaped will be the error message
+                print("Parse error: " .. tostring(subEscaped))
+                return ""
+            end
+
             if (not container) and foundGlobs then
                 curArg.isGlob = true
             end
