@@ -32,6 +32,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"mkdirAll": doMkdirAll,
 
 		"glob":       doGlob,
+		"hasGlob":    doHasGlob,
 		"globEscape": doGlobEscape,
 	})
 	file.Load(L, mod)

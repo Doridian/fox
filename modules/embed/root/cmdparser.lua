@@ -1,11 +1,9 @@
+local fs = require("fox.fs")
 
 shell.commands = {}
 
 local function interpolateVars(str)
     return str
-end
-
-local function globStar(arg)
 end
 
 function shell.parsers.cmd(cmd, lineNo)
@@ -16,10 +14,17 @@ function shell.parsers.cmd(cmd, lineNo)
 
     local i = 1
     local args = {}
-    local buf = {}
-    local nextControlIdx, nextControl, quoteEndIdx
+    local curArg, nextControlIdx, nextControl, quoteEndIdx
     local function bufArg(container)
-        local sub
+        if not curArg then
+            curArg = {
+                buf = "",
+                bufEscaped = "",
+                isGlob = false,
+            }
+        end
+
+        local sub, subEscaped
         if nextControlIdx then
             sub = parsed:sub(i, nextControlIdx - 1)
             i = nextControlIdx + 1
@@ -27,16 +32,42 @@ function shell.parsers.cmd(cmd, lineNo)
             sub = parsed:sub(i)
             i = #parsed + 1
         end
+
         if container ~= "'" then
             sub = interpolateVars(sub)
         end
-        table.insert(buf, sub)
+
+        if curArg.isGlob then
+            if container then
+                subEscaped = fs.globEscape(sub)
+            else
+                subEscaped = sub
+            end
+            curArg.bufEscaped = curArg.bufEscaped .. subEscaped
+        elseif (not container) and fs.hasGlob(sub) then
+            curArg.isGlob = true
+            -- We can only get here if nothing previously could be a glob
+            -- so we can just escape everything in buf lazily here
+            curArg.bufEscaped = fs.globEscape(curArg.buf) .. sub
+        end
+
+        curArg.buf = curArg.buf .. sub
     end
     local function pushArg(container)
         bufArg(container)
-        if #buf > 0 then
-            table.insert(args, buf)
-            buf = {}
+        if #curArg.buf > 0 then
+            local arg = curArg
+            curArg = nil
+            if arg.isGlob then
+                local matches = fs.glob(arg.bufEscaped)
+                if #matches > 0 then
+                    for _, match in pairs(matches) do
+                        table.insert(args, match)
+                    end
+                    return
+                end
+            end
+            table.insert(args, arg.buf)
         end
     end
     while i <= #parsed do
@@ -62,7 +93,7 @@ function shell.parsers.cmd(cmd, lineNo)
     end
 
     for k, v in pairs(args) do
-        print("ARG", k, v.value, v.quoted)
+        print("ARG", k, v)
     end
 
     -- TODO: Parse CLI-like language

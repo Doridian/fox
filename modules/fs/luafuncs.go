@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/Doridian/fox/modules/fs/direntry"
 	"github.com/Doridian/fox/modules/fs/file"
@@ -217,12 +218,18 @@ func doGlob(L *lua.LState) int {
 
 func doGlobEscape(L *lua.LState) int {
 	str := L.CheckString(1)
-	if str == "" {
-		L.ArgError(1, "non-empty str expected")
-		return 0
-	}
-
 	// TODO: Better alternative
 	L.Push(lua.LString(regexp.QuoteMeta(str)))
+	return 1
+}
+
+func doHasGlob(L *lua.LState) int {
+	str := L.CheckString(1)
+	// TODO: Better alternative
+	if strings.ContainsAny(str, "*?[{") {
+		L.Push(lua.LTrue)
+	} else {
+		L.Push(lua.LFalse)
+	}
 	return 1
 }
