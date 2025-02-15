@@ -11,6 +11,8 @@ local cmds = require("fox.embed.cmdparser.cmds")
     - Implement a way for Lua's print to respect stdout changes (likely implement custom print)
     - Need to :wait() for cmd processes that produce input for lua stuff before running it
         - Likely change runCmd -> loadCmd
+    - Need to do command splitting at parse time before variable/glob interp
+        - | || & && ;
 ]]
 
 local M = {}
