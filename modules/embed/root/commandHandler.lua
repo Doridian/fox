@@ -47,7 +47,8 @@ function M.run(cmd, args)
 end
 
 function M.has(cmd)
-    if getCommand(cmd) then
+    local mod, _ = getCommand(cmd)
+    if mod then
         return true
     end
     return false
