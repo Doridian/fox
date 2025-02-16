@@ -10,6 +10,7 @@ import (
 const LuaName = "go:embed"
 
 type LuaModule struct {
+	mod *lua.LTable
 }
 
 func newLuaModule() modules.LuaModule {
@@ -18,16 +19,17 @@ func newLuaModule() modules.LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.NewTable()
+	m.mod = mod
 	L.SetFuncs(mod, map[string]lua.LGFunction{
-		"loader": luaLoader,
+		"loader": m.luaLoader,
 
 		"readFile": luaReadFile,
-		"doFile":   luaDoFile,
-		"loadFile": luaLoadFile,
+		"doFile":   m.luaDoFile,
+		"loadFile": m.luaLoadFile,
 		"openFile": luaOpenFile,
 
 		"readDir": luaReadDir,
-	}, mod)
+	})
 	mod.RawSetString("path", lua.LString("root/?.lua;root/?/init.lua"))
 	mod.RawSetString("prefix", lua.LString("embed:"))
 
