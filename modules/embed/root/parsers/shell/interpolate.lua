@@ -1,5 +1,5 @@
 local fs = require("go:fs")
-local interpolate = require("embed:parsers.shell.vars")
+local vars = require("embed:parsers.shell.vars")
 
 local M = {}
 
