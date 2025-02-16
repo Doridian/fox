@@ -9,8 +9,12 @@ M.search = {
     "embed:commands",
 }
 local function getCommand(cmd)
-    if cmdCache[cmd] then
-        return cmdCache[cmd]
+    local c = cmdCache[cmd]
+    if c then
+        if c.err then
+            return nil, c.err
+        end
+        return c
     end
 
     local errs = {}
@@ -24,15 +28,19 @@ local function getCommand(cmd)
         end
     end
 
-    if #errs > 0 then
-        error(table.concat(errs, "\n"))
-    end
-
-    return nil
+    local err = table.concat(errs, "\n")
+    cmdCache[cmd] = {
+        err = err,
+    }
+    return nil, err
 end
 
 function M.run(cmd, args)
-    local mod = getCommand(cmd)
+    local mod, err = getCommand(cmd)
+    if err then
+        error("Error loading command " .. cmd .. ": " .. err)
+    end
+
     if mod then
         return mod.run(table.unpack(args))
     end

@@ -11,26 +11,41 @@ M.search = {
     "parsers",
 }
 local function getParser(name)
-    if parserCache[name] then
-        return parserCache[name]
+    local c = parserCache[name]
+    if c then
+        if c.err then
+            return nil, c.err
+        end
+        return c
     end
 
     local errs = {}
     for _, prefix in pairs(M.search) do
-        local ok, mod = pcall(require, prefix .. "." .. name)
+        local modName = prefix .. "." .. name
+        local ok, mod = pcall(require, modName)
         if ok then
             parserCache[name] = mod
             return mod
+        elseif not mod then
+            table.insert(errs, "require() did not return table for ".. modName)
         else
             table.insert(errs, mod)
         end
     end
 
-    if #errs > 0 then
-        error(table.concat(errs, "\n"))
-    end
+    local err = table.concat(errs, "\n")
+    parserCache[name] = {
+        err = err,
+    }
+    return nil, err
+end
 
-    return nil
+local function mustGetParser(name)
+    local p, err = getParser(name)
+    if not p then
+        error("Error loading parser " .. name .. ": " .. err)
+    end
+    return p
 end
 
 local function defaultShellParserModule()
@@ -48,23 +63,14 @@ function M.run(cmdAdd, lineNo, prev)
         local cmdPrefix = cmdAdd:sub(1, 1)
         if cmdPrefix == "!" then
             cmdAdd = cmdAdd:sub(2)
-            prev.parser = getParser(cmdAdd)
-
-            if not prev.parser then
-                print("Unknown parser " .. cmdAdd)
-                return ""
-            end
-
+            prev.parser = mustGetParser(cmdAdd)
             return prev, true
         elseif cmdPrefix == "=" or cmdAdd:sub(1, 2) == "--" then
             -- noop
         elseif cmdPrefix == "/" then
             cmdAdd = cmdAdd:sub(2)
         elseif M.defaultParser then
-            local parser = getParser(M.defaultParser)
-            if parser then
-                prev.parser = parser
-            end
+            prev.parser = mustGetParser(M.defaultParser)
         end
     end
 
