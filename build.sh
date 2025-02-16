@@ -1,5 +1,9 @@
 #!/bin/sh
 set -ex
-go generate ./...
-go build -trimpath -o ~/.local/bin/fox ./cmd/fox.go
+
+source ./PKGBUILD
+srcdir=~/.local/bin
+prepare
+build
+
 exec fox
