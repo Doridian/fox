@@ -16,6 +16,9 @@ local exe = os.executable()
 
 local M = {}
 
+local ArgTypeString = 1
+local ArgTypeOp = 2
+
 function M.run(strAdd, lineNo, prev)
     local parsed = (prev or "") .. strAdd .. "\n"
 
@@ -25,7 +28,7 @@ function M.run(strAdd, lineNo, prev)
 
     local i = 1
     local args = {}
-    local curArg, nextControlIdx, nextControl, quoteEndIdx, foundGlobs
+    local curArg, nextControlIdx, nextControl, controlEndIdx, foundGlobs
     local function bufArg(container)
         if not curArg then
             curArg = {
@@ -81,16 +84,22 @@ function M.run(strAdd, lineNo, prev)
                 local matches = fs.glob(arg.bufEscaped)
                 if #matches > 0 then
                     for _, match in pairs(matches) do
-                        table.insert(args, match)
+                        table.insert(args, {
+                            val = match,
+                            type = ArgTypeString,
+                        })
                     end
                     return
                 end
             end
-            table.insert(args, arg.buf)
+            table.insert(args, {
+                val = arg.buf,
+                type = ArgTypeString,
+            })
         end
     end
     while i <= #parsed do
-        nextControlIdx = parsed:find("[ \n\t\"']", i)
+        nextControlIdx = parsed:find("[ \n\t\"';&|><]", i)
         if not nextControlIdx then
             pushArg()
             break
@@ -98,24 +107,38 @@ function M.run(strAdd, lineNo, prev)
 
         nextControl = parsed:sub(nextControlIdx, nextControlIdx)
         if nextControl == "'" or nextControl == '"' then
-            quoteEndIdx = parsed:find(nextControl, nextControlIdx + 1)
-            if not quoteEndIdx then
+            controlEndIdx = parsed:find(nextControl, nextControlIdx + 1)
+            if not controlEndIdx then
                 return parsed, true, nextControl .. "> "
             end
 
             bufArg()
-            nextControlIdx = quoteEndIdx
+            nextControlIdx = controlEndIdx
             bufArg(nextControl)
+        elseif nextControl == "\n" or nextControl == "\r" or nextControl == "\t" or nextControl == " " then
+            pushArg()
         else
             pushArg()
+            controlEndIdx = nextControlIdx
+            while parsed:sub(controlEndIdx + 1, controlEndIdx + 1) == nextControl do
+                controlEndIdx = controlEndIdx + 1
+            end
+            table.insert(args, {
+                val = parsed:sub(nextControlIdx, controlEndIdx),
+                type = ArgTypeOp,
+            })
+            i = controlEndIdx + 1
         end
     end
 
     for k, v in pairs(args) do
-        print("ARG", k, v)
+        print("ARG", k, v.type, v.val)
     end
 
     if #args < 1 then
+        return ""
+    end
+    if true then
         return ""
     end
 
