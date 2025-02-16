@@ -26,11 +26,11 @@ type Cmd struct {
 	foreground bool
 	waitSync   sync.WaitGroup
 
-	lock             sync.RWMutex
-	gocmd            *exec.Cmd
-	AutoLookPath     bool
-	ErrorPropagation bool
-	mod              *LuaModule
+	lock            sync.RWMutex
+	gocmd           *exec.Cmd
+	AutoLookPath    bool
+	RaiseForBadExit bool
+	mod             *LuaModule
 }
 
 func (c *Cmd) ToString() string {

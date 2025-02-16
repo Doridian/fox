@@ -243,7 +243,7 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	return nil
 }
 
-func (c *Cmd) waitStdio() error {
+func (c *Cmd) waitStdio(L *lua.LState) error {
 	c.lock.RLock()
 	stdin := c.stdin
 	c.lock.RUnlock()
@@ -260,7 +260,7 @@ func (c *Cmd) waitStdio() error {
 		return nil
 	}
 
-	return cmd.ensureRan()
+	return cmd.ensureRan(L)
 }
 
 func (c *Cmd) releaseStdioNoLock() error {

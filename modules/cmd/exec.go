@@ -7,13 +7,18 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func handleCmdExitNoLock(L *lua.LState, exitCode int, c *Cmd, ud *lua.LUserData) int {
+func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd, ud *lua.LUserData) int {
 	c.releaseStdioNoLock()
 
 	exitCodeL := lua.LNumber(exitCode)
 
-	if c.ErrorPropagation && exitCode != 0 {
+	if c.RaiseForBadExit && exitCode != 0 {
 		L.RaiseError("command exited with code %d", exitCode)
+		return 0
+	}
+
+	if nonExitError != nil {
+		L.RaiseError("%v", nonExitError)
 		return 0
 	}
 
@@ -29,7 +34,7 @@ func (c *Cmd) doWaitCmdNoLock() {
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd, ud *lua.LUserData) int {
 	c.doWaitCmdNoLock()
-	return handleCmdExitNoLock(L, c.gocmd.ProcessState.ExitCode(), c, ud)
+	return handleCmdExitNoLock(L, nil, c.gocmd.ProcessState.ExitCode(), c, ud)
 }
 
 func doWait(L *lua.LState) int {
@@ -55,9 +60,9 @@ func (c *Cmd) doRun(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock(true)
+	err := c.prepareAndStartNoLock(L, true)
 	if err != nil {
-		return handleCmdExitNoLock(L, ExitCodeProcessCouldNotStart, c, ud)
+		return handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c, ud)
 	}
 	return doWaitCmdNoLock(L, c, ud)
 }
@@ -74,15 +79,15 @@ func (c *Cmd) doStart(L *lua.LState, ud *lua.LUserData) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock(false)
+	err := c.prepareAndStartNoLock(L, false)
 	if err != nil {
-		return handleCmdExitNoLock(L, ExitCodeProcessCouldNotStart, c, ud)
+		return handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c, ud)
 	}
 	L.Push(ud)
 	return 1
 }
 
-func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
+func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	if foreground {
 		c.foreground = true
 	}
@@ -114,7 +119,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		c.waitStdio()
+		c.waitStdio(L)
 		c.gocmd.Wait()
 		c.waitSync.Done()
 	}()
@@ -122,12 +127,13 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	return nil
 }
 
-func (c *Cmd) ensureRan() error {
+func (c *Cmd) ensureRan(L *lua.LState) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
 	if c.gocmd.Process == nil {
-		if err := c.prepareAndStartNoLock(true); err != nil {
+		if err := c.prepareAndStartNoLock(L, true); err != nil {
+			L.Pop(handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c, nil))
 			return err
 		}
 	}

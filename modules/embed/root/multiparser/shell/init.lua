@@ -122,7 +122,7 @@ function M.run(strAdd, lineNo, prev)
         table.insert(args, 2, "-c")
     end
     local sCmd = cmd.new(args)
-    sCmd:errorPropagation(false)
+    sCmd:raiseForBadExit(false)
     -- TODO: Assign multi-command here, assign stdio here
     return function()
         sCmd:run()

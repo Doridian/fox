@@ -64,10 +64,10 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"wait":  doWait,
 		"kill":  doKill,
 
-		"getErrorPropagation": getErrorPropagation,
-		"errorPropagation":    setErrorPropagation,
-		"getAutoLookPath":     getAutoLookPath,
-		"autoLookPath":        setAutoLookPath,
+		"getRaiseForBadExit": getRaiseForBadExit,
+		"raiseForBadExit":    setRaiseForBadExit,
+		"getAutoLookPath":    getAutoLookPath,
+		"autoLookPath":       setAutoLookPath,
 	}))
 	L.SetFuncs(mt, map[string]lua.LGFunction{
 		"__tostring": cmdToString,

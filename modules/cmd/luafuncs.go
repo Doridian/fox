@@ -9,20 +9,20 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func getErrorPropagation(L *lua.LState) int {
+func getRaiseForBadExit(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
 	}
 
 	c.lock.RLock()
-	val := lua.LBool(c.ErrorPropagation)
+	val := lua.LBool(c.RaiseForBadExit)
 	c.lock.RUnlock()
 	L.Push(val)
 	return 1
 }
 
-func setErrorPropagation(L *lua.LState) int {
+func setRaiseForBadExit(L *lua.LState) int {
 	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
@@ -30,7 +30,7 @@ func setErrorPropagation(L *lua.LState) int {
 
 	val := L.CheckBool(2)
 	c.lock.Lock()
-	c.ErrorPropagation = val
+	c.RaiseForBadExit = val
 	c.lock.Unlock()
 
 	L.Push(ud)
@@ -234,10 +234,10 @@ func lookPath(L *lua.LState) int {
 
 func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	c := &Cmd{
-		mod:              m,
-		gocmd:            &exec.Cmd{},
-		AutoLookPath:     true,
-		ErrorPropagation: true,
+		mod:             m,
+		gocmd:           &exec.Cmd{},
+		AutoLookPath:    true,
+		RaiseForBadExit: true,
 	}
 
 	// new|run|start([args, [dir, [env]]])
