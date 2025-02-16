@@ -205,6 +205,14 @@ func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LVa
 	promptOverride := s.l.Get(-1)
 	s.l.Pop(3)
 
+	if needMoreL {
+		if parseRet == lua.LNil || parseRet == nil {
+			s.l.RaiseError("needMore is true but parser returned nil, this is not allowed")
+		} else if parseRet.Type() == lua.LTString {
+			s.l.RaiseError("needMore is true but parser returned a string, this is not allowed")
+		}
+	}
+
 	var promptOverrideRes *string
 	if promptOverride != nil && promptOverride != lua.LNil {
 		str := lua.LVAsString(promptOverride)
