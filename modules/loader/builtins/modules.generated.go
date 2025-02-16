@@ -6,6 +6,7 @@ import (
 	_ "github.com/Doridian/fox/modules/embed"
 	_ "github.com/Doridian/fox/modules/env"
 	_ "github.com/Doridian/fox/modules/fs"
+	_ "github.com/Doridian/fox/modules/info"
 	_ "github.com/Doridian/fox/modules/io"
 	_ "github.com/Doridian/fox/modules/loader"
 	_ "github.com/Doridian/fox/modules/pipe"

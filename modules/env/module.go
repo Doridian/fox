@@ -43,7 +43,5 @@ func (m *LuaModule) PrePrompt() {
 }
 
 func init() {
-	loader.AddModule(newLuaModule, loader.ModuleConfig{
-		GlobalName: "Env",
-	})
+	loader.AddModuleDefault(newLuaModule)
 }

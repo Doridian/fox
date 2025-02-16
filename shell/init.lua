@@ -1,10 +1,10 @@
 local shell = require("go:shell")
-local Env = require("go:env")
+local env = require("go:env")
 local fs = require("go:fs")
 
-local configHome = Env["XDG_CONFIG_HOME"]
+local configHome = env["XDG_CONFIG_HOME"]
 if (not configHome) or configHome == "" then
-    configHome = Env["HOME"] .. "/.config"
+    configHome = env["HOME"] .. "/.config"
 end
 
 local baseDir = configHome .. "/fox"

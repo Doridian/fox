@@ -7,13 +7,19 @@ pkgdesc='Fully OwO eXtensions'
 arch=('any')
 url='https://github.com/Doridian/fox.git'
 license=('GPL-3.0')
-makedepends=('go')
+makedepends=('git' 'go')
 source=()
 sha256sums=()
 
+prepare() {
+  cd "${srcdir}"
+  go generate ../...
+}
+
 build() {
   cd "${srcdir}"
-  go build -trimpath -o ./fox ../cmd
+  pkgverfull="${pkgver}-${pkgrel}"
+  go build -trimpath -ldflags "-X github.com/Doridian/fox/modules/info.version=${pkgverfull} -X github.com/Doridian/fox/modules/info.gitrev=$(git rev-parse HEAD)" -o ./fox ../cmd
 }
 
 package() {

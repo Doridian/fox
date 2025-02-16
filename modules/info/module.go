@@ -1,4 +1,4 @@
-package fox
+package info
 
 import (
 	"github.com/Doridian/fox/modules"
@@ -6,12 +6,15 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-var (
-	version = "unknown"
-	gitrev  = "unknown"
-)
+const LuaName = "go:info"
 
-const LuaName = "go:fox"
+var infoTable map[string]lua.LValue
+
+func init() {
+	infoTable = make(map[string]lua.LValue)
+	infoTable["version"] = lua.LString(version)
+	infoTable["gitrev"] = lua.LString(gitrev)
+}
 
 type LuaModule struct {
 }
@@ -22,9 +25,10 @@ func newLuaModule() modules.LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"version": luaVersion,
-		"gitrev":  luaGitRev,
+		"__index": infoIndex,
+		"__call":  infoCall,
 	})
+	L.SetMetatable(mod, mod)
 	L.Push(mod)
 	return 1
 }
@@ -47,4 +51,11 @@ func (m *LuaModule) PrePrompt() {
 
 func init() {
 	loader.AddModuleDefault(newLuaModule)
+}
+
+func Register(key string, val lua.LValue) {
+	if infoTable[key] != nil {
+		panic("Info key already registered: " + key)
+	}
+	infoTable[key] = val
 }
