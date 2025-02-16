@@ -2,7 +2,6 @@ package shell
 
 import (
 	"context"
-	"os"
 	"sync"
 
 	"github.com/Doridian/fox/modules"
@@ -28,8 +27,6 @@ type Shell struct {
 
 	rlLock sync.Mutex
 	rl     *readline.Instance
-
-	signals chan os.Signal
 
 	ShowErrors bool
 }

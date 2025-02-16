@@ -19,7 +19,8 @@ import (
 //go:embed init.lua
 var initCode string
 
-var ErrNeedMore = errors.New("Need more input")
+var ErrNeedMore = errors.New("need more input")
+var ErrShellNotInited = errors.New("shell not initialized")
 
 // TODO: Handle SIGTERM
 
@@ -90,7 +91,7 @@ func (s *Shell) MustInit(args []string) {
 
 func (s *Shell) Init(args []string) error {
 	if s.args != nil {
-		return errors.New("Shell already initialized!")
+		return errors.New("shell already initialized")
 	}
 	s.args = args
 
@@ -110,7 +111,7 @@ func (s *Shell) Init(args []string) error {
 	mainMod := loader.NewLuaModule()
 	err := mainMod.ManualRegisterModuleDefault(s)
 	if err != nil {
-		return fmt.Errorf("Error registering shell as module: %w", err)
+		return fmt.Errorf("error registering shell as module: %w", err)
 	}
 	mainMod.Load(s.l)
 	s.mainMod = mainMod
@@ -121,11 +122,11 @@ func (s *Shell) Init(args []string) error {
 	defer s.endLuaLock(false, nil)
 	err = s.l.DoString(initCode)
 	if err != nil {
-		return fmt.Errorf("Error initializing shell: %v", err)
+		return fmt.Errorf("error initializing shell: %w", err)
 	}
 
 	if s.l.GetTop() > 0 {
-		return fmt.Errorf("luaInit %d left stack frames!", s.l.GetTop())
+		return fmt.Errorf("luaInit %d left stack frames", s.l.GetTop())
 	}
 
 	return nil
@@ -252,14 +253,6 @@ func (s *Shell) readLine(disp string) (string, error) {
 	return s.rl.ReadLine()
 }
 
-func (s *Shell) ensureInited() {
-	if s.args == nil {
-		panic("Shell not initialized!")
-	}
-}
-
-var ErrShellNotInited = errors.New("Shell not initialized!")
-
 func (s *Shell) RunFile(file string) error {
 	if s.args == nil {
 		return ErrShellNotInited
@@ -364,7 +357,7 @@ func (s *Shell) runPromptOne() (bool, error) {
 			if errors.Is(err, readline.ErrInterrupt) {
 				return true, err
 			}
-			err = fmt.Errorf("Prompt aborted: %w", err)
+			err = fmt.Errorf("prompt aborted: %w", err)
 			if s.ShowErrors {
 				log.Println(err.Error())
 			}
