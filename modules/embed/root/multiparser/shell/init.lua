@@ -124,10 +124,9 @@ function M.run(str, lineNo)
     local sCmd = cmd.new(args)
     sCmd:errorPropagation(false)
     -- TODO: Assign multi-command here, assign stdio here
-    _G._SHELL_RUN_CODE = function()
+    return function()
         sCmd:run()
     end
-    return "_G._SHELL_RUN_CODE()"
 end
 
 return M
