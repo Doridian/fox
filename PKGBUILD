@@ -9,7 +9,7 @@ fi
 
 pkgname=fox
 pkgver="${latest_tag}${tag_suffix}"
-pkgrel="${commits_since_tag}"
+pkgrel="$((commits_since_tag + 1))"
 pkgdesc='Fully OwO eXtensions'
 arch=('any')
 url='https://github.com/Doridian/fox.git'
