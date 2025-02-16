@@ -29,7 +29,7 @@ local function setGocmdStdio(cmd, name)
         cmd.gocmd[name](cmd.gocmd, fh)
     elseif redir.type == splitter.RedirTypeCmd then
         if name == "stdin" then
-            cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdoutPipe())
+            cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
         else
             error("cannot pipe cmd into stdout or stderr")
         end

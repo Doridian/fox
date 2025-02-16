@@ -260,6 +260,7 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	} else {
 		c.gocmd.Stdin = nil
 	}
+
 	return nil
 }
 
@@ -290,19 +291,19 @@ func (c *Cmd) waitStdio(L *lua.LState) error {
 func (c *Cmd) releaseStdioNoLock() error {
 	if c.stdin != nil {
 		if c.closeStdin {
-			ioClose(c.stdin)
+			_ = ioClose(c.stdin)
 		}
 		c.stdin = nil
 	}
 	if c.stdout != nil {
 		if c.closeStdout {
-			ioClose(c.stdout)
+			_ = ioClose(c.stdout)
 		}
 		c.stdout = nil
 	}
 	if c.stderr != nil {
 		if c.closeStderr {
-			ioClose(c.stderr)
+			_ = ioClose(c.stderr)
 		}
 		c.stderr = nil
 	}
