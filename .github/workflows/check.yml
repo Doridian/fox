@@ -28,7 +28,7 @@ jobs:
       - name: Go generate check
         run: |
           go generate ./...
-          git diff-index --quiet HEAD || (echo "go generate is out of date" && exit 1)
+          git diff-index --quiet HEAD || (git diff HEAD && exit 1)
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
