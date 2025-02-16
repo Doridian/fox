@@ -31,7 +31,7 @@ local function setGocmdStdio(cmd, name)
         if name == "stdin" then
             cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdoutPipe())
         else
-            cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdinPipe())
+            error("cannot pipe cmd into stdout or stderr")
         end
     else
         error("invalid redir type: " .. tostring(redir.type))
