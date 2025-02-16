@@ -29,21 +29,25 @@ shell.commandSearch = {
     "go:commands",
     "embed:commands",
 }
-function shell.runCommand(cmd)
+local function getCommand(cmd)
     for _, prefix in pairs(shell.commandSearch) do
         local ok, mod = pcall(require, prefix .. "." .. cmd)
         if ok then
-            return mod.run(table.unpack(shell.args))
+            return mod
         end
+    end
+    return nil
+end
+function shell.runCommand(cmd)
+    local mod = getCommand(cmd)
+    if mod then
+        return mod.run(table.unpack(shell.args))
     end
     error("No such command: " .. cmd)
 end
 function shell.hasCommand(cmd)
-    for _, prefix in pairs(shell.commandSearch) do
-        local ok, _ = pcall(require, prefix .. "." .. cmd)
-        if ok then
-            return true
-        end
+    if getCommand(cmd) then
+        return true
     end
     return false
 end
