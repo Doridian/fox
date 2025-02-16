@@ -132,7 +132,7 @@ func (s *Shell) Init(args []string) error {
 	return nil
 }
 
-func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *string) {
+func defaultShellParser(cmdAdd string, _ int, prev lua.LValue) (lua.LValue, bool, *string) {
 	if cmdAdd == "" {
 		return prev, false, nil
 	}
@@ -148,7 +148,7 @@ func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *stri
 	}
 
 	cmd := prevStr + cmdAdd + "\n"
-	if strings.HasPrefix(cmd, "--\n") {
+	if strings.HasPrefix(cmd, "--") {
 		return lua.LString(cmd), true, nil
 	}
 
@@ -160,26 +160,29 @@ func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *stri
 
 func luaDefaultShellParser(L *lua.LState) int {
 	cmd := L.CheckString(1)
-	// Ignore arg2 (lineNo)
-	parsed, needMore, _ := defaultShellParser(cmd, L.Get(3))
+	parsed, needMore, promptOverride := defaultShellParser(cmd, int(L.OptNumber(2, 1)), L.Get(3))
 	L.Push(parsed)
 	L.Push(lua.LBool(needMore))
-	L.Push(lua.LNil)
+	if promptOverride == nil {
+		L.Push(lua.LNil)
+	} else {
+		L.Push(lua.LString(*promptOverride))
+	}
 	return 3
 }
 
 func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LValue, bool, *string) {
-	if s.mod == nil {
-		return defaultShellParser(cmdAdd, prev)
+	if s.mod == nil || (prev != nil && prev.Type() == lua.LTString) {
+		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser == nil || shellParser == lua.LNil {
-		return defaultShellParser(cmdAdd, prev)
+		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
 	if strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
-		return defaultShellParser(cmdAdd, prev)
+		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
 	s.startLuaLock()
@@ -207,7 +210,7 @@ func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LVa
 	}
 
 	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
-		cmd, needMore, _ := defaultShellParser(cmdAdd, prev)
+		cmd, needMore, _ := defaultShellParser(cmdAdd, lineNo, prev)
 		return cmd, needMore, promptOverrideRes
 	}
 	return parseRet, needMoreL, promptOverrideRes
