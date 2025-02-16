@@ -20,8 +20,14 @@ function M.run(strAdd, lineNo, prev)
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
-    local tokens = tokenizer.run(parsed)
-    local cmds = splitter.run(tokens)
+    local tokens, err = tokenizer.run(parsed)
+    if not tokens then
+        error(err)
+    end
+    local cmds, err = splitter.run(tokens)
+    if not cmds then
+        error(err)
+    end
 
     local function pStdMap(op, v)
         if not v then

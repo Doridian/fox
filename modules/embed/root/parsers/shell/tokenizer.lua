@@ -33,8 +33,7 @@ function M.run(parsed)
             sub, subEscaped, foundGlobs = interpolate.run(sub, not container)
             if not sub then
                 -- subEscaped will be the error message
-                print("Parse error: " .. tostring(subEscaped))
-                return ""
+                return nil, "Parse error: " .. tostring(subEscaped)
             end
 
             if (not container) and foundGlobs then
