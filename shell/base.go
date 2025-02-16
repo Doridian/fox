@@ -162,7 +162,7 @@ func luaDefaultShellParser(L *lua.LState) int {
 	return 2
 }
 
-func (s *Shell) shellParser(cmd string, lineNo int) (lua.LValue, bool, *string) {
+func (s *Shell) shellParser(cmd string, lineNo int, prev lua.LValue) (lua.LValue, bool, *string) {
 	if s.mod == nil {
 		return defaultShellParser(cmd)
 	}
@@ -181,7 +181,8 @@ func (s *Shell) shellParser(cmd string, lineNo int) (lua.LValue, bool, *string) 
 	s.l.Push(shellParser)
 	s.l.Push(lua.LString(cmd))
 	s.l.Push(lua.LNumber(lineNo))
-	err := s.l.PCall(2, 2, nil)
+	s.l.Push(prev)
+	err := s.l.PCall(3, 2, nil)
 	if err != nil {
 		if s.ShowErrors {
 			log.Printf("Error in Lua shell.parser: %v", err)
@@ -354,7 +355,7 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 }
 
 func (s *Shell) runPromptOne() (bool, error) {
-	var luaCode lua.LValue
+	var parseRes lua.LValue
 
 	s.mainMod.PrePrompt()
 
@@ -384,22 +385,22 @@ func (s *Shell) runPromptOne() (bool, error) {
 		cmdBuilder.WriteString(cmdAdd)
 		cmdBuilder.WriteRune('\n')
 
-		luaCode, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String(), lineNo)
+		parseRes, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String(), lineNo, parseRes)
 		lineNo++
 	}
 
-	if luaCode == nil || luaCode == lua.LNil {
+	if parseRes == nil || parseRes == lua.LNil {
 		return true, nil
 	}
 
-	switch typedLuaCode := luaCode.(type) {
+	switch typedLuaCode := parseRes.(type) {
 	case lua.LString:
 		return true, s.RunString(typedLuaCode.String())
 	case *lua.LFunction:
 		return true, s.RunFunc(typedLuaCode)
 	}
 
-	err := fmt.Errorf("unknown shell.parser return type: %v", luaCode.Type().String())
+	err := fmt.Errorf("unknown shell.parser return type: %v", parseRes.Type().String())
 	if s.ShowErrors {
 		log.Println(err.Error())
 	}
