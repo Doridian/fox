@@ -1,4 +1,5 @@
 local fs = require("go:fs")
+local vars = require("embed:multiparser.shell.vars")
 
 local M = {}
 
@@ -32,7 +33,7 @@ function M.run(str, escapeGlobs)
             varEnd = #str + 1
         end
         varTmp = str:sub(varStart + 1, varEnd - 1)
-        varTmp = M.get(varType, varTmp)
+        varTmp = vars.get(varType, varTmp)
 
         retStr = retStr .. varTmp
         if hasGlobs then
