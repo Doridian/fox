@@ -38,6 +38,19 @@ function shell.runCommand(cmd)
     end
     error("No such command: " .. cmd)
 end
+function shell.hasCommand(cmd)
+    for _, prefix in pairs(shell.commandSearch) do
+        local ok, _ = pcall(require, prefix .. "." .. cmd)
+        if ok then
+            return true
+        end
+    end
+    return false
+end
+
+local mp = require("embed:multiparser")
+shell.parser = mp.run
+mp.parsers.default = mp.parsers.shell
 
 local initLua = baseDir .. "/init.lua"
 if fs.stat(initLua) then

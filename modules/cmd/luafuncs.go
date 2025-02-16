@@ -234,9 +234,10 @@ func lookPath(L *lua.LState) int {
 
 func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	c := &Cmd{
-		mod:          m,
-		gocmd:        &exec.Cmd{},
-		AutoLookPath: true,
+		mod:              m,
+		gocmd:            &exec.Cmd{},
+		AutoLookPath:     true,
+		ErrorPropagation: true,
 	}
 
 	// new|run|start([args, [dir, [env]]])
