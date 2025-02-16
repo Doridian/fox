@@ -131,13 +131,12 @@ function M.run(strAdd, lineNo, prev)
                 controlEndIdx = controlEndIdx + 1
             end
 
-            local prevArg = curArg
-            curArg = nil
             table.insert(args, {
-                pre = prevArg and prevArg.buf,
+                pre = curArg and curArg.buf,
                 val = parsed:sub(nextControlIdx, controlEndIdx),
                 type = ArgTypeOp,
             })
+            curArg = nil
             i = controlEndIdx + 1
         end
     end
