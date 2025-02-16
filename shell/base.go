@@ -142,7 +142,12 @@ func defaultShellParser(cmd string) (string, bool, *string) {
 	if strings.HasSuffix(cmd, "\\\n") {
 		return "", true, nil
 	}
-	return strings.ReplaceAll(cmd, "\\\n", "\n"), false, nil
+
+	cmdFixed := strings.ReplaceAll(cmd, "\\\n", "\n")
+	if cmdFixed[0] == '=' {
+		return "return " + cmdFixed[1:], false, nil
+	}
+	return cmdFixed, false, nil
 }
 
 func luaDefaultShellParser(L *lua.LState) int {
