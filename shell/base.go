@@ -174,11 +174,12 @@ func luaDefaultShellParser(L *lua.LState) int {
 }
 
 func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LValue, bool, *string) {
-	if s.mod == nil || (prev != nil && prev.Type() == lua.LTString) {
+	hasPrev := prev != nil && prev != lua.LNil
+	if s.mod == nil || (hasPrev && prev.Type() == lua.LTString) {
 		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
-	if (prev == nil || prev == lua.LNil) && strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
+	if hasPrev && strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
 		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
