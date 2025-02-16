@@ -1,8 +1,15 @@
 # Maintainer: Doridian <git at doridian dot net>
 
+latest_tag="$(git describe --tags --abbrev=0)"
+commits_since_tag="$(git rev-list --count ${latest_tag}..HEAD)"
+tag_suffix=""
+if ! git diff-index --quiet HEAD --; then
+  tag_suffix="dev"
+fi
+
 pkgname=fox
-pkgver="${PKG_VERSION-0.0.0dev}"
-pkgrel=1
+pkgver="${latest_tag}${tag_suffix}"
+pkgrel="${commits_since_tag}"
 pkgdesc='Fully OwO eXtensions'
 arch=('any')
 url='https://github.com/Doridian/fox.git'
