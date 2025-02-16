@@ -3,4 +3,5 @@
 .vscode
 /src
 /pkg
+/.SRCINFO
 *.pkg.tar*
