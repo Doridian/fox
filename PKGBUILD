@@ -1,5 +1,9 @@
 # Maintainer: Doridian <git at doridian dot net>
 
+# This should ideally be inside a pkgver() subroutine, but that is not possible
+# as part of the version comes from the commit count since the latest tag
+# so if you commit your current changes the PKGBUILD that would push it one tag further
+# than it just calculated, so it would cause a perma-diff in git which is very suboptimal
 latest_tag="$(git describe --tags --abbrev=0)"
 commits_since_tag="$(git rev-list --count ${latest_tag}..HEAD)"
 tag_suffix=""
