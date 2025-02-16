@@ -3,7 +3,7 @@ local fs = require("go:fs")
 local shell = require("go:shell")
 local os = require("go:os")
 local interpolate = require("embed:parsers.shell.interpolate")
-local cmdh = require("embed:commandHandler")
+local cmdHandler = require("embed:commandHandler")
 
 local exe = os.executable()
 
@@ -135,6 +135,7 @@ function M.run(strAdd, lineNo, prev)
                 pre = curToken and curToken.buf,
                 val = nextControl,
                 len = controlEndIdx - nextControlIdx + 1,
+                raw = parsed:sub(nextControlIdx, controlEndIdx),
                 type = ArgTypeOp,
             })
             curToken = nil
@@ -142,18 +143,108 @@ function M.run(strAdd, lineNo, prev)
         end
     end
 
+    if #tokens < 1 then
+        return ""
+    end
+
     for _, v in pairs(tokens) do
         print("TOKEN", v.type, v.val, v.pre, v.len)
     end
 
-    if #tokens < 1 then
-        return ""
-    end
-    if true then
-        return ""
+    local cmds = {}
+    local curCmd = nil
+    local invertNextCmd = false
+    local token
+    local idx = 1
+    while idx < #tokens do
+        token = tokens[idx]
+        if not curCmd then
+            curCmd = {
+                args = {},
+                invert = invertNextCmd,
+                stdinMod = nil,
+                stdoutMod = nil,
+                stderrMod = nil,
+                chainToNext = nil,
+            }
+            invertNextCmd = false
+        end
+
+        if token.type == ArgTypeString then
+            table.insert(curCmd.args, token.val)
+        elseif token.type == ArgTypeOp then
+            if token.val == "|" or token.val == "&" or token.val == ";" then
+                if token.val ~= ";" then
+                    if #curCmd.args < 1 then
+                        error("Cannot have " .. token.raw .. " at the start of a command!")
+                    end
+                    if token.len > 2 then
+                        error("Cannot have more than 2 of " .. token.val .. " in a row")
+                    end
+                    curCmd.chainToNext = token.raw
+                end
+                -- TODO: Singular | should set stdin up
+                table.insert(cmds, curCmd)
+                curCmd = nil
+            elseif token.val == "!" then
+                if #curCmd.args > 0 then
+                    error("Cannot have \"" .. token.raw .. "\" in the middle of a command!")
+                end
+                invertNextCmd = (token.len % 2) == 1
+            elseif token.val == "<" or token.val == ">" then
+                if #curCmd.args < 1 then
+                    error("Cannot redirect stdin/out/err of nothing!")
+                end
+                idx = idx + 1
+                local outFile = tokens[idx]
+                if outFile.type ~= ArgTypeString then
+                    error("Expected string after " .. token.raw)
+                end
+
+                local fileInfo = {
+                    name = outFile.val,
+                    append = token.len > 1,
+                }
+
+                if token.val == "<" then
+                    if token.pre and token.pre ~= "" then
+                        error("Expected nothing before " .. token.raw)
+                    end
+                    curCmd.stdinMod = fileInfo
+                elseif token.val == ">" then
+                    if token.pre == "2" then
+                        curCmd.stderrMod = fileInfo
+                    elseif token.pre == "1" or token.pre == "" or not token.pre then
+                        curCmd.stdoutMod = fileInfo
+                    else
+                        error("Expected nothing, 1 or 2 before " .. token.raw)
+                    end
+                end
+            end
+        end
+
+        idx = idx + 1
     end
 
-    if cmdh.has(tokens[1]) then
+    if #curCmd.args > 0 then
+        table.insert(cmds, curCmd)
+    end
+
+    local function pStdMap(op, v)
+        if not v then
+            return
+        end
+        print("REDIR", op, v.name, v.append)
+    end
+    for _, v in pairs(cmds) do
+        print("CMD", v.invert, table.concat(v.args, " "))
+        pStdMap("<", v.stdinMod)
+        pStdMap(">", v.stdoutMod)
+        pStdMap("2>", v.stderrMod)
+    end
+
+    --[[
+    if cmdHandler.has(tokens[1]) then
         table.insert(tokens, 1, exe)
         table.insert(tokens, 2, "-c")
     end
@@ -163,6 +254,8 @@ function M.run(strAdd, lineNo, prev)
     return function()
         sCmd:run()
     end
+    ]]
+    return ""
 end
 
 return M
