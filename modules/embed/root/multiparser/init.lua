@@ -16,7 +16,8 @@ function M.run(cmdAdd, lineNo, prev)
         prev = {
             prev = nil,
         }
-        if cmdAdd:sub(1, 1) == "!" then
+        local cmdPrefix = cmdAdd:sub(1, 1)
+        if cmdPrefix == "!" then
             cmdAdd = cmdAdd:sub(2)
             prev.parser = M.parsers[cmdAdd]
 
@@ -26,6 +27,10 @@ function M.run(cmdAdd, lineNo, prev)
             end
 
             return prev, true
+        elseif cmdPrefix == "=" then
+            return "return " .. cmdAdd:sub(2)
+        elseif cmdPrefix == "/" then
+            return cmdAdd:sub(2)
         else
             prev.parser = M.parsers.default
         end
