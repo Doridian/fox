@@ -12,7 +12,8 @@ import (
 const LuaName = "go:shell"
 
 type Shell struct {
-	args []string
+	args        []string
+	interactive bool
 
 	l     *lua.LState
 	lLock sync.Mutex

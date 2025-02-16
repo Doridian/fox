@@ -14,6 +14,20 @@ func luaExit(L *lua.LState) int {
 	return 0
 }
 
+func (s *Shell) luaGetArgs(L *lua.LState) int {
+	argsL := s.l.NewTable()
+	for _, arg := range s.args {
+		argsL.Append(lua.LString(arg))
+	}
+	L.Push(argsL)
+	return 1
+}
+
+func (s *Shell) luaIsInteractive(L *lua.LState) int {
+	L.Push(lua.LBool(s.interactive))
+	return 1
+}
+
 func (s *Shell) luaSetReadlineConfig(L *lua.LState) int {
 	cfg, _ := config.Check(L, 1)
 	if cfg == nil {

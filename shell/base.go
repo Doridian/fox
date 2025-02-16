@@ -63,7 +63,10 @@ func (s *Shell) signalInit() {
 
 func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
-		"exit":              luaExit,
+		"exit":        luaExit,
+		"args":        s.luaGetArgs,
+		"interactive": s.luaIsInteractive,
+
 		"readlineConfig":    s.luaSetReadlineConfig,
 		"getReadlineConfig": s.luaGetReadlineConfig,
 
@@ -71,29 +74,23 @@ func (s *Shell) Loader(L *lua.LState) int {
 		"defaultRenderPrompt": luaDefaultRenderPrompt,
 	})
 	s.mod = mod
-	if s.args != nil {
-		argsL := s.l.NewTable()
-		for _, arg := range s.args {
-			argsL.Append(lua.LString(arg))
-		}
-		s.mod.RawSetString("args", argsL)
-	}
 	L.Push(mod)
 	return 1
 }
 
 func (s *Shell) MustInit(args []string, interactive bool) {
-	err := s.Init(args)
+	err := s.Init(args, interactive)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
 	}
 }
 
-func (s *Shell) Init(args []string) error {
+func (s *Shell) Init(args []string, interactive bool) error {
 	if s.args != nil {
 		return errors.New("shell already initialized")
 	}
 	s.args = args
+	s.interactive = interactive
 
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))

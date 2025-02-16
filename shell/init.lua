@@ -41,7 +41,7 @@ end
 function shell.runCommand(cmd)
     local mod = getCommand(cmd)
     if mod then
-        return mod.run(table.unpack(shell.args))
+        return mod.run(table.unpack(shell.args()))
     end
     error("No such command: " .. cmd)
 end
@@ -52,9 +52,11 @@ function shell.hasCommand(cmd)
     return false
 end
 
-local mp = require("embed:multiparser")
-shell.parser = mp.run
-mp.parsers.default = mp.parsers.shell
+if shell.interactive() then
+    local mp = require("embed:multiparser")
+    shell.parser = mp.run
+    mp.parsers.default = mp.parsers.shell
+end
 
 local initLua = baseDir .. "/init.lua"
 if fs.stat(initLua) then

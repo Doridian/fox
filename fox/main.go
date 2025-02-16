@@ -72,8 +72,7 @@ func Main() error {
 		runFunc = s.RunCommand
 	}
 
-	interactiveMode := forceShell || *continuePtr || (flag.NArg() == 0)
-	s.MustInit(args, interactiveMode)
+	s.MustInit(args, *continuePtr || (runFunc == nil))
 
 	if runFunc != nil {
 		if flag.NArg() == 0 {
@@ -81,7 +80,7 @@ func Main() error {
 		}
 
 		err = runFunc(flag.Arg(0))
-		if !interactiveMode {
+		if !*continuePtr {
 			return err
 		}
 	}
