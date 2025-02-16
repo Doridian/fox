@@ -2,7 +2,7 @@ local cmd = require("go:cmd")
 local fs = require("go:fs")
 local shell = require("go:shell")
 local os = require("go:os")
-local interpolate = require("embed:multiparser.shell.interpolate")
+local interpolate = require("embed:parsers.shell.interpolate")
 
 local exe = os.executable()
 

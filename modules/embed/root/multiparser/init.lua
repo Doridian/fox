@@ -1,27 +1,54 @@
 local shell = require("go:shell")
 
 local M = {}
+local parserCache = {}
 
-M.parsers = {}
+M.defaultParser = nil
 
-function M.loadParser(name, func)
-    M.parsers[name] = func
+M.search = {
+    "embed:parsers",
+    "go:parsers",
+    "parsers",
+}
+local function getParser(name)
+    if parserCache[name] then
+        return parserCache[name]
+    end
+
+    local errs = {}
+    for _, prefix in pairs(M.search) do
+        local ok, mod = pcall(require, prefix .. "." .. name)
+        if ok then
+            parserCache[name] = mod
+            return mod
+        else
+            table.insert(errs, mod)
+        end
+    end
+
+    if #errs > 0 then
+        error(table.concat(errs, "\n"))
+    end
+
+    return nil
 end
-local function loadIntegratedParser(name)
-    M.loadParser(name, require("embed:multiparser." .. name).run)
+
+local function defaultShellParserModule()
+    return {
+        run = shell.defaultShellParser,
+    }
 end
-loadIntegratedParser("lua")
-loadIntegratedParser("shell")
 
 function M.run(cmdAdd, lineNo, prev)
     if not prev then
         prev = {
             prev = nil,
+            parser = defaultShellParserModule(),
         }
         local cmdPrefix = cmdAdd:sub(1, 1)
         if cmdPrefix == "!" then
             cmdAdd = cmdAdd:sub(2)
-            prev.parser = M.parsers[cmdAdd]
+            prev.parser = getParser(cmdAdd)
 
             if not prev.parser then
                 print("Unknown parser " .. cmdAdd)
@@ -30,20 +57,18 @@ function M.run(cmdAdd, lineNo, prev)
 
             return prev, true
         elseif cmdPrefix == "=" or cmdAdd:sub(1, 2) == "--" then
-            prev.parser = shell.defaultShellParser
+            -- noop
         elseif cmdPrefix == "/" then
-            prev.parser = shell.defaultShellParser
             cmdAdd = cmdAdd:sub(2)
-        else
-            prev.parser = M.parsers.default
+        elseif M.defaultParser then
+            local parser = getParser(M.defaultParser)
+            if parser then
+                prev.parser = parser
+            end
         end
     end
 
-    if not prev.parser then
-        return false
-    end
-
-    local state, needMore, promptOverride = prev.parser(cmdAdd, lineNo, prev.prev)
+    local state, needMore, promptOverride = prev.parser.run(cmdAdd, lineNo, prev.prev)
     if needMore then
         prev.prev = state
         return prev, true, promptOverride

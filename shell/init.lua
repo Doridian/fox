@@ -54,8 +54,8 @@ end
 
 if shell.interactive() then
     local mp = require("embed:multiparser")
+    mp.defaultParser = "shell"
     shell.parser = mp.run
-    mp.parsers.default = mp.parsers.shell
 end
 
 local initLua = baseDir .. "/init.lua"
