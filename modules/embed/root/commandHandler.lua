@@ -13,13 +13,21 @@ local function getCommand(cmd)
         return cmdCache[cmd]
     end
 
+    local errs = {}
     for _, prefix in pairs(M.search) do
         local ok, mod = pcall(require, prefix .. "." .. cmd)
         if ok then
             cmdCache[cmd] = mod
             return mod
+        else
+            table.insert(errs, mod)
         end
     end
+
+    if #errs > 0 then
+        error(table.concat(errs, "\n"))
+    end
+
     return nil
 end
 
