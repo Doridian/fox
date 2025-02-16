@@ -132,15 +132,22 @@ func (s *Shell) Init(args []string) error {
 	return nil
 }
 
-func defaultShellParser(cmd string) (lua.LValue, bool, *string) {
+func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *string) {
+	prevStr := ""
+	if prev != nil && prev != lua.LNil {
+		prevStr = lua.LVAsString(prev)
+	}
+	cmd := prevStr + cmdAdd
+
+	// TODO: Make use of prev and cmdAdd here to improve perf?
 	if strings.HasPrefix(cmd, "--\n") {
 		if strings.HasSuffix(cmd, "\n\n") {
 			return lua.LString(cmd), false, nil
 		}
-		return lua.LNil, true, nil
+		return lua.LString(cmd), true, nil
 	}
 	if strings.HasSuffix(cmd, "\\\n") {
-		return lua.LNil, true, nil
+		return lua.LString(cmd), true, nil
 	}
 
 	cmdFixed := strings.ReplaceAll(cmd, "\\\n", "\n")
@@ -152,46 +159,44 @@ func defaultShellParser(cmd string) (lua.LValue, bool, *string) {
 
 func luaDefaultShellParser(L *lua.LState) int {
 	cmd := L.CheckString(1)
-	parsed, needMore, _ := defaultShellParser(cmd)
-	if needMore {
-		L.Push(lua.LTrue)
-	} else {
-		L.Push(parsed)
-	}
+	parsed, needMore, _ := defaultShellParser(cmd, nil)
+	L.Push(parsed)
+	L.Push(lua.LBool(needMore))
 	L.Push(lua.LNil)
-	return 2
+	return 3
 }
 
-func (s *Shell) shellParser(cmd string, lineNo int, prev lua.LValue) (lua.LValue, bool, *string) {
+func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LValue, bool, *string) {
 	if s.mod == nil {
-		return defaultShellParser(cmd)
+		return defaultShellParser(cmdAdd, prev)
 	}
 
 	shellParser := s.mod.RawGetString("parser")
 	if shellParser == nil || shellParser == lua.LNil {
-		return defaultShellParser(cmd)
+		return defaultShellParser(cmdAdd, prev)
 	}
 
-	if strings.HasPrefix(cmd, "--[[DEFAULT]]") {
-		return defaultShellParser(cmd)
+	if strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
+		return defaultShellParser(cmdAdd, prev)
 	}
 
 	s.startLuaLock()
 	defer s.endLuaLock(false, nil)
 	s.l.Push(shellParser)
-	s.l.Push(lua.LString(cmd))
+	s.l.Push(lua.LString(cmdAdd))
 	s.l.Push(lua.LNumber(lineNo))
 	s.l.Push(prev)
-	err := s.l.PCall(3, 2, nil)
+	err := s.l.PCall(3, 3, nil)
 	if err != nil {
 		if s.ShowErrors {
 			log.Printf("Error in Lua shell.parser: %v", err)
 		}
 		return lua.LNil, false, nil
 	}
-	parseRet := s.l.Get(-2)
+	parseRet := s.l.Get(-3)
+	needMoreL := s.l.OptBool(-2, false)
 	promptOverride := s.l.Get(-1)
-	s.l.Pop(2)
+	s.l.Pop(3)
 
 	var promptOverrideRes *string
 	if promptOverride != nil && promptOverride != lua.LNil {
@@ -200,12 +205,10 @@ func (s *Shell) shellParser(cmd string, lineNo int, prev lua.LValue) (lua.LValue
 	}
 
 	if parseRet == nil || parseRet == lua.LNil || parseRet == lua.LFalse {
-		cmd, needMore, _ := defaultShellParser(cmd)
+		cmd, needMore, _ := defaultShellParser(cmdAdd, prev)
 		return cmd, needMore, promptOverrideRes
-	} else if parseRet == lua.LTrue {
-		return lua.LNil, true, promptOverrideRes
 	}
-	return parseRet, false, promptOverrideRes
+	return parseRet, needMoreL, promptOverrideRes
 }
 
 func defaultRenderPrompt(lineNo int) string {
@@ -355,11 +358,10 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 }
 
 func (s *Shell) runPromptOne() (bool, error) {
-	var parseRes lua.LValue
+	var parseRes lua.LValue = lua.LNil
 
 	s.mainMod.PrePrompt()
 
-	cmdBuilder := strings.Builder{}
 	lineNo := 1
 	needMore := true
 
@@ -382,10 +384,8 @@ func (s *Shell) runPromptOne() (bool, error) {
 			}
 			return false, err
 		}
-		cmdBuilder.WriteString(cmdAdd)
-		cmdBuilder.WriteRune('\n')
 
-		parseRes, needMore, nextPromptOverride = s.shellParser(cmdBuilder.String(), lineNo, parseRes)
+		parseRes, needMore, nextPromptOverride = s.shellParser(cmdAdd+"\n", lineNo, parseRes)
 		lineNo++
 	}
 

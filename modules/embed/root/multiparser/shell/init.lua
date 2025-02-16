@@ -15,10 +15,10 @@ local exe = os.executable()
 
 local M = {}
 
-function M.run(str, lineNo)
-    local parsed, promptOverride = shell.defaultShellParser(str, lineNo)
-    if (not parsed) or parsed == true or parsed == "" or parsed == "\n" then
-        return parsed, promptOverride
+function M.run(strAdd, lineNo, prev)
+    local parsed = (prev or "") .. strAdd
+    if strAdd:sub(#strAdd - 1, #strAdd) == "\\\n" then
+        return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
     local i = 1
@@ -98,7 +98,7 @@ function M.run(str, lineNo)
         if nextControl == "'" or nextControl == '"' then
             quoteEndIdx = parsed:find(nextControl, nextControlIdx + 1)
             if not quoteEndIdx then
-                return true, nextControl .. "> "
+                return parsed, true, nextControl .. "> "
             end
 
             bufArg()
@@ -114,7 +114,7 @@ function M.run(str, lineNo)
     end
 
     if #args < 1 then
-        return
+        return ""
     end
 
     if shell.hasCommand(args[1]) then
