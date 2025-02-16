@@ -27,9 +27,11 @@ func Check(L *lua.LState, i int) (interface{}, *lua.LUserData) {
 
 func IndexFuncs() map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
-		"close": ioClose,
-		"read":  ioRead,
-		"write": ioWrite,
-		"seek":  ioSeek,
+		"close":    ioClose,
+		"read":     ioRead,
+		"write":    ioWrite,
+		"seek":     ioSeek,
+		"canRead":  ioCanRead,
+		"canWrite": ioCanWrite,
 	}
 }

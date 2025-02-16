@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-
-	"github.com/Doridian/fox/modules/pipe"
 )
 
 const (
@@ -15,11 +13,11 @@ const (
 )
 
 type Cmd struct {
-	stdout      *pipe.Pipe
+	stdout      interface{}
 	closeStdout bool
-	stderr      *pipe.Pipe
+	stderr      interface{}
 	closeStderr bool
-	stdin       *pipe.Pipe
+	stdin       interface{}
 	closeStdin  bool
 
 	awaited    bool

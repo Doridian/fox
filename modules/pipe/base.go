@@ -1,6 +1,7 @@
 package pipe
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -20,6 +21,8 @@ type Pipe struct {
 	rd     io.Reader
 	wr     io.Writer
 }
+
+var _ io.ReadWriteCloser = (*Pipe)(nil)
 
 func NewReadPipe(creator PipeCreator, description string, rc io.ReadCloser) *Pipe {
 	return &Pipe{
@@ -46,12 +49,6 @@ func NewWritePipe(creator PipeCreator, description string, wc io.WriteCloser) *P
 		description: description,
 		wr:          wc,
 		cl:          wc,
-	}
-}
-
-func (p *Pipe) Close() {
-	if p.cl != nil {
-		_ = p.cl.Close()
 	}
 }
 
@@ -102,4 +99,25 @@ func (p *Pipe) ToString() string {
 	}
 
 	return fmt.Sprintf("%s{%s, %s, %s}", LuaType, mode, p.description, creatorStr)
+}
+
+func (p *Pipe) Close() error {
+	if p.cl != nil {
+		return p.cl.Close()
+	}
+	return errors.New("cannot close pipe")
+}
+
+func (p *Pipe) Read(data []byte) (n int, err error) {
+	if p.rd != nil {
+		return p.rd.Read(data)
+	}
+	return 0, errors.New("cannot read from pipe")
+}
+
+func (p *Pipe) Write(data []byte) (n int, err error) {
+	if p.wr != nil {
+		return p.wr.Write(data)
+	}
+	return 0, errors.New("cannot write to pipe")
 }

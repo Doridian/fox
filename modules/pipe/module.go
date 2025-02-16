@@ -23,9 +23,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
 
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), util.MergeMaps(io.IndexFuncs(), map[string]lua.LGFunction{
-		"canRead":  pipeCanRead,
-		"canWrite": pipeCanWrite,
-		"isNull":   pipeIsNull,
+		"isNull": pipeIsNull,
 	})))
 	mt.RawSetString("__tostring", L.NewFunction(pipeToString))
 

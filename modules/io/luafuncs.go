@@ -102,3 +102,25 @@ func ioSeek(L *lua.LState) int {
 	L.Push(lua.LNumber(n))
 	return 1
 }
+
+func ioCanWrite(L *lua.LState) int {
+	f, _ := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	_, ok := f.(goio.Writer)
+	L.Push(lua.LBool(ok))
+	return 1
+}
+
+func ioCanRead(L *lua.LState) int {
+	f, _ := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	_, ok := f.(goio.Reader)
+	L.Push(lua.LBool(ok))
+	return 1
+}
