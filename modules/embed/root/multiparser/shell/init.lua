@@ -1,7 +1,10 @@
 local cmd = require("go:cmd")
 local fs = require("go:fs")
 local shell = require("go:shell")
+local os = require("go:os")
 local interpolate = require("embed:multiparser.shell.interpolate")
+
+local exe = os.executable()
 
 --[[
     TODO:
@@ -14,7 +17,7 @@ local M = {}
 
 function M.run(str, lineNo)
     local parsed, promptOverride = shell.defaultShellParser(str, lineNo)
-    if (not parsed) or parsed == true or parsed == "" then
+    if (not parsed) or parsed == true or parsed == "" or parsed == "\n" then
         return parsed, promptOverride
     end
 
@@ -110,11 +113,16 @@ function M.run(str, lineNo)
         print("ARG", k, v)
     end
 
+    if #args < 1 then
+        return
+    end
+
     if shell.hasCommand(args[1]) then
-        table.insert(args, 1, "fox")
+        table.insert(args, 1, exe)
         table.insert(args, 2, "-c")
     end
     local sCmd = cmd.new(args)
+    sCmd:errorPropagation(false)
     -- TODO: Assign multi-command here, assign stdio here
     _G._SHELL_RUN_CODE = function()
         sCmd:run()
