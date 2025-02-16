@@ -14,7 +14,6 @@ function M.run(tokens)
     local idx = 1
     while idx <= #tokens do
         token = tokens[idx]
-        print("TOKEN", token.type, token.val, token.pre, token.len)
 
         if not curCmd then
             curCmd = {
@@ -36,10 +35,10 @@ function M.run(tokens)
             if token.val == "|" or token.val == "&" or token.val == ";" then
                 if token.val == ";" then
                     if #curCmd.args < 1 and (curCmd.invert or curCmd.stdin) then
-                        error("Cannot have " .. token.val .. " after " .. curCmd.invert and "!" or "|")
+                        return nil, "Cannot have " .. token.val .. " after " .. curCmd.invert and "!" or "|"
                     end
                 elseif #curCmd.args < 1 then
-                    error("Cannot have " .. token.raw .. " at the start of a command!")
+                    return nil, "cannot have " .. token.raw .. " at the start of a command!"
                 else
                     if token.val == "|" and token.len == 1 then
                         stdinNextCmd = {
@@ -47,13 +46,13 @@ function M.run(tokens)
                             cmd = curCmd,
                         }
                         if curCmd.background then
-                            error("Cannot pipe (" .. token.raw .. ") after background command (&)")
+                            return nil, "cannot pipe (" .. token.raw .. ") after background command (&)"
                         end
                     elseif token.val == "&" and token.len == 1 then
                         curCmd.background = true
                     else
                         if token.len > 2 then
-                            error("Cannot have more than 2 of " .. token.val .. " in a row")
+                            return nil, "cannot have more than 2 of " .. token.val .. " in a row"
                         end
                         curCmd.chainToNext = token.raw
                     end
@@ -64,17 +63,17 @@ function M.run(tokens)
                 curCmd = nil
             elseif token.val == "!" then
                 if #curCmd.args > 0 then
-                    error("Cannot have \"" .. token.raw .. "\" in the middle of a command!")
+                    return nil, "cannot have \"" .. token.raw .. "\" in the middle of a command"
                 end
                 invertNextCmd = (token.len % 2) == 1
             elseif token.val == "<" or token.val == ">" then
                 if #curCmd.args < 1 then
-                    error("Cannot redirect stdin/out/err of nothing!")
+                    return nil, "cannot redirect stdin/out/err of nothing"
                 end
                 idx = idx + 1
                 local outFile = tokens[idx]
                 if outFile.type ~= tokenizer.ArgTypeString then
-                    error("Expected string after " .. token.raw)
+                    return nil, "expected string after " .. token.raw
                 end
 
                 local fileInfo = {
@@ -85,7 +84,7 @@ function M.run(tokens)
 
                 if token.val == "<" then
                     if token.pre and token.pre ~= "" then
-                        error("Expected nothing before " .. token.raw)
+                        return nil, "expected nothing before " .. token.raw
                     end
                     curCmd.stdin = fileInfo
                 elseif token.val == ">" then
@@ -94,7 +93,7 @@ function M.run(tokens)
                     elseif token.pre == "1" or token.pre == "" or not token.pre then
                         curCmd.stdout = fileInfo
                     else
-                        error("Expected nothing, 1 or 2 before " .. token.raw)
+                        return nil, "expected nothing, 1 or 2 before " .. token.raw
                     end
                 end
             end

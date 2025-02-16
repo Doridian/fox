@@ -33,7 +33,7 @@ function M.run(parsed)
             sub, subEscaped, foundGlobs = interpolate.run(sub, not container)
             if not sub then
                 -- subEscaped will be the error message
-                return nil, "Parse error: " .. tostring(subEscaped)
+                return nil, "shell.interpolate error: " .. tostring(subEscaped)
             end
 
             if (not container) and foundGlobs then
@@ -92,7 +92,7 @@ function M.run(parsed)
         if nextControl == "'" or nextControl == '"' then
             controlEndIdx = parsed:find(nextControl, nextControlIdx + 1)
             if not controlEndIdx then
-                return parsed, true, nextControl .. "> "
+                return nil, "unclosed " .. nextControl
             end
 
             bufToken()

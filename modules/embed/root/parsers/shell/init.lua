@@ -22,11 +22,13 @@ function M.run(strAdd, lineNo, prev)
 
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        error(err)
+        print("shell.tokenizer error: " .. err)
+        return ""
     end
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        error(err)
+        print("shell.splitter error: " .. err)
+        return ""
     end
 
     local function pStdMap(op, v)
