@@ -27,6 +27,7 @@ jobs:
           cache: false
       - name: Go generate check
         run: |
+          set -x
           go generate ./...
           git diff-index --quiet HEAD || (git diff HEAD && exit 1)
       - name: golangci-lint
