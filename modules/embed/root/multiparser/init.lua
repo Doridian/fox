@@ -11,23 +11,36 @@ end
 loadIntegratedParser("lua")
 loadIntegratedParser("shell")
 
-function M.run(cmd, lineNo, prev)
-    if cmd:sub(1, 1) == "!" then
-        local newLine = cmd:find("\n", 1, true)
-        local cmdPrefix = cmd:sub(2, newLine - 1)
-        if M.parsers[cmdPrefix] then
-            return M.parsers[cmdPrefix](cmd:sub(newLine + 1), lineNo, prev)
+function M.run(cmdAdd, lineNo, prev)
+    if not prev then
+        prev = {
+            prev = nil,
+        }
+        if cmdAdd:sub(1, 1) == "!" then
+            cmdAdd = cmdAdd:sub(2)
+            prev.parser = M.parsers[cmdAdd]
+
+            if not prev.parser then
+                print("Unknown parser " .. cmdAdd)
+                return ""
+            end
+
+            return prev, true
+        else
+            prev.parser = M.parsers.default
         end
-
-        print("Unknown parser " .. cmdPrefix)
-        return ""
     end
 
-    local defParser = M.parsers.default
-    if defParser then
-        return defParser(cmd, lineNo, prev)
+    if not prev.parser then
+        return false
     end
-    return false
+
+    local state, needMore, promptOverride = prev.parser(cmdAdd, lineNo, prev.prev)
+    if needMore then
+        prev.prev = state
+        return prev, true, promptOverride
+    end
+    return state, false, promptOverride
 end
 
 return M

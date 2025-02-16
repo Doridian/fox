@@ -1,9 +1,9 @@
 local M =  {}
 
 function M.run(cmdAdd, lineNo, prev)
-    local cmd = prev .. cmdAdd
+    local cmd = (prev or "") .. cmdAdd .. "\n"
 
-    if cmd:sub(#cmd - 1, #cmd) == "\n\n" then
+    if cmdAdd == "" then
         return cmd
     end
     return cmd, true

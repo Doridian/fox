@@ -137,7 +137,8 @@ func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *stri
 	if prev != nil && prev != lua.LNil {
 		prevStr = lua.LVAsString(prev)
 	}
-	cmd := prevStr + cmdAdd
+
+	cmd := prevStr + cmdAdd + "\n"
 
 	// TODO: Make use of prev and cmdAdd here to improve perf?
 	if strings.HasPrefix(cmd, "--\n") {
@@ -385,7 +386,7 @@ func (s *Shell) runPromptOne() (bool, error) {
 			return false, err
 		}
 
-		parseRes, needMore, nextPromptOverride = s.shellParser(cmdAdd+"\n", lineNo, parseRes)
+		parseRes, needMore, nextPromptOverride = s.shellParser(cmdAdd, lineNo, parseRes)
 		lineNo++
 	}
 

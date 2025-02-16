@@ -16,8 +16,9 @@ local exe = os.executable()
 local M = {}
 
 function M.run(strAdd, lineNo, prev)
-    local parsed = (prev or "") .. strAdd
-    if strAdd:sub(#strAdd - 1, #strAdd) == "\\\n" then
+    local parsed = (prev or "") .. strAdd .. "\n"
+
+    if strAdd:sub(#strAdd, #strAdd) == "\\" then
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
