@@ -24,14 +24,6 @@ function shell.setHistoryFile(file)
 end
 shell.setHistoryFile(baseDir .. "/history")
 
-local initLua = baseDir .. "/init.lua"
-if fs.stat(initLua) then
-    local ok, err = pcall(dofile, initLua)
-    if not ok then
-        print("Error loading user init.lua: " .. tostring(err))
-    end
-end
-
 shell.commandSearch = {
     "commands",
     "go:commands",
@@ -45,4 +37,12 @@ function shell.runCommand(cmd)
         end
     end
     error("No such command: " .. cmd)
+end
+
+local initLua = baseDir .. "/init.lua"
+if fs.stat(initLua) then
+    local ok, err = pcall(dofile, initLua)
+    if not ok then
+        print("Error loading user init.lua: " .. tostring(err))
+    end
 end
