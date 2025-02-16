@@ -2,6 +2,9 @@ local shell = require("go:shell")
 local env = require("go:env")
 local fs = require("go:fs")
 
+---@diagnostic disable-next-line: deprecated
+table.unpack = table.unpack or _G.unpack
+
 local configHome = env["XDG_CONFIG_HOME"]
 if (not configHome) or configHome == "" then
     configHome = env["HOME"] .. "/.config"
@@ -38,7 +41,7 @@ function shell.runCommand(cmd)
     for _, prefix in pairs(shell.commandSearch) do
         local ok, mod = pcall(require, prefix .. "." .. cmd)
         if ok then
-            return mod.run(unpack(shell.args))
+            return mod.run(table.unpack(shell.args))
         end
     end
     error("No such command: " .. cmd)
