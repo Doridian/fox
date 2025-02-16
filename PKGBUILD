@@ -1,7 +1,7 @@
 # Maintainer: Doridian <git at doridian dot net>
 
 pkgname=fox
-pkgver=0.1.0
+pkgver="${PKG_VERSION-0.0.0-dev}"
 pkgrel=1
 pkgdesc='Fully OwO eXtensions'
 arch=('any')
