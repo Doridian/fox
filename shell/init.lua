@@ -24,36 +24,13 @@ function shell.setHistoryFile(file)
 end
 shell.setHistoryFile(baseDir .. "/history")
 
-shell.commandSearch = {
-    "commands",
-    "go:commands",
-    "embed:commands",
-}
-local function getCommand(cmd)
-    for _, prefix in pairs(shell.commandSearch) do
-        local ok, mod = pcall(require, prefix .. "." .. cmd)
-        if ok then
-            return mod
-        end
-    end
-    return nil
-end
-function shell.runCommand(cmd)
-    local mod = getCommand(cmd)
-    if mod then
-        return mod.run(table.unpack(shell.args()))
-    end
-    error("No such command: " .. cmd)
-end
-function shell.hasCommand(cmd)
-    if getCommand(cmd) then
-        return true
-    end
-    return false
+local cmdh = require("embed:commandHandler")
+shell.runCommand = function(cmd)
+    return cmdh.run(cmd, shell.args())
 end
 
 if shell.interactive() then
-    local mp = require("embed:multiparser")
+    local mp = require("embed:multiParser")
     mp.defaultParser = "shell"
     shell.parser = mp.run
 end

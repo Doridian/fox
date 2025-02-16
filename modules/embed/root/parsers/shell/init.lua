@@ -3,6 +3,7 @@ local fs = require("go:fs")
 local shell = require("go:shell")
 local os = require("go:os")
 local interpolate = require("embed:parsers.shell.interpolate")
+local cmdh = require("embed:commandHandler")
 
 local exe = os.executable()
 
@@ -118,7 +119,7 @@ function M.run(strAdd, lineNo, prev)
         return ""
     end
 
-    if shell.hasCommand(args[1]) then
+    if cmdh.has(args[1]) then
         table.insert(args, 1, exe)
         table.insert(args, 2, "-c")
     end
