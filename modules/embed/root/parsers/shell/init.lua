@@ -102,7 +102,7 @@ function M.run(strAdd, lineNo, prev)
         manualPushToken()
     end
     while i <= #parsed do
-        nextControlIdx = parsed:find("[ \n\t\"';&|><]", i)
+        nextControlIdx = parsed:find("[ \n\t\"';&|><!]", i)
         if not nextControlIdx then
             pushToken()
             break
@@ -133,7 +133,8 @@ function M.run(strAdd, lineNo, prev)
 
             table.insert(tokens, {
                 pre = curToken and curToken.buf,
-                val = parsed:sub(nextControlIdx, controlEndIdx),
+                val = nextControl,
+                len = controlEndIdx - nextControlIdx + 1,
                 type = ArgTypeOp,
             })
             curToken = nil
@@ -142,7 +143,7 @@ function M.run(strAdd, lineNo, prev)
     end
 
     for _, v in pairs(tokens) do
-        print("TOKEN", v.type, v.val, v.pre)
+        print("TOKEN", v.type, v.val, v.pre, v.len)
     end
 
     if #tokens < 1 then
