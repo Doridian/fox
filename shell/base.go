@@ -179,7 +179,7 @@ func (s *Shell) shellParser(cmdAdd string, lineNo int, prev lua.LValue) (lua.LVa
 		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
-	if hasPrev && strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
+	if !hasPrev && strings.HasPrefix(cmdAdd, "--[[DEFAULT]]") {
 		return defaultShellParser(cmdAdd, lineNo, prev)
 	}
 
