@@ -29,7 +29,7 @@ jobs:
         run: |
           set -x
           go generate ./...
-          git diff-index --quiet HEAD -- || (git diff-index HEAD -- && exit 1)
+          git diff-index --quiet HEAD -- || (cat modules/loader/builtins/modules.generated.go && exit 1)
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
