@@ -27,11 +27,11 @@ function M.run(strAdd, lineNo, prev)
     end
 
     local i = 1
-    local args = {}
-    local curArg, nextControlIdx, nextControl, controlEndIdx, foundGlobs
-    local function bufArg(container)
-        if not curArg then
-            curArg = {
+    local tokens = {}
+    local curToken, nextControlIdx, nextControl, controlEndIdx, foundGlobs
+    local function bufToken(container)
+        if not curToken then
+            curToken = {
                 buf = "",
                 bufEscaped = "",
                 isGlob = false,
@@ -57,33 +57,33 @@ function M.run(strAdd, lineNo, prev)
             end
 
             if (not container) and foundGlobs then
-                curArg.isGlob = true
+                curToken.isGlob = true
             end
         end
 
-        if curArg.isGlob then
+        if curToken.isGlob then
             if container then
                 subEscaped = fs.globEscape(sub)
             end
-            curArg.bufEscaped = curArg.bufEscaped .. subEscaped
+            curToken.bufEscaped = curToken.bufEscaped .. subEscaped
         elseif (not container) and fs.hasGlob(sub) then
-            curArg.isGlob = true
+            curToken.isGlob = true
             -- We can only get here if nothing previously could be a glob
             -- so we can just escape everything in buf lazily here
-            curArg.bufEscaped = fs.globEscape(curArg.buf) .. sub
+            curToken.bufEscaped = fs.globEscape(curToken.buf) .. sub
         end
 
-        curArg.buf = curArg.buf .. sub
+        curToken.buf = curToken.buf .. sub
     end
-    local function manualPushArg()
-        if #curArg.buf > 0 then
-            local arg = curArg
-            curArg = nil
+    local function manualPushToken()
+        if #curToken.buf > 0 then
+            local arg = curToken
+            curToken = nil
             if arg.isGlob then
                 local matches = fs.glob(arg.bufEscaped)
                 if #matches > 0 then
                     for _, match in pairs(matches) do
-                        table.insert(args, {
+                        table.insert(tokens, {
                             val = match,
                             type = ArgTypeString,
                         })
@@ -91,20 +91,20 @@ function M.run(strAdd, lineNo, prev)
                     return
                 end
             end
-            table.insert(args, {
+            table.insert(tokens, {
                 val = arg.buf,
                 type = ArgTypeString,
             })
         end
     end
-    local function pushArg(container)
-        bufArg(container)
-        manualPushArg()
+    local function pushToken(container)
+        bufToken(container)
+        manualPushToken()
     end
     while i <= #parsed do
         nextControlIdx = parsed:find("[ \n\t\"';&|><]", i)
         if not nextControlIdx then
-            pushArg()
+            pushToken()
             break
         end
 
@@ -115,15 +115,15 @@ function M.run(strAdd, lineNo, prev)
                 return parsed, true, nextControl .. "> "
             end
 
-            bufArg()
+            bufToken()
             nextControlIdx = controlEndIdx
-            bufArg(nextControl)
+            bufToken(nextControl)
         elseif nextControl == "\n" or nextControl == "\r" or nextControl == "\t" or nextControl == " " then
-            pushArg()
+            pushToken()
         else
-            bufArg()
-            if (nextControl ~= "<" and nextControl ~= ">") or not (curArg and tonumber(curArg.buf)) then
-                manualPushArg()
+            bufToken()
+            if (nextControl ~= "<" and nextControl ~= ">") or not (curToken and tonumber(curToken.buf)) then
+                manualPushToken()
             end
 
             controlEndIdx = nextControlIdx
@@ -131,32 +131,32 @@ function M.run(strAdd, lineNo, prev)
                 controlEndIdx = controlEndIdx + 1
             end
 
-            table.insert(args, {
-                pre = curArg and curArg.buf,
+            table.insert(tokens, {
+                pre = curToken and curToken.buf,
                 val = parsed:sub(nextControlIdx, controlEndIdx),
                 type = ArgTypeOp,
             })
-            curArg = nil
+            curToken = nil
             i = controlEndIdx + 1
         end
     end
 
-    for k, v in pairs(args) do
-        print("ARG", k, v.type, v.val, v.pre)
+    for _, v in pairs(tokens) do
+        print("TOKEN", v.type, v.val, v.pre)
     end
 
-    if #args < 1 then
+    if #tokens < 1 then
         return ""
     end
     if true then
         return ""
     end
 
-    if cmdh.has(args[1]) then
-        table.insert(args, 1, exe)
-        table.insert(args, 2, "-c")
+    if cmdh.has(tokens[1]) then
+        table.insert(tokens, 1, exe)
+        table.insert(tokens, 2, "-c")
     end
-    local sCmd = cmd.new(args)
+    local sCmd = cmd.new(tokens)
     sCmd:raiseForBadExit(false)
     -- TODO: Assign multi-command here, assign stdio here
     return function()
