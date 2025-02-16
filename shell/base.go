@@ -132,6 +132,12 @@ func (s *Shell) Init(args []string) error {
 }
 
 func defaultShellParser(cmd string) (string, bool, *string) {
+	if strings.HasPrefix(cmd, "--\n") {
+		if strings.HasSuffix(cmd, "\n\n") {
+			return cmd, false, nil
+		}
+		return "", true, nil
+	}
 	if strings.HasSuffix(cmd, "\\\n") {
 		return "", true, nil
 	}
