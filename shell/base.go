@@ -160,7 +160,8 @@ func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *stri
 
 func luaDefaultShellParser(L *lua.LState) int {
 	cmd := L.CheckString(1)
-	parsed, needMore, _ := defaultShellParser(cmd, nil)
+	// Ignore arg2 (lineNo)
+	parsed, needMore, _ := defaultShellParser(cmd, L.Get(3))
 	L.Push(parsed)
 	L.Push(lua.LBool(needMore))
 	L.Push(lua.LNil)

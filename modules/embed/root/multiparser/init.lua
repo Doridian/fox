@@ -1,3 +1,5 @@
+local shell = require("go:shell")
+
 local M = {}
 
 M.parsers = {}
@@ -28,9 +30,10 @@ function M.run(cmdAdd, lineNo, prev)
 
             return prev, true
         elseif cmdPrefix == "=" then
-            return "return " .. cmdAdd:sub(2)
+            prev.parser = shell.defaultShellParser
         elseif cmdPrefix == "/" then
-            return cmdAdd:sub(2)
+            prev.parser = shell.defaultShellParser
+            cmdAdd = cmdAdd:sub(2)
         else
             prev.parser = M.parsers.default
         end
