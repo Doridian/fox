@@ -63,26 +63,25 @@ func Main() error {
 	cfg.Autoload = *gomodsAutoload
 	loader.SetDefaultConfig(cfg)
 
-	if forceShell || flag.NArg() == 0 {
-		if runFunc != nil {
+	args := flag.Args()
+	if skipArg0 {
+		args = args[1:]
+	}
+
+	if flag.NArg() > 0 && runFunc == nil && !forceShell {
+		runFunc = s.RunCommand
+	}
+
+	interactiveMode := forceShell || *continuePtr || (flag.NArg() == 0)
+	s.MustInit(args, interactiveMode)
+
+	if runFunc != nil {
+		if flag.NArg() == 0 {
 			log.Fatalf("cannont run in non-shell mode without at least one argument")
 		}
-		s.MustInit(flag.Args())
-		return s.RunPrompt()
-	}
 
-	if skipArg0 {
-		s.MustInit(flag.Args()[1:])
-	} else {
-		s.MustInit(flag.Args())
-	}
-
-	if flag.NArg() > 0 {
-		if runFunc == nil {
-			runFunc = s.RunCommand
-		}
 		err = runFunc(flag.Arg(0))
-		if !forceShell && !*continuePtr {
+		if !interactiveMode {
 			return err
 		}
 	}

@@ -82,7 +82,7 @@ func (s *Shell) Loader(L *lua.LState) int {
 	return 1
 }
 
-func (s *Shell) MustInit(args []string) {
+func (s *Shell) MustInit(args []string, interactive bool) {
 	err := s.Init(args)
 	if err != nil {
 		log.Fatalf("Error initializing shell: %v", err)
