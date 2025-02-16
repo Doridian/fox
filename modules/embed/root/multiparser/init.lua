@@ -29,7 +29,7 @@ function M.run(cmdAdd, lineNo, prev)
             end
 
             return prev, true
-        elseif cmdPrefix == "=" or cmdAdd == "--" then
+        elseif cmdPrefix == "=" or cmdAdd:sub(1, 2) == "--" then
             prev.parser = shell.defaultShellParser
         elseif cmdPrefix == "/" then
             prev.parser = shell.defaultShellParser
