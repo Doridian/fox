@@ -160,7 +160,9 @@ func defaultShellParser(cmdAdd string, _ int, prev lua.LValue) (lua.LValue, bool
 
 func luaDefaultShellParser(L *lua.LState) int {
 	cmd := L.CheckString(1)
-	parsed, needMore, promptOverride := defaultShellParser(cmd, int(L.OptNumber(2, 1)), L.Get(3))
+	lineNo := L.OptInt(2, 1)
+	prev := L.Get(3)
+	parsed, needMore, promptOverride := defaultShellParser(cmd, lineNo, prev)
 	L.Push(parsed)
 	L.Push(lua.LBool(needMore))
 	if promptOverride == nil {
