@@ -1,0 +1,49 @@
+on:
+  push:
+    branches: [main]
+
+name: Release
+
+jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+    secrets: inherit
+  create_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
+      - run: echo "Relase name is $RELEASE_NAME"
+      # - name: Release mainline
+      #   uses: ncipollo/release-action@v1.15.0
+      #   with:
+      #     name: ${{ env.RELEASE_NAME }}
+      #     tag: ${{ env.RELEASE_NAME }}
+      #     commit: ${{ github.sha }}
+      #     artifacts: ./repo/*
+      #     allowUpdates: true
+      #     artifactErrorsFailBuild: true
+      #     omitBody: true
+      #     omitBodyDuringUpdate: true
+      #     removeArtifacts: true
+      # - uses: rickstaa/action-create-tag@v1.7.2
+      #   with:
+      #     tag: ${{ env.RELEASE_NAME }}
+      #     force_push_tag: true
+  release:
+    needs: [check, create_release]
+    strategy:
+      matrix:
+        os:
+          # - macos-latest
+          - ubuntu-latest
+          # - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps: 
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          check-latest: true
+          cache: true
