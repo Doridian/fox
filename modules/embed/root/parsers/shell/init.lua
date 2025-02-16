@@ -28,7 +28,11 @@ local function setGocmdStdio(cmd, name)
         end
         cmd.gocmd[name](cmd.gocmd, fh)
     elseif redir.type == splitter.RedirTypeCmd then
-        cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdoutPipe())
+        if name == "stdin" then
+            cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdoutPipe())
+        else
+            cmd.gocmd[name](cmd.gocmd, redir.cmd.gocmd:stdinPipe())
+        end
     else
         error("invalid redir type: " .. tostring(redir.type))
     end
