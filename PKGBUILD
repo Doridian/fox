@@ -8,8 +8,8 @@ if ! git diff-index --quiet HEAD --; then
 fi
 
 pkgname=fox
-pkgver="${latest_tag}${tag_suffix}"
-pkgrel="$((commits_since_tag + 1))"
+pkgver="${latest_tag}.${commits_since_tag}${tag_suffix}"
+pkgrel="1"
 pkgdesc='Fully OwO eXtensions'
 arch=('any')
 url='https://github.com/Doridian/fox.git'
