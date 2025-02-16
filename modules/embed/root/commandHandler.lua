@@ -5,7 +5,6 @@ local cmdCache = {}
 
 M.search = {
     "commands",
-    "go:commands",
     "embed:commands",
 }
 local function getCommand(cmd)

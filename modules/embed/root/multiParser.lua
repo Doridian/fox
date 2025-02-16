@@ -6,9 +6,8 @@ local parserCache = {}
 M.defaultParser = nil
 
 M.search = {
-    "embed:parsers",
-    "go:parsers",
     "parsers",
+    "embed:parsers",
 }
 local function getParser(name)
     local c = parserCache[name]
