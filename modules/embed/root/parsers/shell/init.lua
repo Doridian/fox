@@ -75,8 +75,7 @@ function M.run(strAdd, lineNo, prev)
 
         curArg.buf = curArg.buf .. sub
     end
-    local function pushArg(container)
-        bufArg(container)
+    local function manualPushArg()
         if #curArg.buf > 0 then
             local arg = curArg
             curArg = nil
@@ -98,6 +97,10 @@ function M.run(strAdd, lineNo, prev)
             })
         end
     end
+    local function pushArg(container)
+        bufArg(container)
+        manualPushArg()
+    end
     while i <= #parsed do
         nextControlIdx = parsed:find("[ \n\t\"';&|><]", i)
         if not nextControlIdx then
@@ -118,13 +121,20 @@ function M.run(strAdd, lineNo, prev)
         elseif nextControl == "\n" or nextControl == "\r" or nextControl == "\t" or nextControl == " " then
             pushArg()
         else
-            pushArg()
+            bufArg()
+            if (nextControl ~= "<" and nextControl ~= ">") or not (curArg and tonumber(curArg.buf)) then
+                manualPushArg()
+            end
+
             controlEndIdx = nextControlIdx
             while parsed:sub(controlEndIdx + 1, controlEndIdx + 1) == nextControl do
                 controlEndIdx = controlEndIdx + 1
             end
+
+            local prevArg = curArg
+            curArg = nil
             table.insert(args, {
-                val = parsed:sub(nextControlIdx, controlEndIdx),
+                val = (prevArg and prevArg.buf or "") .. parsed:sub(nextControlIdx, controlEndIdx),
                 type = ArgTypeOp,
             })
             i = controlEndIdx + 1
