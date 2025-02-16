@@ -23,7 +23,7 @@ func setRunFunc(strVal string, newFunc func(string) error) error {
 		return errors.New("flag must be true")
 	}
 	if runFuncSet {
-		return errors.New("First arg type already set (only at most one of -c, -e, -f, -s can be set)")
+		return errors.New("first arg type already set (only at most one of -c, -e, -f, -s can be set)")
 	}
 	runFuncSet = true
 	runFunc = newFunc
@@ -35,10 +35,6 @@ var gomodsGlobal = flag.Bool("gomods-global", true, "Register go modules as glob
 var gomodsAutoload = flag.Bool("gomods-auto-load", true, "Automatically load go modules")
 
 var skipArg0 = false
-
-func shellRunNoop(_ string) error {
-	return nil
-}
 
 func Main() error {
 	var err error

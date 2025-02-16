@@ -28,6 +28,12 @@ func Check(L *lua.LState, i int) (time.Duration, *lua.LUserData) {
 	return 0, nil
 }
 
+func Is(L *lua.LState, i int) bool {
+	ud := L.CheckUserData(i)
+	_, ok := ud.Value.(time.Duration)
+	return ok
+}
+
 func CheckAllowNumber(L *lua.LState, i int) (time.Duration, *lua.LUserData) {
 	num, ok := L.Get(i).(lua.LNumber)
 	if ok {

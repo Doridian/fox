@@ -46,7 +46,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"dir":    setDir,
 		"getCmd": getCmd,
 		"cmd":    setCmd,
-		"getEnv": getCmd,
+		"getEnv": getEnv,
 		"env":    setEnv,
 
 		"stdout":     setStdout,

@@ -78,7 +78,7 @@ func (m *LuaModule) ManualRegisterModuleDefault(mod modules.LuaModule) error {
 
 func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg ModuleConfig) error {
 	if m.loaded {
-		return errors.New("Cannot manually register modules after the loader has been loaded")
+		return errors.New("cannot manually register modules after the loader has been loaded")
 	}
 
 	m.gomods = append(m.gomods, &ModuleInstance{

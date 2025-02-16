@@ -34,6 +34,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"clock": timeClock,
 		"date":  timeDate,
 
+		"addDate": timeAddDate,
+
 		"nanosecond": timeNanosecond,
 		"second":     timeSecond,
 		"minute":     timeMinute,

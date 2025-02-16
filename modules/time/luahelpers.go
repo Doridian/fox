@@ -18,6 +18,12 @@ func PushNew(L *lua.LState, t time.Time) int {
 	return 1
 }
 
+func Is(L *lua.LState, i int) bool {
+	ud := L.CheckUserData(i)
+	_, ok := ud.Value.(time.Time)
+	return ok
+}
+
 func Check(L *lua.LState, i int) (time.Time, *lua.LUserData) {
 	ud := L.CheckUserData(i)
 	if v, ok := ud.Value.(time.Time); ok {
