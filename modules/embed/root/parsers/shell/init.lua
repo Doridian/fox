@@ -134,7 +134,8 @@ function M.run(strAdd, lineNo, prev)
             local prevArg = curArg
             curArg = nil
             table.insert(args, {
-                val = (prevArg and prevArg.buf or "") .. parsed:sub(nextControlIdx, controlEndIdx),
+                pre = prevArg and prevArg.buf,
+                val = parsed:sub(nextControlIdx, controlEndIdx),
                 type = ArgTypeOp,
             })
             i = controlEndIdx + 1
@@ -142,7 +143,7 @@ function M.run(strAdd, lineNo, prev)
     end
 
     for k, v in pairs(args) do
-        print("ARG", k, v.type, v.val)
+        print("ARG", k, v.type, v.val, v.pre)
     end
 
     if #args < 1 then
