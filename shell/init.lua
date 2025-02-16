@@ -14,11 +14,6 @@ fs.mkdirAll(baseDir)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-function shell.parser(cmd, lineNo)
-    -- TODO: syntax-aware lua end finding
-    return false
-end
-
 function shell.setHistoryFile(file)
     local readlineConfig = shell.getReadlineConfig()
     readlineConfig:historyFile(file)
