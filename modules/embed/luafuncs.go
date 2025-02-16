@@ -94,7 +94,9 @@ func (m *LuaModule) luaLoader(L *lua.LState) int {
 			errArr = append(errArr, fmt.Sprintf("embed: module \"%s\" read error: %v", fixedPath, err))
 			continue
 		}
-		defer fh.Close()
+		defer func() {
+			_ = fh.Close()
+		}()
 		lf, err := L.Load(fh, name)
 		if err != nil {
 			errArr = append(errArr, fmt.Sprintf("embed: module \"%s\" load error: %v", fixedPath, err))

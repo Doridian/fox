@@ -18,7 +18,9 @@ func (m *LuaModule) pushFileFromLua(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	defer fh.Close()
+	defer func() {
+		_ = fh.Close()
+	}()
 
 	lf, err := L.Load(fh, fmt.Sprintf("%s%s", m.getPrefix(L), name))
 	if err != nil {

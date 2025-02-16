@@ -26,7 +26,10 @@ func envNewIndex(L *lua.LState) int {
 	k := L.CheckString(2)
 	v := L.CheckString(3)
 
-	os.Setenv(k, v)
+	err := os.Setenv(k, v)
+	if err != nil {
+		L.RaiseError("%v", err)
+	}
 	return 0
 }
 

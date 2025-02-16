@@ -51,7 +51,7 @@ func NewWritePipe(creator PipeCreator, description string, wc io.WriteCloser) *P
 
 func (p *Pipe) Close() {
 	if p.cl != nil {
-		p.cl.Close()
+		_ = p.cl.Close()
 	}
 }
 

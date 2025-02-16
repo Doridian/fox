@@ -69,7 +69,11 @@ func rlSetConfig(L *lua.LState) int {
 	}
 
 	cfg, _ := config.Check(L, 2)
-	rl.SetConfig(cfg)
+	err := rl.SetConfig(cfg)
+	if err != nil {
+		L.RaiseError("%v", err)
+		return 0
+	}
 
 	L.Push(ud)
 	return 1
@@ -135,6 +139,6 @@ func rlClose(L *lua.LState) int {
 		return 0
 	}
 
-	rl.Close()
+	_ = rl.Close()
 	return 0
 }

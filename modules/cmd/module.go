@@ -98,7 +98,7 @@ func (m *LuaModule) Interrupt() bool {
 		}
 
 		if cmd.gocmd.ProcessState == nil && cmd.gocmd.Process != nil {
-			cmd.gocmd.Process.Kill()
+			_ = cmd.gocmd.Process.Kill()
 			triedKill = true
 		}
 	}

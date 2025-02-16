@@ -241,7 +241,11 @@ func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	}
 
 	// new|run|start([args, [dir, [env]]])
-	c.setArgs(L.OptTable(1, nil))
+	err := c.setArgs(L.OptTable(1, nil))
+	if err != nil {
+		L.RaiseError("%v", err)
+		return nil, nil
+	}
 	c.gocmd.Dir = L.OptString(2, "")
 	c.setEnv(L.OptTable(3, nil))
 

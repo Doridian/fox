@@ -8,7 +8,7 @@ import (
 )
 
 func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd, ud *lua.LUserData) int {
-	c.releaseStdioNoLock()
+	_ = c.releaseStdioNoLock()
 
 	exitCodeL := lua.LNumber(exitCode)
 
@@ -119,8 +119,8 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		c.waitStdio(L)
-		c.gocmd.Wait()
+		_ = c.waitStdio(L)
+		_ = c.gocmd.Wait()
 		c.waitSync.Done()
 	}()
 
@@ -149,7 +149,7 @@ func doKill(L *lua.LState) int {
 	}
 
 	if c.gocmd.Process != nil {
-		c.gocmd.Process.Kill()
+		_ = c.gocmd.Process.Kill()
 	}
 
 	L.Push(ud)
