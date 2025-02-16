@@ -19,6 +19,9 @@ local M = {}
 local ArgTypeString = 1
 local ArgTypeOp = 2
 
+local RedirTypeFile = 1
+local RedirTypeCmd = 2
+
 function M.run(strAdd, lineNo, prev)
     local parsed = (prev or "") .. strAdd .. "\n"
 
@@ -147,26 +150,27 @@ function M.run(strAdd, lineNo, prev)
         return ""
     end
 
-    for _, v in pairs(tokens) do
-        print("TOKEN", v.type, v.val, v.pre, v.len)
-    end
-
     local cmds = {}
     local curCmd = nil
     local invertNextCmd = false
+    local stdinNextCmd = nil
     local token
     local idx = 1
-    while idx < #tokens do
+    while idx <= #tokens do
         token = tokens[idx]
+        print("TOKEN", token.type, token.val, token.pre, token.len)
+
         if not curCmd then
             curCmd = {
                 args = {},
                 invert = invertNextCmd,
-                stdinMod = nil,
-                stdoutMod = nil,
-                stderrMod = nil,
+                stdin = stdinNextCmd,
+                stdout = nil,
+                stderr = nil,
                 chainToNext = nil,
+                background = false,
             }
+            stdinNextCmd = nil
             invertNextCmd = false
         end
 
@@ -174,17 +178,33 @@ function M.run(strAdd, lineNo, prev)
             table.insert(curCmd.args, token.val)
         elseif token.type == ArgTypeOp then
             if token.val == "|" or token.val == "&" or token.val == ";" then
-                if token.val ~= ";" then
-                    if #curCmd.args < 1 then
-                        error("Cannot have " .. token.raw .. " at the start of a command!")
+                if token.val == ";" then
+                    if #curCmd.args < 1 and (curCmd.invert or curCmd.stdin) then
+                        error("Cannot have " .. token.val .. " after " .. curCmd.invert and "!" or "|")
                     end
-                    if token.len > 2 then
-                        error("Cannot have more than 2 of " .. token.val .. " in a row")
+                elseif #curCmd.args < 1 then
+                    error("Cannot have " .. token.raw .. " at the start of a command!")
+                else
+                    if token.val == "|" and token.len == 1 then
+                        stdinNextCmd = {
+                            type = RedirTypeCmd,
+                            cmd = curCmd,
+                        }
+                        if curCmd.background then
+                            error("Cannot pipe (" .. token.raw .. ") after background command (&)")
+                        end
+                    elseif token.val == "&" and token.len == 1 then
+                        curCmd.background = true
+                    else
+                        if token.len > 2 then
+                            error("Cannot have more than 2 of " .. token.val .. " in a row")
+                        end
+                        curCmd.chainToNext = token.raw
                     end
-                    curCmd.chainToNext = token.raw
                 end
-                -- TODO: Singular | should set stdin up
-                table.insert(cmds, curCmd)
+                if #curCmd.args > 0 then
+                    table.insert(cmds, curCmd)
+                end
                 curCmd = nil
             elseif token.val == "!" then
                 if #curCmd.args > 0 then
@@ -202,6 +222,7 @@ function M.run(strAdd, lineNo, prev)
                 end
 
                 local fileInfo = {
+                    type = RedirTypeFile,
                     name = outFile.val,
                     append = token.len > 1,
                 }
@@ -210,12 +231,12 @@ function M.run(strAdd, lineNo, prev)
                     if token.pre and token.pre ~= "" then
                         error("Expected nothing before " .. token.raw)
                     end
-                    curCmd.stdinMod = fileInfo
+                    curCmd.stdin = fileInfo
                 elseif token.val == ">" then
                     if token.pre == "2" then
-                        curCmd.stderrMod = fileInfo
+                        curCmd.stderr = fileInfo
                     elseif token.pre == "1" or token.pre == "" or not token.pre then
-                        curCmd.stdoutMod = fileInfo
+                        curCmd.stdout = fileInfo
                     else
                         error("Expected nothing, 1 or 2 before " .. token.raw)
                     end
@@ -226,7 +247,7 @@ function M.run(strAdd, lineNo, prev)
         idx = idx + 1
     end
 
-    if #curCmd.args > 0 then
+    if curCmd and #curCmd.args > 0 then
         table.insert(cmds, curCmd)
     end
 
@@ -234,13 +255,13 @@ function M.run(strAdd, lineNo, prev)
         if not v then
             return
         end
-        print("REDIR", op, v.name, v.append)
+        print("REDIR", op, v.type, v.name, v.cmd, v.append)
     end
     for _, v in pairs(cmds) do
-        print("CMD", v.invert, table.concat(v.args, " "))
-        pStdMap("<", v.stdinMod)
-        pStdMap(">", v.stdoutMod)
-        pStdMap("2>", v.stderrMod)
+        print("CMD", v.invert, v.background, table.concat(v.args, " "))
+        pStdMap("STDIN", v.stdin)
+        pStdMap("STDOUT", v.stdout)
+        pStdMap("STDERR", v.stderr)
     end
 
     --[[
