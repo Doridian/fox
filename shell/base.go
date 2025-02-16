@@ -133,29 +133,29 @@ func (s *Shell) Init(args []string) error {
 }
 
 func defaultShellParser(cmdAdd string, prev lua.LValue) (lua.LValue, bool, *string) {
+	if cmdAdd == "" {
+		return prev, false, nil
+	}
+
 	prevStr := ""
 	if prev != nil && prev != lua.LNil {
 		prevStr = lua.LVAsString(prev)
 	}
 
+	if strings.HasSuffix(cmdAdd, "\\") {
+		cmd := prevStr + cmdAdd[:len(cmdAdd)-1] + "\n"
+		return lua.LString(cmd), true, nil
+	}
+
 	cmd := prevStr + cmdAdd + "\n"
-
-	// TODO: Make use of prev and cmdAdd here to improve perf?
 	if strings.HasPrefix(cmd, "--\n") {
-		if strings.HasSuffix(cmd, "\n\n") {
-			return lua.LString(cmd), false, nil
-		}
-		return lua.LString(cmd), true, nil
-	}
-	if strings.HasSuffix(cmd, "\\\n") {
 		return lua.LString(cmd), true, nil
 	}
 
-	cmdFixed := strings.ReplaceAll(cmd, "\\\n", "\n")
-	if cmdFixed[0] == '=' {
-		cmdFixed = "return " + cmdFixed[1:]
+	if cmd[0] == '=' {
+		return lua.LString("return " + cmd[1:]), false, nil
 	}
-	return lua.LString(cmdFixed), false, nil
+	return lua.LString(cmd), false, nil
 }
 
 func luaDefaultShellParser(L *lua.LState) int {
