@@ -7,7 +7,7 @@
 latest_tag="$(git describe --tags --abbrev=0)"
 commits_since_tag="$(git rev-list --count ${latest_tag}..HEAD)"
 tag_suffix=""
-if ! git diff-index --quiet main --; then
+if ! git status --porcelain; then
   tag_suffix="dev"
 fi
 
