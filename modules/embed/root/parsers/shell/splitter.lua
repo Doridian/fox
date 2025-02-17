@@ -54,6 +54,10 @@ function M.run(tokens)
                         if token.len > 2 then
                             return nil, "cannot have more than 2 of " .. token.val .. " in a row"
                         end
+                        -- Must have || or && here
+                        if curCmd.background then
+                            return nil, "cannot chain (" .. token.raw .. ") to background command (&)"
+                        end
                         curCmd.chainToNext = token.raw
                     end
                 end

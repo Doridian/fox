@@ -50,16 +50,12 @@ function M.run(strAdd, lineNo, prev)
     end
 
     local rootCmds = {}
-    local backgroundCmds = {}
 
     for _, cmd in pairs(cmds) do
         -- TODO: Native lua commands
         cmd.gocmd = gocmd.new(cmd.args)
 
         rootCmds[cmd] = cmd
-        if cmd.background then
-            table.insert(backgroundCmds, cmd)
-        end
     end
 
     -- Do this after so all gocmd structures are for sure filled
@@ -74,33 +70,33 @@ function M.run(strAdd, lineNo, prev)
     end
 
     return function()
-        for _, cmd in pairs(backgroundCmds) do
-            cmd.gocmd:start()
-        end
-
         local skipNext = false
         local exitSuccess = true
         for _, cmd in pairs(rootCmds) do
-            if not skipNext then
-                local exitCode = cmd.gocmd:run()
-                exitSuccess = exitCode == 0
-                if cmd.invert then
-                    exitSuccess = not exitSuccess
-                end
+            if cmd.background then
+                cmd.gocmd:start()
             else
-                skipNext = false
-            end
+                if not skipNext then
+                    local exitCode = cmd.gocmd:run()
+                    exitSuccess = exitCode == 0
+                    if cmd.invert then
+                        exitSuccess = not exitSuccess
+                    end
+                else
+                    skipNext = false
+                end
 
-            if cmd.chainToNext == "&&" then
-                if not exitSuccess then
-                    skipNext = true
+                if cmd.chainToNext == "&&" then
+                    if not exitSuccess then
+                        skipNext = true
+                    end
+                elseif cmd.chainToNext == "||" then
+                    if exitSuccess then
+                        skipNext = true
+                    end
+                elseif cmd.chainToNext then
+                    error("invalid chainToNext: " .. tostring(cmd.chainToNext))
                 end
-            elseif cmd.chainToNext == "||" then
-                if exitSuccess then
-                    skipNext = true
-                end
-            elseif cmd.chainToNext then
-                error("invalid chainToNext: " .. tostring(cmd.chainToNext))
             end
         end
     end
