@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"os/exec"
 	"strings"
 
+	"github.com/Doridian/fox/modules/cmd/integrated"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -37,7 +39,11 @@ func (c *Cmd) doWaitCmdNoLock(L *lua.LState) {
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd) int {
 	c.doWaitCmdNoLock(L)
-	return handleCmdExitNoLock(L, nil, c.gocmd.ProcessState.ExitCode(), c)
+	exitCode := c.iExit
+	if c.gocmd.ProcessState != nil {
+		exitCode = c.gocmd.ProcessState.ExitCode()
+	}
+	return handleCmdExitNoLock(L, nil, exitCode, c)
 }
 
 func doWait(L *lua.LState) int {
@@ -96,7 +102,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	if foreground {
 		c.foreground = true
 	}
-	if c.gocmd.Process != nil || c.gocmd.ProcessState != nil {
+	if c.gocmd.Process != nil || c.gocmd.ProcessState != nil || c.iCtx != nil {
 		return nil
 	}
 
@@ -116,16 +122,28 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 		return err
 	}
 
-	err = c.gocmd.Start()
-	if err != nil {
-		return err
+	c.iCmd = integrated.LookupCmd(c.gocmd.Args[0])
+	if c.iCmd != nil {
+		c.iCtx, c.iCancel = context.WithCancel(context.Background())
+		c.iCmd.SetContext(c.iCtx)
+	} else {
+		err = c.gocmd.Start()
+		if err != nil {
+			return err
+		}
 	}
 
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
 		_ = c.waitDepStdio(nil, false)
-		_ = c.gocmd.Wait()
+		if c.iCmd != nil {
+			code, err := c.iCmd.RunAs(c.gocmd)
+			c.iExit = code
+			handleCmdExitNoLock(nil, err, c.iExit, c)
+		} else {
+			_ = c.gocmd.Wait()
+		}
 		c.waitSync.Done()
 	}()
 
@@ -156,8 +174,14 @@ func doKill(L *lua.LState) int {
 		return 0
 	}
 
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
+
 	if c.gocmd.Process != nil {
 		_ = c.gocmd.Process.Kill()
+	}
+	if c.iCancel != nil {
+		c.iCancel()
 	}
 
 	L.Push(ud)

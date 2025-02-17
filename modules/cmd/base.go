@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
 	"sync"
+
+	"github.com/Doridian/fox/modules/cmd/integrated"
 )
 
 const (
@@ -24,6 +27,11 @@ type Cmd struct {
 	foreground bool
 	waitSync   sync.WaitGroup
 	startLock  sync.Mutex
+
+	iCmd    integrated.Cmd
+	iCtx    context.Context
+	iCancel context.CancelFunc
+	iExit   int
 
 	lock            sync.RWMutex
 	gocmd           *exec.Cmd
