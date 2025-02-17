@@ -8,7 +8,7 @@ M.search = {
     "commands",
     "embed:commands",
 }
-local function getCommand(cmd)
+function M.get(cmd)
     local c = cmdCache[cmd]
     if c then
         if c.err then
@@ -44,7 +44,7 @@ function M.closeCtx(ctx)
 end
 
 function M.run(ctx, cmd, args)
-    local mod, err = getCommand(cmd)
+    local mod, err = M.get(cmd)
     if err then
         error("Error loading command " .. cmd .. ": " .. err)
     end
@@ -56,10 +56,6 @@ function M.run(ctx, cmd, args)
     local exitCode = mod.run(ctx, table.unpack(args))
     M.closeCtx(ctx)
     return exitCode
-end
-
-function M.get(cmd)
-    return getCommand(cmd)
 end
 
 return M
