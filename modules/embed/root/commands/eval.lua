@@ -1,6 +1,6 @@
 local M = {}
 
-function M.runDirect(_, code)
+function M.run(_, _, code)
 ---@diagnostic disable-next-line: deprecated
     local func = loadstring(code, "commands.eval")
     if not func then

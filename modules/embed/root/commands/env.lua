@@ -2,7 +2,7 @@ local env = require("go:env")
 
 local M = {}
 
-function M.runDirect(_, envSet)
+function M.run(_, _, envSet)
     local eqPos = envSet:find("=", 1, true)
     if not eqPos then
         error("missing variable value")

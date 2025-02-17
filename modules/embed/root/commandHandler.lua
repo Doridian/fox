@@ -53,19 +53,13 @@ function M.run(ctx, cmd, args)
         error("No such command: " .. cmd)
     end
 
-    ctx.name = args[1]
-    table.remove(args, 1)
     local exitCode = mod.run(ctx, table.unpack(args))
     M.closeCtx(ctx)
     return exitCode
 end
 
-function M.has(cmd)
-    local mod, _ = getCommand(cmd)
-    if mod then
-        return mod.run or mod.runDirect, mod.runDirect
-    end
-    return false, false
+function M.get(cmd)
+    return getCommand(cmd)
 end
 
 return M

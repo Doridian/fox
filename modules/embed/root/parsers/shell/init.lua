@@ -10,9 +10,6 @@ local exe = os.executable()
 
 local M = {}
 
--- TODO: Implement merge runDirect + run
--- TODO: Implement ctx as first cmd arg such that { stderr = PIPE, stdout = PIPE, stdin = PIPE, name = arg0 } can be passed
-
 local function cmdRun(cmd)
     if cmd._runPre then
         pcall(cmd._runPre)
@@ -146,9 +143,16 @@ function M.run(strAdd, lineNo, prev)
         cmd._stdin = pipe.stdin
         cmd._stdout = pipe.stdout
         cmd._stderr = pipe.stderr
-        if cmdHandler.has(cmd.args[1]) then
-            cmd.run = function(ctx, subargs)
-                return cmdHandler.run(ctx, cmd.args[1], subargs)
+
+        local cmdObj, _ = cmdHandler.get(cmd.args[1])
+        if cmdObj then
+            if cmdObj.forbidInline then
+                table.insert(cmd.args, 1, exe)
+                table.insert(cmd.args, 2, "-c")
+            else
+                cmd.run = function(ctx, subargs)
+                    return cmdObj.run(ctx, table.unpack(subargs))
+                end
             end
         end
         if not cmd.run then

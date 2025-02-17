@@ -65,10 +65,16 @@ func (p *Pipe) CanWrite() bool {
 }
 
 func (p *Pipe) GetReader() io.Reader {
+	if p.isNull {
+		return p
+	}
 	return p.rd
 }
 
 func (p *Pipe) GetWriter() io.Writer {
+	if p.isNull {
+		return p
+	}
 	return p.wr
 }
 
@@ -112,6 +118,9 @@ func (p *Pipe) Close() error {
 }
 
 func (p *Pipe) Read(data []byte) (n int, err error) {
+	if p.isNull {
+		return 0, io.EOF
+	}
 	if p.rd != nil {
 		return p.rd.Read(data)
 	}
@@ -119,6 +128,9 @@ func (p *Pipe) Read(data []byte) (n int, err error) {
 }
 
 func (p *Pipe) Write(data []byte) (n int, err error) {
+	if p.isNull {
+		return len(data), nil
+	}
 	if p.wr != nil {
 		return p.wr.Write(data)
 	}
