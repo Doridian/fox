@@ -11,10 +11,6 @@ local exe = os.executable()
 local M = {}
 
 local function cmdRun(cmd)
-    if cmd._runPre then
-        pcall(cmd._runPre)
-    end
-
     local ctx = {
         stdin = cmd._stdin,
         stdout = cmd._stdout,
@@ -33,6 +29,11 @@ local function cmdRun(cmd)
         table.insert(dummyCtx, ctx.stderr)
         ctx.stderr = cmd["_"..cmd._ref_stderr]
     end
+
+    if cmd._runPre then
+        pcall(cmd._runPre)
+    end
+
     local ok, exitCode = pcall(cmd.run, ctx, cmd.args)
     if not ok then
         (ctx.stderr or pipe.stderr):write(exitCode)
@@ -96,6 +97,7 @@ local function setGocmdStdio(cmd, name)
                     cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
                     return
                 end
+
                 redir.cmd._stdout = cmd.gocmd:stdinPipe()
                 cmd.gocmd:addPreReq(function()
                     cmdRun(redir.cmd)

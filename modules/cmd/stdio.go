@@ -264,12 +264,10 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	return nil
 }
 
-func (c *Cmd) setupRemoteStdio(L *lua.LState, actuallyWait bool) error {
-	if actuallyWait {
-		for _, preReq := range c.preReqs {
-			L.Push(preReq)
-			L.Call(0, 0)
-		}
+func (c *Cmd) setupRemoteStdio(L *lua.LState) error {
+	for _, preReq := range c.preReqs {
+		L.Push(preReq)
+		L.Call(0, 0)
 	}
 
 	c.lock.RLock()
@@ -292,7 +290,7 @@ func (c *Cmd) setupRemoteStdio(L *lua.LState, actuallyWait bool) error {
 		return nil
 	}
 
-	return cmd.ensurePrepared(L, actuallyWait)
+	return cmd.ensurePrepared(L)
 }
 
 func (c *Cmd) releaseStdioNoLock() error {

@@ -109,11 +109,6 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 		return err
 	}
 
-	err = c.setupRemoteStdio(L, false)
-	if err != nil {
-		return err
-	}
-
 	err = c.gocmd.Start()
 	if err != nil {
 		return err
@@ -122,7 +117,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		_ = c.setupRemoteStdio(L, true)
+		_ = c.setupRemoteStdio(L)
 		_ = c.gocmd.Wait()
 		c.waitSync.Done()
 	}()
@@ -130,7 +125,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	return nil
 }
 
-func (c *Cmd) ensurePrepared(L *lua.LState, actuallyWait bool) error {
+func (c *Cmd) ensurePrepared(L *lua.LState) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -141,9 +136,7 @@ func (c *Cmd) ensurePrepared(L *lua.LState, actuallyWait bool) error {
 		}
 	}
 
-	if actuallyWait {
-		c.doWaitCmdNoLock()
-	}
+	c.doWaitCmdNoLock()
 	return nil
 }
 
