@@ -4,7 +4,6 @@ local splitter = require("embed:parsers.shell.splitter")
 local gocmd = require("go:cmd")
 local fs = require("go:fs")
 local cmdHandler = require("embed:commandHandler")
-local shell = require("go:shell")
 local pipe = require("go:pipe")
 
 local exe = os.executable()
@@ -74,22 +73,6 @@ local function setGocmdStdio(cmd, name)
     end
 end
 
-local superBuiltins = {}
-function superBuiltins.cd(args)
-    os.chdir(args[2])
-    return 0
-end
-function superBuiltins.exit(args)
-    shell.exit(args[2])
-    return 0
-end
-function superBuiltins.pwd(_)
-    return 0, os.getwd() .. "\n"
-end
-function superBuiltins.echo(args)
-    return 0, table.concat(args, " ", 2) .. "\n"
-end
-
 function M.run(strAdd, lineNo, prev)
     local parsed = (prev or "") .. strAdd .. "\n"
 
@@ -111,10 +94,13 @@ function M.run(strAdd, lineNo, prev)
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
+        local hasCmd, hasDirect = cmdHandler.has(cmd.args[1])
         local args = cmd.args
-        if superBuiltins[args[1]] then
-            cmd.run = superBuiltins[args[1]]
-        elseif cmdHandler.has(cmd.args[1]) then
+        if hasDirect then
+            cmd.run = function(subargs)
+                return cmdHandler.run(args[1], subargs, true)
+            end
+        elseif hasCmd then
             table.insert(args, 1, exe)
             table.insert(args, 2, "-c")
         end

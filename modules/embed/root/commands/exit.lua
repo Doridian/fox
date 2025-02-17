@@ -1,0 +1,10 @@
+local shell = require("go:shell")
+
+local M = {}
+
+function M.runDirect(_, code)
+    shell.exit(code)
+    return code
+end
+
+return M
