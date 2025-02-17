@@ -12,10 +12,15 @@ local M = {}
 
 local function cmdRun(cmd)
     if cmd._runPre then
-        cmd._runPre()
+        pcall(cmd._runPre)
     end
 
-    local exitCode, stdout = cmd.run(cmd.args)
+    local ok, exitCode, stdout = pcall(cmd.run, cmd.args)
+    if not ok then
+        print("error running command: " .. exitCode)
+        exitCode = 1
+    end
+
     if cmd._stdout then
         if stdout then
             pcall(cmd._stdout.write, cmd._stdout, stdout)
@@ -63,6 +68,7 @@ local function setGocmdStdio(cmd, name)
                 end
             else
                 -- mostly ignore it, sb -> sb doesn't do anything but order
+                redir.cmd._stdout = pipe.null
                 cmd._runPre = function()
                     cmdRun(redir.cmd)
                 end
