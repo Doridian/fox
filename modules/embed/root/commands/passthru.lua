@@ -1,5 +1,3 @@
-local os = require("go:os")
-
 local M = {}
 
 function M.run(ctx)
@@ -14,4 +12,3 @@ function M.run(ctx)
 end
 
 return M
-

@@ -42,3 +42,5 @@ if fs.stat(initLua) then
         print("Error loading user init.lua: " .. tostring(err))
     end
 end
+
+_G.print = nil
