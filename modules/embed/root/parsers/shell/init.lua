@@ -43,6 +43,7 @@ local function cmdRun(cmd)
     elseif stderr then
         pipe.stderr:write(stderr)
     end
+
     return exitCode or 0
 end
 
