@@ -3,8 +3,9 @@ local tokenizer = require("embed:parsers.shell.tokenizer")
 local splitter = require("embed:parsers.shell.splitter")
 local gocmd = require("go:cmd")
 local fs = require("go:fs")
+local cmdHandler = require("embed:commandHandler")
 
--- local exe = os.executable()
+local exe = os.executable()
 
 local M = {}
 
@@ -52,9 +53,12 @@ function M.run(strAdd, lineNo, prev)
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
-        -- TODO: Native lua commands
-        cmd.gocmd = gocmd.new(cmd.args)
-
+        local args = cmd.args
+        if cmdHandler.has(cmd.args[1]) then
+            table.insert(args, 1, exe)
+            table.insert(args, 2, "-c")
+        end
+        cmd.gocmd = gocmd.new(args)
         rootCmds[cmd] = cmd
     end
 
