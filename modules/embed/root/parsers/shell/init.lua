@@ -6,13 +6,6 @@ local fs = require("go:fs")
 
 -- local exe = os.executable()
 
---[[
-    TODO:
-    - Need to do command splitting at parse time before variable/glob interp
-        - | || & && ;
-    - Need todo stdio redirections
-]]
-
 local M = {}
 
 local function setGocmdStdio(cmd, name)
@@ -80,19 +73,6 @@ function M.run(strAdd, lineNo, prev)
         setGocmdStdio(cmd, "stderr")
     end
 
-    --[[local function pStdMap(op, v)
-        if not v then
-            return
-        end
-        print("REDIR", op, v.type, v.name, v.cmd, v.append)
-    end
-    for _, v in pairs(cmds) do
-        print("CMD", v.invert, v.background, table.concat(v.args, " "))
-        pStdMap("STDIN", v.stdin)
-        pStdMap("STDOUT", v.stdout)
-        pStdMap("STDERR", v.stderr)
-    end]]
-
     return function()
         for _, cmd in pairs(backgroundCmds) do
             cmd.gocmd:start()
@@ -101,8 +81,6 @@ function M.run(strAdd, lineNo, prev)
         local skipNext = false
         local exitSuccess = true
         for _, cmd in pairs(rootCmds) do
-            -- print("ROOT", table.concat(cmd.args, " "))
-            -- TODO: Command chaining decision operators (&&, ||)
             if not skipNext then
                 local exitCode = cmd.gocmd:run()
                 exitSuccess = exitCode == 0
