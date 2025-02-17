@@ -18,29 +18,16 @@ local function cmdRun(cmd)
         pcall(cmd._runPre)
     end
 
-    local ok, exitCode, stdout, stderr = pcall(cmd.run, cmd.args)
+    local ctx = {
+        stdin = cmd._stdin,
+        stdout = cmd._stdout,
+        stderr = cmd._stderr,
+    }
+    local ok, exitCode = pcall(cmd.run, ctx, cmd.args)
     if not ok then
-        stdout = nil
-        stderr = "Lua error: " .. exitCode .. "\n"
+        (ctx.stderr or pipe.stderr):write(exitCode)
+        cmdHandler.closeCtx(ctx)
         exitCode = 1
-    end
-
-    if cmd._stdout then
-        if stdout then
-            pcall(cmd._stdout.write, cmd._stdout, stdout)
-        end
-        pcall(cmd._stdout.close, cmd._stdout)
-    elseif stdout then
-        pipe.stdout:write(stdout)
-    end
-
-    if cmd._stderr then
-        if stderr then
-            pcall(cmd._stderr.write, cmd._stderr, stderr)
-        end
-        pcall(cmd._stderr.close, cmd._stderr)
-    elseif stderr then
-        pipe.stderr:write(stderr)
     end
 
     return exitCode or 0

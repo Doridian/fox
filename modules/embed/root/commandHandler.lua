@@ -35,7 +35,13 @@ local function getCommand(cmd)
     return nil, err
 end
 
-function M.run(cmd, args, direct)
+function M.closeCtx(ctx)
+    pcall(ctx.stdin.close, ctx.stdin)
+    pcall(ctx.stdout.close, ctx.stdout)
+    pcall(ctx.stderr.close, ctx.stderr)
+end
+
+function M.run(ctx, cmd, args)
     local mod, err = getCommand(cmd)
     if err then
         error("Error loading command " .. cmd .. ": " .. err)
@@ -45,21 +51,14 @@ function M.run(cmd, args, direct)
         error("No such command: " .. cmd)
     end
 
-    local runFunc
-    if direct then
-        runFunc = mod.runDirect
-    elseif mod.run then
-        runFunc = mod.run
-    elseif mod.runDirect then
-        runFunc = function(...)
-            local exitCode, stdout = mod.runDirect(...)
-            if stdout then
-                pipe.stdout:write(stdout)
-            end
-            return exitCode
-        end
-    end
-    return runFunc(table.unpack(args))
+    ctx.name = args[1]
+    ctx.stdin = ctx.stdin or pipe.stdin
+    ctx.stdout = ctx.stdout or pipe.stdout
+    ctx.stderr = ctx.stderr or pipe.stderr
+    table.remove(args, 1)
+    local exitCode = mod.run(ctx, table.unpack(args))
+    closeCtx(ctx)
+    return exitCode
 end
 
 function M.has(cmd)

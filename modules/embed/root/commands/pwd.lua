@@ -2,8 +2,9 @@ local os = require("go:os")
 
 local M = {}
 
-function M.runDirect()
-    return 0, os.getwd() .. "\n"
+function M.run(ctx)
+    ctx.stdout:write(os.getwd() .. "\n")
+    return 0
 end
 
 return M
