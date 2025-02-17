@@ -9,6 +9,9 @@ import (
 
 func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd) int {
 	_ = c.releaseStdioNoLock()
+	if L == nil {
+		return 0
+	}
 
 	exitCodeL := lua.LNumber(exitCode)
 
@@ -28,7 +31,7 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 
 func (c *Cmd) doWaitCmdNoLock(L *lua.LState) {
 	c.awaited = true
-	c.runPreReqs(L)
+	_ = c.waitDepStdio(L, true)
 	c.waitSync.Wait()
 }
 
@@ -60,7 +63,7 @@ func (c *Cmd) doRun(L *lua.LState) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock(L, true)
+	err := c.prepareAndStartNoLock(true)
 	if err != nil {
 		return handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c)
 	}
@@ -79,18 +82,21 @@ func (c *Cmd) doStart(L *lua.LState) int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	err := c.prepareAndStartNoLock(L, false)
+	err := c.prepareAndStartNoLock(false)
 	if err != nil {
 		return handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c)
 	}
 	return 0
 }
 
-func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
+func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
+	c.startLock.Lock()
+	defer c.startLock.Unlock()
+
 	if foreground {
 		c.foreground = true
 	}
-	if c.gocmd.Process != nil {
+	if c.gocmd.Process != nil || c.gocmd.ProcessState != nil {
 		return nil
 	}
 
@@ -118,7 +124,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		_ = c.waitDepStdio(L)
+		_ = c.waitDepStdio(nil, false)
 		_ = c.gocmd.Wait()
 		c.waitSync.Done()
 	}()
@@ -126,18 +132,21 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	return nil
 }
 
-func (c *Cmd) ensureRan(L *lua.LState) error {
+func (c *Cmd) ensureRan(L *lua.LState, doAwait bool) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if c.gocmd.Process == nil {
-		if err := c.prepareAndStartNoLock(L, true); err != nil {
-			L.Pop(handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c))
-			return err
+	if err := c.prepareAndStartNoLock(true); err != nil {
+		retC := handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c)
+		if retC > 0 {
+			L.Pop(retC)
 		}
+		return err
 	}
 
-	c.doWaitCmdNoLock(L)
+	if doAwait {
+		c.doWaitCmdNoLock(L)
+	}
 	return nil
 }
 

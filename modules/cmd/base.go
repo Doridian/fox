@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-
-	lua "github.com/yuin/gopher-lua"
 )
 
 const (
@@ -25,13 +23,13 @@ type Cmd struct {
 	awaited    bool
 	foreground bool
 	waitSync   sync.WaitGroup
+	startLock  sync.Mutex
 
 	lock            sync.RWMutex
 	gocmd           *exec.Cmd
 	AutoLookPath    bool
 	RaiseForBadExit bool
 	mod             *LuaModule
-	preReqs         []*lua.LFunction
 }
 
 func (c *Cmd) ToString() string {

@@ -264,15 +264,7 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	return nil
 }
 
-func (c *Cmd) runPreReqs(L *lua.LState) {
-	for _, preReq := range c.preReqs {
-		L.Push(preReq)
-		L.Call(0, 0)
-	}
-	c.preReqs = []*lua.LFunction{}
-}
-
-func (c *Cmd) waitDepStdio(L *lua.LState) error {
+func (c *Cmd) waitDepStdio(L *lua.LState, doAwait bool) error {
 	c.lock.RLock()
 	stdin := c.stdin
 	c.lock.RUnlock()
@@ -294,7 +286,7 @@ func (c *Cmd) waitDepStdio(L *lua.LState) error {
 		return nil
 	}
 
-	return cmd.ensureRan(L)
+	return cmd.ensureRan(L, doAwait)
 }
 
 func (c *Cmd) releaseStdioNoLock() error {

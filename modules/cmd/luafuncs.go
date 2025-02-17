@@ -210,18 +210,6 @@ func (c *Cmd) setEnv(envL *lua.LTable) {
 	c.lock.Unlock()
 }
 
-func cmdAddPreReq(L *lua.LState) int {
-	c, ud := Check(L, 1)
-	if c == nil {
-		return 0
-	}
-	f := L.CheckFunction(2)
-	c.preReqs = append(c.preReqs, f)
-
-	L.Push(ud)
-	return 1
-}
-
 func cmdToString(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
@@ -250,7 +238,6 @@ func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 		gocmd:           &exec.Cmd{},
 		AutoLookPath:    true,
 		RaiseForBadExit: false,
-		preReqs:         make([]*lua.LFunction, 0),
 	}
 
 	// new|run|start([args, [dir, [env]]])
