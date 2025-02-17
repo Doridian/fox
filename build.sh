@@ -7,7 +7,8 @@ echo 'Sourced.'
 
 set -x
 
-srcdir=~/.local/bin
 startdir="$(pwd)"
+srcdir="${startdir}/src"
+mkdir -p "${srcdir}"
 prepare
 build

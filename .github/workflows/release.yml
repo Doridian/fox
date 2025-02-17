@@ -20,6 +20,7 @@ jobs:
     uses: ./.github/workflows/check.yml
     secrets: inherit
   create_release:
+    needs: [check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
