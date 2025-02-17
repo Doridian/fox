@@ -10,6 +10,9 @@ local exe = os.executable()
 
 local M = {}
 
+-- TODO: Implement merge runDirect + run
+-- TODO: Implement ctx as first cmd arg such that { stderr = PIPE, stdout = PIPE, stdin = PIPE, name = arg0 } can be passed
+
 local function cmdRun(cmd)
     if cmd._runPre then
         pcall(cmd._runPre)
