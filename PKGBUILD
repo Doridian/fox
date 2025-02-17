@@ -22,6 +22,8 @@ makedepends=('git' 'go')
 source=()
 sha256sums=()
 
+goldflags='' # Hidden tweak for source-ing this file
+
 prepare() {
   cd "${startdir}"
   go generate ./...
@@ -30,7 +32,7 @@ prepare() {
 build() {
   cd "${startdir}"
   pkgverfull="${pkgver}-${pkgrel}"
-  go build -trimpath -ldflags "${GOLDFLAGS-} -X github.com/Doridian/fox/modules/info.version=${pkgverfull} -X github.com/Doridian/fox/modules/info.gitrev=$(git rev-parse HEAD)" -o "${srcdir}/fox" ./cmd
+  go build -trimpath -ldflags "${goldflags} -X github.com/Doridian/fox/modules/info.version=${pkgverfull} -X github.com/Doridian/fox/modules/info.gitrev=$(git rev-parse HEAD)" -o "${srcdir}/fox" ./cmd
 }
 
 package() {

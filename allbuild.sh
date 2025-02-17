@@ -6,6 +6,8 @@ source ./PKGBUILD
 echo './PKGBUILD OK!'
 set -x
 
+goldflags="${GOLDFLAGS-}"
+
 startdir="$(pwd)"
 mkdir -p pkg src
 
