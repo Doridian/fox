@@ -1,7 +1,7 @@
 local M = {}
 
 function M.run(ctx, _, ...)
-    ctx.stdout:write(table.concat({...}, " ") .. "\n")
+    ctx.stdout:print(...)
     return 0
 end
 

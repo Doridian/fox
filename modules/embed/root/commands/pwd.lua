@@ -3,7 +3,7 @@ local os = require("go:os")
 local M = {}
 
 function M.run(ctx)
-    ctx.stdout:write(os.getwd() .. "\n")
+    ctx.stdout:print(os.getwd())
     return 0
 end
 

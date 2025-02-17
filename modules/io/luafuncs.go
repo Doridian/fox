@@ -163,3 +163,33 @@ func ioCanRead(L *lua.LState) int {
 	L.Push(lua.LBool(ok))
 	return 1
 }
+
+func ioPrint(L *lua.LState) int {
+	f, _ := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	w, ok := f.(goio.Writer)
+	if !ok {
+		L.ArgError(1, "not writable")
+		return 0
+	}
+
+	if L.GetTop() < 2 {
+		return 0
+	}
+
+	for i := 2; i <= L.GetTop(); i++ {
+		lvRaw := L.Get(i)
+		lvStrL := L.ToStringMeta(lvRaw)
+		lvStr := lua.LVAsString(lvStrL)
+
+		if i > 2 {
+			w.Write([]byte("\t"))
+		}
+		w.Write([]byte(lvStr))
+	}
+	w.Write([]byte("\n"))
+	return 0
+}

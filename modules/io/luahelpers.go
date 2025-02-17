@@ -34,5 +34,6 @@ func IndexFuncs() map[string]lua.LGFunction {
 		"seek":      ioSeek,
 		"canRead":   ioCanRead,
 		"canWrite":  ioCanWrite,
+		"print":     ioPrint,
 	}
 }

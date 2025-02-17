@@ -146,12 +146,12 @@ function M.run(strAdd, lineNo, prev)
 
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        os.stderr:write("shell.tokenizer error: " .. err .. "\n")
+        os.stderr:print("shell.tokenizer error", err)
         return ""
     end
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        os.stderr:write("shell.splitter error: " .. err .. "\n")
+        os.stderr:print("shell.splitter error", err)
         return ""
     end
 
