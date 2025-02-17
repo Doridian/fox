@@ -18,6 +18,8 @@ func newLuaModule() modules.LuaModule {
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"executable": osExecutable,
+		"chdir":      osChdir,
+		"getwd":      osGetwd,
 	})
 	L.Push(mod)
 	return 1

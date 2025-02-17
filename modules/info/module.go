@@ -1,8 +1,6 @@
 package info
 
 import (
-	"os"
-
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
 	lua "github.com/yuin/gopher-lua"
@@ -16,10 +14,6 @@ func init() {
 	infoTable = make(map[string]lua.LValue)
 	infoTable["version"] = lua.LString(version)
 	infoTable["gitrev"] = lua.LString(gitrev)
-	exe, err := os.Executable()
-	if err == nil {
-		infoTable["executable"] = lua.LString(exe)
-	}
 }
 
 type LuaModule struct {

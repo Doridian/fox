@@ -4,6 +4,8 @@ local splitter = require("embed:parsers.shell.splitter")
 local gocmd = require("go:cmd")
 local fs = require("go:fs")
 local cmdHandler = require("embed:commandHandler")
+local shell = require("go:shell")
+local pipe = require("go:pipe")
 
 local exe = os.executable()
 
@@ -15,21 +17,54 @@ local function setGocmdStdio(cmd, name)
         return
     end
 
+    if not cmd.gocmd then
+        error("cannot redirect superbuiltin: " .. tostring(cmd.args[1]))
+    end
+
     if redir.type == splitter.RedirTypeFile then
         local fh, err = fs.open(redir.name, redir.append and "a" or "w")
         if not fh then
             error(err)
         end
-        cmd.gocmd[name](cmd.gocmd, fh)
+        if not cmd.gocmd then
+            if name == "stdout" then
+                cmd._stdout = fh
+            end
+        else
+            cmd.gocmd[name](cmd.gocmd, fh)
+        end
     elseif redir.type == splitter.RedirTypeCmd then
         if name == "stdin" then
-            cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
+            if cmd.gocmd then
+                if redir.cmd.gocmd then
+                    cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
+                    return
+                end
+                redir.cmd._stdout = cmd.gocmd:stdinPipe()
+            elseif redir.cmd.gocmd then
+                cmd._stdout = redir.cmd.gocmd:stdoutPipe()
+            else
+                -- entirely ignore it, sb -> sb doesn't do anything
+            end
         else
             error("cannot pipe cmd into stdout or stderr")
         end
     else
         error("invalid redir type: " .. tostring(redir.type))
     end
+end
+
+local superBuiltins = {}
+function superBuiltins.cd(args)
+    os.chdir(args[2])
+    return 0
+end
+function superBuiltins.exit(args)
+    shell.exit(args[2])
+    return 0
+end
+function superBuiltins.pwd(_)
+    return 0, os.getwd()
 end
 
 function M.run(strAdd, lineNo, prev)
@@ -54,11 +89,15 @@ function M.run(strAdd, lineNo, prev)
 
     for _, cmd in pairs(cmds) do
         local args = cmd.args
-        if cmdHandler.has(cmd.args[1]) then
+        if superBuiltins[args[1]] then
+            cmd.run = superBuiltins[args[1]]
+        elseif cmdHandler.has(cmd.args[1]) then
             table.insert(args, 1, exe)
             table.insert(args, 2, "-c")
         end
-        cmd.gocmd = gocmd.new(args)
+        if not cmd.run then
+            cmd.gocmd = gocmd.new(args)
+        end
         rootCmds[cmd] = cmd
     end
 
@@ -76,12 +115,34 @@ function M.run(strAdd, lineNo, prev)
     return function()
         local skipNext = false
         local exitSuccess = true
+        local stdout
+        local exitCode
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
-                cmd.gocmd:start()
+                if cmd.run then
+                    _, stdout = cmd.run(cmd.args)
+                    if cmd._stdout then
+                        cmd._stdout:write(stdout)
+                        cmd._stdout:close()
+                    else
+                        print(stdout)
+                    end
+                else
+                    cmd.gocmd:start()
+                end
             else
                 if not skipNext then
-                    local exitCode = cmd.gocmd:run()
+                    if cmd.run then
+                        exitCode, stdout = cmd.run(cmd.args)
+                        if cmd._stdout then
+                            cmd._stdout:write(stdout)
+                            cmd._stdout:close()
+                        else
+                            print(stdout)
+                        end
+                    else
+                        exitCode = cmd.gocmd:run()
+                    end
                     exitSuccess = exitCode == 0
                     if cmd.invert then
                         exitSuccess = not exitSuccess
