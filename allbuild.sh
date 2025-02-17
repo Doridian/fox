@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
+echo 'source ./PKGBUILD'
 source ./PKGBUILD
+echo './PKGBUILD OK!'
+set -x
 
 startdir="$(pwd)"
 mkdir -p pkg src

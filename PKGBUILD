@@ -30,7 +30,7 @@ prepare() {
 build() {
   cd "${startdir}"
   pkgverfull="${pkgver}-${pkgrel}"
-  go build -trimpath -ldflags "-X github.com/Doridian/fox/modules/info.version=${pkgverfull} -X github.com/Doridian/fox/modules/info.gitrev=$(git rev-parse HEAD)" -o "${srcdir}/fox" ./cmd
+  go build -trimpath -ldflags "${GOLDFLAGS-} -X github.com/Doridian/fox/modules/info.version=${pkgverfull} -X github.com/Doridian/fox/modules/info.gitrev=$(git rev-parse HEAD)" -o "${srcdir}/fox" ./cmd
 }
 
 package() {
