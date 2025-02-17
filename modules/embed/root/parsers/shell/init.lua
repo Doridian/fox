@@ -153,7 +153,7 @@ function M.run(strAdd, lineNo, prev)
 
         local cmdObj, _ = cmdHandler.get(cmd.args[1])
         if cmdObj then
-            if cmdObj.forbidInline then
+            if cmdObj.needsBiDi then
                 table.insert(cmd.args, 1, exe)
                 table.insert(cmd.args, 2, "-c")
             else

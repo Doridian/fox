@@ -11,4 +11,6 @@ function M.run(ctx)
     return 0
 end
 
+M.needsBiDi = true
+
 return M
