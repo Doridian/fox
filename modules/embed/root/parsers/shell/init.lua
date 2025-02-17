@@ -17,7 +17,9 @@ local function cmdRun(cmd)
 
     local exitCode, stdout = cmd.run(cmd.args)
     if cmd._stdout then
-        pcall(cmd._stdout.write, cmd._stdout, stdout)
+        if stdout then
+            pcall(cmd._stdout.write, cmd._stdout, stdout)
+        end
         pcall(cmd._stdout.close, cmd._stdout)
     else
         pipe.stdout:write(stdout)
