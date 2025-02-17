@@ -288,6 +288,7 @@ func (c *Cmd) waitDepStdio(L *lua.LState) error {
 	if creator == nil {
 		return nil
 	}
+
 	cmd, ok := creator.(*Cmd)
 	if !ok || cmd == nil || cmd == c {
 		return nil

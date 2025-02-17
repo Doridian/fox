@@ -7,4 +7,7 @@ function M.run(_, _, dir)
     return 0
 end
 
+M.canLua = true
+M.mustLua = true
+
 return M

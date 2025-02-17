@@ -26,14 +26,14 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 	return 1
 }
 
-func (c *Cmd) doWaitCmdNoLock() {
+func (c *Cmd) doWaitCmdNoLock(L *lua.LState) {
 	c.awaited = true
+	c.runPreReqs(L)
 	c.waitSync.Wait()
 }
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd) int {
-	c.runPreReqs(L)
-	c.doWaitCmdNoLock()
+	c.doWaitCmdNoLock(L)
 	return handleCmdExitNoLock(L, nil, c.gocmd.ProcessState.ExitCode(), c)
 }
 
@@ -137,7 +137,7 @@ func (c *Cmd) ensureRan(L *lua.LState) error {
 		}
 	}
 
-	c.doWaitCmdNoLock()
+	c.doWaitCmdNoLock(L)
 	return nil
 }
 

@@ -7,4 +7,7 @@ function M.run(ctx)
     return 0
 end
 
+M.canLua = true
+M.mustLua = true
+
 return M

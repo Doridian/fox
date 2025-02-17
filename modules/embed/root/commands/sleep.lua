@@ -7,4 +7,6 @@ function M.run(_, _, durStr)
     return 0
 end
 
+M.canLua = true
+
 return M

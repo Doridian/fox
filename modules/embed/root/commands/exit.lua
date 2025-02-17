@@ -7,4 +7,7 @@ function M.run(_, _, code)
     return code
 end
 
+M.canLua = true
+M.mustLua = true
+
 return M

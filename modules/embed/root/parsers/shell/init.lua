@@ -36,7 +36,7 @@ local function cmdRun(cmd)
 
     local ok, exitCode = pcall(cmd.run, ctx, cmd.args)
     if not ok then
-        (ctx.stderr or os.stderr):write(exitCode)
+        (ctx.stderr or os.stderr):write(tostring(exitCode))
         exitCode = 1
     end
     cmdHandler.closeCtx(ctx)
@@ -51,6 +51,9 @@ end
 
 local function luaCmdToGocmd(cmd)
     if cmd.gocmd or not cmd.run then
+        return
+    end
+    if cmd.mustLua then
         return
     end
 
@@ -105,6 +108,8 @@ local function setGocmdStdio(cmd, name)
         if name ~= "stdin" then
             error("cannot pipe cmd into stdout or stderr")
         end
+
+        -- attach cmd's stdin to redir.cmd's stdout
 
         if cmd.gocmd then
             if redir.cmd.gocmd then
@@ -169,6 +174,10 @@ function M.run(strAdd, lineNo, prev)
             cmd.run = function(ctx, subargs)
                 return cmdObj.run(ctx, table.unpack(subargs))
             end
+            if not cmdObj.canLua then
+                luaCmdToGocmd(cmd)
+            end
+            cmd.mustLua = cmdObj.mustLua
         else
             cmd.gocmd = gocmd.new(cmd.args)
         end
@@ -179,15 +188,8 @@ function M.run(strAdd, lineNo, prev)
     -- Do this after so all gocmd structures are for sure filled
     for _, cmd in pairs(cmds) do
         local stdin = cmd.stdin
-        local chainHasNonGoCmd = not cmd.gocmd
         while stdin and stdin.type == splitter.RedirTypeCmd do
             rootCmds[stdin.cmd] = nil
-            if not stdin.cmd.gocmd then
-                if chainHasNonGoCmd then
-                    luaCmdToGocmd(stdin.cmd)
-                end
-                chainHasNonGoCmd = true
-            end
             stdin.cmd._background = stdin.cmd._background or cmd._background
             stdin = stdin.cmd.stdin
         end
@@ -199,11 +201,15 @@ function M.run(strAdd, lineNo, prev)
         end
     end
 
-    for   _, cmd in pairs(cmds) do
+    for _, cmd in pairs(cmds) do
         setGocmdStdio(cmd, "stdin")
         setGocmdStdio(cmd, "stdout")
         setGocmdStdio(cmd, "stderr")
     end
+
+    -- for _, cmd in pairs(cmds) do
+    --     os.stderr:print(cmd.args[1], cmd.run and "lua" or "cmd")
+    -- end
 
     return function()
         local skipNext = false
