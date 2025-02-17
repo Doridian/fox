@@ -71,7 +71,9 @@ local function setGocmdStdio(cmd, name)
                 end
             else
                 -- mostly ignore it, sb -> sb doesn't do anything but order
-                redir.cmd._stdout = pipe.null
+                local subPipe = pipe.new()
+                redir.cmd._stdout = subPipe
+                cmd._stdin = subPipe
                 cmd._runPre = function()
                     cmdRun(redir.cmd)
                 end
@@ -105,18 +107,13 @@ function M.run(strAdd, lineNo, prev)
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
-        local hasCmd, hasDirect = cmdHandler.has(cmd.args[1])
-        local args = cmd.args
-        if hasDirect then
-            cmd.run = function(subargs)
-                return cmdHandler.run(args[1], subargs, true)
+        if cmdHandler.has(cmd.args[1]) then
+            cmd.run = function(ctx, subargs)
+                return cmdHandler.run(ctx, cmd.args[1], subargs)
             end
-        elseif hasCmd then
-            table.insert(args, 1, exe)
-            table.insert(args, 2, "-c")
         end
         if not cmd.run then
-            cmd.gocmd = gocmd.new(args)
+            cmd.gocmd = gocmd.new(cmd.args)
         end
         rootCmds[cmd] = cmd
     end

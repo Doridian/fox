@@ -36,9 +36,15 @@ local function getCommand(cmd)
 end
 
 function M.closeCtx(ctx)
-    pcall(ctx.stdin.close, ctx.stdin)
-    pcall(ctx.stdout.close, ctx.stdout)
-    pcall(ctx.stderr.close, ctx.stderr)
+    if ctx.stdin then
+        pcall(ctx.stdin.close, ctx.stdin)
+    end
+    if ctx.stdout then
+        pcall(ctx.stdout.close, ctx.stdout)
+    end
+    if ctx.stderr then
+        pcall(ctx.stderr.close, ctx.stderr)
+    end
 end
 
 function M.run(ctx, cmd, args)
@@ -57,7 +63,7 @@ function M.run(ctx, cmd, args)
     ctx.stderr = ctx.stderr or pipe.stderr
     table.remove(args, 1)
     local exitCode = mod.run(ctx, table.unpack(args))
-    closeCtx(ctx)
+    M.closeCtx(ctx)
     return exitCode
 end
 

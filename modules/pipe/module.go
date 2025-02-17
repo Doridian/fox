@@ -27,7 +27,9 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	})))
 	mt.RawSetString("__tostring", L.NewFunction(pipeToString))
 
-	mod := L.NewTable()
+	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
+		"new": pipeNew,
+	})
 
 	mod.RawSetString("null", ToUserdata(L, &nullPipe))
 	mod.RawSetString("stdin", ToUserdata(L, &stdinPipe))
