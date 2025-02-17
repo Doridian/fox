@@ -15,4 +15,9 @@ srcdir="${startdir}/src"
 prepare
 build
 
-exec ./src/fox
+if [-z "${BINPATH-}" ]; then
+    exec ./src/fox
+else
+    mv ./src/fox "${BINPATH}"
+    exec "${BINPATH}"
+fi
