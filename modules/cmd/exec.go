@@ -135,15 +135,6 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	if c.iCmd != nil {
 		c.iCtx, c.iCancel = context.WithCancel(context.Background())
 		c.iCmd.SetContext(c.iCtx)
-
-		c.iCmdWait.Add(1)
-		go func() {
-			code, err := c.iCmd.RunAs(c.gocmd)
-			c.iErr = err
-			c.iExit = code
-			c.iCancel()
-			c.iCmdWait.Done()
-		}()
 	} else {
 		err = c.gocmd.Start()
 		if err != nil {
@@ -156,7 +147,10 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	c.mod.addCmd(c)
 	go func() {
 		if c.iCmd != nil {
-			c.iCmdWait.Wait()
+			code, err := c.iCmd.RunAs(c.gocmd)
+			c.iErr = err
+			c.iExit = code
+			c.iCancel()
 		} else {
 			_ = c.gocmd.Wait()
 		}

@@ -29,12 +29,11 @@ type Cmd struct {
 	waitSync   sync.WaitGroup
 	startLock  sync.Mutex
 
-	iCmd     integrated.Cmd
-	iCtx     context.Context
-	iCancel  context.CancelFunc
-	iExit    int
-	iErr     error
-	iCmdWait sync.WaitGroup
+	iCmd    integrated.Cmd
+	iCtx    context.Context
+	iCancel context.CancelFunc
+	iExit   int
+	iErr    error
 
 	lock            sync.RWMutex
 	gocmd           *exec.Cmd
