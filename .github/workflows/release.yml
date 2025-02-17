@@ -22,8 +22,9 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - run: echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-      - run: echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
+      - run: |
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
       - name: Release create
         uses: ncipollo/release-action@v1.15.0
         with:
@@ -49,8 +50,9 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - run: echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-      - run: echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
+      - run: |
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
