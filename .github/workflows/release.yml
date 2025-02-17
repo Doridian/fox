@@ -19,30 +19,8 @@ jobs:
   check:
     uses: ./.github/workflows/check.yml
     secrets: inherit
-  create_release:
-    needs: [check]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - run: |
-          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-          echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
-      - name: Release create
-        uses: ncipollo/release-action@v1.15.0
-        with:
-          name: ${{ env.RELEASE_NAME }}
-          tag: ${{ env.RELEASE_TAG }}
-          commit: ${{ github.sha }}
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          omitBody: true
-          omitBodyDuringUpdate: true
-          removeArtifacts: true
   release:
-    needs: [check, create_release]
+    needs: [check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,4 +47,4 @@ jobs:
           artifactErrorsFailBuild: true
           omitBody: true
           omitBodyDuringUpdate: true
-          removeArtifacts: false
+          removeArtifacts: true
