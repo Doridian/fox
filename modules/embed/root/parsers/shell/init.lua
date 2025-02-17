@@ -45,11 +45,7 @@ local function setGocmdStdio(cmd, name)
             error(err)
         end
         if not cmd.gocmd then
-            if name == "stdout" then
-                cmd._stdout = fh
-            elseif name == "stderr" then
-                cmd._stderr = fh
-            end
+            cmd["_"..name] = fh
         else
             cmd.gocmd[name](cmd.gocmd, fh)
         end
