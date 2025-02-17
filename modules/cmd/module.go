@@ -126,7 +126,7 @@ func (m *LuaModule) PrePrompt() {
 		}
 		toDelete = append(toDelete, cmd)
 
-		if cmd.foreground {
+		if cmd.awaited {
 			continue
 		}
 

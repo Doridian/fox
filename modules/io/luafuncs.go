@@ -60,6 +60,40 @@ func ioRead(L *lua.LState) int {
 	return 1
 }
 
+func ioReadToEnd(L *lua.LState) int {
+	f, _ := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	r, ok := f.(goio.Reader)
+	if !ok {
+		L.ArgError(1, "not readable")
+		return 0
+	}
+
+	newData := make([]byte, 4096)
+	data := []byte{}
+	nTotal := 0
+	for {
+		n, err := r.Read(newData)
+		nTotal += n
+		if err != nil {
+			if errors.Is(err, goio.EOF) {
+				break
+			}
+			L.RaiseError("%v", err)
+			return 0
+		}
+		if n > 0 {
+			data = append(data, newData[:n]...)
+		}
+	}
+
+	L.Push(lua.LString(data))
+	return 1
+}
+
 func ioWrite(L *lua.LState) int {
 	f, ud := Check(L, 1)
 	if f == nil {

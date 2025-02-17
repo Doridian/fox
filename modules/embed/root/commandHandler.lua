@@ -1,6 +1,3 @@
-local shell = require("go:shell")
-local pipe = require("go:pipe")
-
 local M = {}
 local cmdCache = {}
 
@@ -36,6 +33,10 @@ function M.get(cmd)
 end
 
 function M.closeCtx(ctx)
+    if not ctx then
+        return
+    end
+
     for _, v in pairs(ctx) do
         if v and v.close then
             pcall(v.close, v)

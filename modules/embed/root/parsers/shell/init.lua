@@ -41,6 +41,10 @@ local function cmdRun(cmd)
     cmdHandler.closeCtx(ctx)
     cmdHandler.closeCtx(dummyCtx)
 
+    if cmd._runPost then
+        pcall(cmd._runPost)
+    end
+
     return exitCode or 0
 end
 
@@ -99,7 +103,10 @@ local function setGocmdStdio(cmd, name)
             elseif redir.cmd.gocmd then
                 cmd._stdin = redir.cmd.gocmd:stdoutPipe()
                 cmd._runPre = function()
-                    redir.cmd.gocmd:run()
+                    redir.cmd.gocmd:start()
+                end
+                cmd._runPost = function()
+                    redir.cmd.gocmd:wait()
                 end
             else
                 -- mostly ignore it, sb -> sb doesn't do anything but order
