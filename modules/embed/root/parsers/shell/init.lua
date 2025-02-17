@@ -15,9 +15,14 @@ local function cmdRun(cmd)
         pcall(cmd._runPre)
     end
 
-    local ok, exitCode, stdout = pcall(cmd.run, cmd.args)
+    local ok, exitCode, stdout, stderr = pcall(cmd.run, cmd.args)
     if not ok then
-        print("error running command: " .. exitCode)
+        if stderr then
+            stderr = stderr .. "\n"
+        else
+            stderr = ""
+        end
+        stderr = stderr .. "\n" .. "exit code: " .. exitCode
         exitCode = 1
     end
 
@@ -28,6 +33,15 @@ local function cmdRun(cmd)
         pcall(cmd._stdout.close, cmd._stdout)
     elseif stdout then
         pipe.stdout:write(stdout)
+    end
+
+    if cmd._stderr then
+        if stderr then
+            pcall(cmd._stderr.write, cmd._stderr, stderr)
+        end
+        pcall(cmd._stderr.close, cmd._stderr)
+    elseif stderr then
+        pipe.stderr:write(stderr)
     end
     return exitCode or 0
 end
@@ -46,6 +60,8 @@ local function setGocmdStdio(cmd, name)
         if not cmd.gocmd then
             if name == "stdout" then
                 cmd._stdout = fh
+            elseif name == "stderr" then
+                cmd._stderr = fh
             end
         else
             cmd.gocmd[name](cmd.gocmd, fh)
