@@ -4,6 +4,7 @@ local M = {}
 
 M.RedirTypeFile = 1
 M.RedirTypeCmd = 2
+M.RedirTypeRefer = 3
 
 function M.run(tokens)
     local cmds = {}
@@ -95,6 +96,19 @@ function M.run(tokens)
                     name = outFile.val,
                     append = token.len > 1,
                 }
+
+                if token.hasAmpersand then
+                    local referTo = tonumber(outFile.val)
+                    if referTo == 1 then
+                        fileInfo.type = M.RedirTypeRefer
+                        fileInfo.ref = "stdout"
+                    elseif referTo == 2 then
+                        fileInfo.type = M.RedirTypeRefer
+                        fileInfo.ref = "stderr"
+                    else
+                        return nil, "&ref to invalid stream: " .. outFile.val
+                    end
+                end
 
                 if token.val == "<" then
                     if token.pre and token.pre ~= "" then

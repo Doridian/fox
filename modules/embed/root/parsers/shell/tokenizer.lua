@@ -107,7 +107,19 @@ function M.run(parsed)
             end
 
             controlEndIdx = nextControlIdx
-            while parsed:sub(controlEndIdx + 1, controlEndIdx + 1) == nextControl do
+            local hasAmpersand = false
+            while true do
+                local nextC = parsed:sub(controlEndIdx + 1, controlEndIdx + 1)
+                if nextC ~= nextControl then
+                    if nextC == "&" then
+                        if hasAmpersand then
+                            return nil, "cannot have && right after >"
+                        end
+                        hasAmpersand = true
+                    else
+                        break
+                    end
+                end
                 controlEndIdx = controlEndIdx + 1
             end
 
@@ -116,6 +128,7 @@ function M.run(parsed)
                 val = nextControl,
                 len = controlEndIdx - nextControlIdx + 1,
                 raw = parsed:sub(nextControlIdx, controlEndIdx),
+                hasAmpersand = hasAmpersand,
                 type = M.ArgTypeOp,
             })
             curToken = nil

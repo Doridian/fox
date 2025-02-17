@@ -1,6 +1,7 @@
 local shell = require("go:shell")
 local env = require("go:env")
 local fs = require("go:fs")
+local pipe = require("go:pipe")
 
 ---@diagnostic disable-next-line: deprecated
 table.unpack = table.unpack or _G.unpack
@@ -26,7 +27,11 @@ shell.setHistoryFile(baseDir .. "/history")
 
 local cmdHandler = require("embed:commandHandler")
 shell.runCommand = function(cmd)
-    return cmdHandler.run({}, cmd, shell.args())
+    return cmdHandler.run({
+        stdin = pipe.stdin,
+        stdout = pipe.stdout,
+        stderr = pipe.stderr,
+    }, cmd, shell.args())
 end
 
 if shell.interactive() then

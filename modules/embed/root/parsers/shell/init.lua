@@ -23,12 +23,26 @@ local function cmdRun(cmd)
         stdout = cmd._stdout,
         stderr = cmd._stderr,
     }
+    local dummyCtx = {}
+    if cmd._ref_stdin then
+        table.insert(dummyCtx, ctx.stdin)
+        ctx.stdin = cmd["_"..cmd._ref_stdin]
+    end
+    if cmd._ref_stdout then
+        table.insert(dummyCtx, ctx.stdout)
+        ctx.stdout = cmd["_"..cmd._ref_stdout]
+    end
+    if cmd._ref_stderr then
+        table.insert(dummyCtx, ctx.stderr)
+        ctx.stderr = cmd["_"..cmd._ref_stderr]
+    end
     local ok, exitCode = pcall(cmd.run, ctx, cmd.args)
     if not ok then
         (ctx.stderr or pipe.stderr):write(exitCode)
-        cmdHandler.closeCtx(ctx)
         exitCode = 1
     end
+    cmdHandler.closeCtx(ctx)
+    cmdHandler.closeCtx(dummyCtx)
 
     return exitCode or 0
 end
@@ -57,6 +71,23 @@ local function setGocmdStdio(cmd, name)
         else
             cmd.gocmd[name](cmd.gocmd, fh)
         end
+    elseif redir.type == splitter.RedirTypeRefer then
+        cmd["_ref_"..name] = redir.ref
+        cmd["_ref_" .. redir.ref] = "null"
+
+        if cmd.gocmd then
+            local refObj
+            if redir.ref == "stdout" then
+                refObj = cmd.gocmd:stdoutPipe()
+            elseif redir.ref == "stderr" then
+                refObj = cmd.gocmd:stderrPipe()
+            elseif redir.ref == "stdin" then
+                refObj = cmd.gocmd:stdinPipe()
+            else
+                error("invalid refer type: " .. tostring(redir.ref))
+            end
+            cmd.gocmd[name](cmd.gocmd, refObj)
+        end
     elseif redir.type == splitter.RedirTypeCmd then
         if name == "stdin" then
             if cmd.gocmd then
@@ -69,7 +100,7 @@ local function setGocmdStdio(cmd, name)
                     cmdRun(redir.cmd)
                 end)
             elseif redir.cmd.gocmd then
-                redir.cmd.gocmd:stdout(pipe.null)
+                cmd._stdin = redir.cmd.gocmd:stdoutPipe()
                 cmd._runPre = function()
                     redir.cmd.gocmd:run()
                 end
@@ -99,18 +130,22 @@ function M.run(strAdd, lineNo, prev)
 
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        print("shell.tokenizer error: " .. err)
+        pipe.stderr:write("shell.tokenizer error: " .. err .. "\n")
         return ""
     end
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        print("shell.splitter error: " .. err)
+        pipe.stderr:write("shell.splitter error: " .. err .. "\n")
         return ""
     end
 
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
+        cmd._null = pipe.null
+        cmd._stdin = pipe.stdin
+        cmd._stdout = pipe.stdout
+        cmd._stderr = pipe.stderr
         if cmdHandler.has(cmd.args[1]) then
             cmd.run = function(ctx, subargs)
                 return cmdHandler.run(ctx, cmd.args[1], subargs)

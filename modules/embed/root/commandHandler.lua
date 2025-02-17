@@ -36,14 +36,10 @@ local function getCommand(cmd)
 end
 
 function M.closeCtx(ctx)
-    if ctx.stdin then
-        pcall(ctx.stdin.close, ctx.stdin)
-    end
-    if ctx.stdout then
-        pcall(ctx.stdout.close, ctx.stdout)
-    end
-    if ctx.stderr then
-        pcall(ctx.stderr.close, ctx.stderr)
+    for _, v in pairs(ctx) do
+        if v and v.close then
+            pcall(v.close, v)
+        end
     end
 end
 
@@ -58,9 +54,6 @@ function M.run(ctx, cmd, args)
     end
 
     ctx.name = args[1]
-    ctx.stdin = ctx.stdin or pipe.stdin
-    ctx.stdout = ctx.stdout or pipe.stdout
-    ctx.stderr = ctx.stderr or pipe.stderr
     table.remove(args, 1)
     local exitCode = mod.run(ctx, table.unpack(args))
     M.closeCtx(ctx)
