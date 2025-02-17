@@ -5,8 +5,8 @@ local M = {}
 function M.runDirect(_, envSet)
     local eqPos = envSet:find("=", 1, true)
     if not eqPos then
-        env[envSet] = _G[envSet] or env[envSet]
-        return 0
+        error("missing variable value")
+        return 1
     end
     local envKey = envSet:sub(1, eqPos - 1)
     local envVal = envSet:sub(eqPos + 1)
