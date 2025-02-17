@@ -1,6 +1,7 @@
 package io
 
 import (
+	"errors"
 	goio "io"
 
 	lua "github.com/yuin/gopher-lua"
@@ -47,6 +48,10 @@ func ioRead(L *lua.LState) int {
 	data := make([]byte, len)
 	n, err := r.Read(data)
 	if err != nil {
+		if errors.Is(err, goio.EOF) {
+			L.Push(lua.LNil)
+			return 1
+		}
 		L.RaiseError("%v", err)
 		return 0
 	}
