@@ -80,7 +80,7 @@ function M.run(strAdd, lineNo, prev)
         setGocmdStdio(cmd, "stderr")
     end
 
-    local function pStdMap(op, v)
+    --[[local function pStdMap(op, v)
         if not v then
             return
         end
@@ -91,7 +91,7 @@ function M.run(strAdd, lineNo, prev)
         pStdMap("STDIN", v.stdin)
         pStdMap("STDOUT", v.stdout)
         pStdMap("STDERR", v.stderr)
-    end
+    end]]
 
     return function()
         for _, cmd in pairs(backgroundCmds) do
@@ -99,7 +99,7 @@ function M.run(strAdd, lineNo, prev)
         end
 
         for _, cmd in pairs(rootCmds) do
-            print("ROOT", table.concat(cmd.args, " "))
+            -- print("ROOT", table.concat(cmd.args, " "))
             -- TODO: Command chaining decision operators (&&, ||)
             cmd.gocmd:run()
         end

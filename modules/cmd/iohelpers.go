@@ -56,3 +56,15 @@ func ioClose(pipeIo interface{}) error {
 	}
 	return errors.New("not closable")
 }
+
+func (c *Cmd) ioIsSelf(pipeIo interface{}) bool {
+	if pipeIo == nil {
+		return false
+	}
+
+	p, ok := pipeIo.(*pipe.Pipe)
+	if ok {
+		return p.Creator() == c
+	}
+	return false
+}

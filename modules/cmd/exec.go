@@ -115,6 +115,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	if err != nil {
 		return err
 	}
+
 	err = c.gocmd.Start()
 	if err != nil {
 		return err

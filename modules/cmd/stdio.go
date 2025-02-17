@@ -238,21 +238,21 @@ func acquireStdoutPipe(L *lua.LState) int {
 
 func (c *Cmd) setupStdio(defaultStdin bool) error {
 	if c.stdout != nil {
-		if ioCanWrite(c.stdout) {
+		if !c.ioIsSelf(c.stdout) {
 			c.gocmd.Stdout = c.stdout.(io.Writer)
 		}
 	} else {
 		c.gocmd.Stdout = os.Stdout
 	}
 	if c.stderr != nil {
-		if ioCanWrite(c.stderr) {
+		if !c.ioIsSelf(c.stderr) {
 			c.gocmd.Stderr = c.stderr.(io.Writer)
 		}
 	} else {
 		c.gocmd.Stderr = os.Stderr
 	}
 	if c.stdin != nil {
-		if ioCanRead(c.stdin) {
+		if !c.ioIsSelf(c.stdin) {
 			c.gocmd.Stdin = c.stdin.(io.Reader)
 		}
 	} else if defaultStdin {
