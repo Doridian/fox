@@ -7,7 +7,7 @@ function M.get(varType, name)
     if varType == "$" then
         return Env[name] or ""
     elseif varType == "%" then
-        return _G[name] or ""
+        return tostring(_G[name] or "")
     end
 end
 
