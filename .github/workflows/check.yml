@@ -9,13 +9,7 @@ permissions:
   contents: read
 jobs:
   lint:
-    strategy:
-      matrix:
-        os:
-          # - macos-latest
-          - ubuntu-latest
-          # - windows-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -33,6 +27,7 @@ jobs:
         with:
           version: latest
           args: --timeout=30m
+      - name: Go build
+        run: go build -o "$(mktemp -d)/fox" ./cmd  
       - name: Go test
         run: go test ./...
-
