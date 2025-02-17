@@ -40,7 +40,15 @@ local function setGocmdStdio(cmd, name)
     end
 
     if redir.type == splitter.RedirTypeFile then
-        local fh, err = fs.open(redir.name, redir.append and "a" or "w")
+        local fMode
+        if name == "stdin" then
+            fMode = "r"
+        elseif redir.append then
+            fMode = "a"
+        else
+            fMode = "w"
+        end
+        local fh, err = fs.open(redir.name, fMode)
         if not fh then
             error(err)
         end
