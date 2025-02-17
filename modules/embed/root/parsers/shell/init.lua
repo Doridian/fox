@@ -17,12 +17,8 @@ local function cmdRun(cmd)
 
     local ok, exitCode, stdout, stderr = pcall(cmd.run, cmd.args)
     if not ok then
-        if stderr then
-            stderr = stderr .. "\n"
-        else
-            stderr = ""
-        end
-        stderr = stderr .. "Lua error: " .. exitCode .. "\n"
+        stdout = nil
+        stderr = "Lua error: " .. exitCode .. "\n"
         exitCode = 1
     end
 
