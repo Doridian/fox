@@ -4,6 +4,10 @@ on:
 
 name: Release
 
+concurrency:
+  group: release
+  cancel-in-progress: true
+
 env:
   RELEASE_NAME: ''
   RELEASE_TAG: ''
