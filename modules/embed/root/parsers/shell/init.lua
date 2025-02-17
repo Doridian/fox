@@ -49,6 +49,17 @@ local function cmdRun(cmd)
     return exitCode or 0
 end
 
+local function luaCmdToGocmd(cmd)
+    if cmd.gocmd or not cmd.run then
+        return
+    end
+
+    table.insert(cmd.args, 1, exe)
+    table.insert(cmd.args, 2, "-c")
+    cmd.gocmd = gocmd.new(cmd.args)
+    cmd.run = nil
+end
+
 local function setGocmdStdio(cmd, name)
     local redir = cmd[name]
     if not redir then
@@ -68,9 +79,9 @@ local function setGocmdStdio(cmd, name)
         if not fh then
             error(err)
         end
-        if not cmd.gocmd then
-            cmd["_"..name] = fh
-        else
+
+        cmd["_"..name] = fh
+        if cmd.gocmd then
             cmd.gocmd[name](cmd.gocmd, fh)
         end
     elseif redir.type == splitter.RedirTypeRefer then
@@ -91,36 +102,35 @@ local function setGocmdStdio(cmd, name)
             cmd.gocmd[name](cmd.gocmd, refObj)
         end
     elseif redir.type == splitter.RedirTypeCmd then
-        if name == "stdin" then
-            if cmd.gocmd then
-                if redir.cmd.gocmd then
-                    cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
-                    return
-                end
+        if name ~= "stdin" then
+            error("cannot pipe cmd into stdout or stderr")
+        end
 
-                redir.cmd._stdout = cmd.gocmd:stdinPipe()
-                cmd.gocmd:addPreReq(function()
-                    cmdRun(redir.cmd)
-                end)
-            elseif redir.cmd.gocmd then
-                cmd._stdin = redir.cmd.gocmd:stdoutPipe()
-                cmd._runPre = function()
-                    redir.cmd.gocmd:start()
-                end
-                cmd._runPost = function()
-                    redir.cmd.gocmd:wait()
-                end
-            else
-                -- mostly ignore it, sb -> sb doesn't do anything but order
-                local subPipe = pipe.new()
-                redir.cmd._stdout = subPipe
-                cmd._stdin = subPipe
-                cmd._runPre = function()
-                    cmdRun(redir.cmd)
-                end
+        if cmd.gocmd then
+            if redir.cmd.gocmd then
+                cmd.gocmd:stdin(redir.cmd.gocmd:stdoutPipe())
+                return
+            end
+
+            redir.cmd._stdout = cmd.gocmd:stdinPipe()
+            cmd.gocmd:addPreReq(function()
+                cmdRun(redir.cmd)
+            end)
+        elseif redir.cmd.gocmd then
+            cmd._stdin = redir.cmd.gocmd:stdoutPipe()
+            cmd._runPre = function()
+                redir.cmd.gocmd:start()
+            end
+            cmd._runPost = function()
+                redir.cmd.gocmd:wait()
             end
         else
-            error("cannot pipe cmd into stdout or stderr")
+            local subPipe = pipe.new()
+            redir.cmd._stdout = subPipe
+            cmd._stdin = subPipe
+            cmd._runPre = function()
+                cmdRun(redir.cmd)
+            end
         end
     else
         error("invalid redir type: " .. tostring(redir.type))
@@ -155,16 +165,10 @@ function M.run(strAdd, lineNo, prev)
 
         local cmdObj, _ = cmdHandler.get(cmd.args[1])
         if cmdObj then
-            if cmdObj.needsBiDi then
-                table.insert(cmd.args, 1, exe)
-                table.insert(cmd.args, 2, "-c")
-            else
-                cmd.run = function(ctx, subargs)
-                    return cmdObj.run(ctx, table.unpack(subargs))
-                end
+            cmd.run = function(ctx, subargs)
+                return cmdObj.run(ctx, table.unpack(subargs))
             end
-        end
-        if not cmd.run then
+        else
             cmd.gocmd = gocmd.new(cmd.args)
         end
         rootCmds[cmd] = cmd
@@ -172,13 +176,24 @@ function M.run(strAdd, lineNo, prev)
 
     -- Do this after so all gocmd structures are for sure filled
     for _, cmd in pairs(cmds) do
-        if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
-            rootCmds[cmd.stdin.cmd] = nil
+        cmd._background = cmd.background or false
+
+        local stdin = cmd.stdin
+        while stdin and stdin.type == splitter.RedirTypeCmd do
+            rootCmds[stdin.cmd] = nil
+            stdin.cmd._background = cmd._background
+            stdin = stdin.cmd.stdin
         end
 
         setGocmdStdio(cmd, "stdin")
         setGocmdStdio(cmd, "stdout")
         setGocmdStdio(cmd, "stderr")
+    end
+
+    for _, cmd in pairs(cmds) do
+        if cmd._background then
+            luaCmdToGocmd(cmd)
+        end
     end
 
     return function()
@@ -187,11 +202,7 @@ function M.run(strAdd, lineNo, prev)
         local exitCode
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
-                if cmd.run then
-                    cmdRun(cmd)
-                else
-                    cmd.gocmd:start()
-                end
+                cmd.gocmd:start()
             else
                 if not skipNext then
                     if cmd.run then

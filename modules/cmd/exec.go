@@ -32,6 +32,7 @@ func (c *Cmd) doWaitCmdNoLock() {
 }
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd) int {
+	c.waitDepStdio(L, true)
 	c.doWaitCmdNoLock()
 	return handleCmdExitNoLock(L, nil, c.gocmd.ProcessState.ExitCode(), c)
 }
@@ -117,7 +118,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		_ = c.setupRemoteStdio(L)
+		_ = c.waitDepStdio(L, false)
 		_ = c.gocmd.Wait()
 		c.waitSync.Done()
 	}()
@@ -125,7 +126,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	return nil
 }
 
-func (c *Cmd) ensurePrepared(L *lua.LState) error {
+func (c *Cmd) ensureRan(L *lua.LState) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 

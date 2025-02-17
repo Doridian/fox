@@ -264,10 +264,13 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	return nil
 }
 
-func (c *Cmd) setupRemoteStdio(L *lua.LState) error {
-	for _, preReq := range c.preReqs {
-		L.Push(preReq)
-		L.Call(0, 0)
+func (c *Cmd) waitDepStdio(L *lua.LState, inSync bool) error {
+	if inSync {
+		for _, preReq := range c.preReqs {
+			L.Push(preReq)
+			L.Call(0, 0)
+		}
+		c.preReqs = []*lua.LFunction{}
 	}
 
 	c.lock.RLock()
@@ -290,7 +293,7 @@ func (c *Cmd) setupRemoteStdio(L *lua.LState) error {
 		return nil
 	}
 
-	return cmd.ensurePrepared(L)
+	return cmd.ensureRan(L)
 }
 
 func (c *Cmd) releaseStdioNoLock() error {
