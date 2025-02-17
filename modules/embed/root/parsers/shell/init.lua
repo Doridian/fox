@@ -43,8 +43,14 @@ local function setGocmdStdio(cmd, name)
                 redir.cmd._stdout = cmd.gocmd:stdinPipe()
             elseif redir.cmd.gocmd then
                 cmd._stdout = redir.cmd.gocmd:stdoutPipe()
+                cmd._runPre = function()
+                    return redir.cmd.gocmd:run()
+                end
             else
-                -- entirely ignore it, sb -> sb doesn't do anything
+                -- mostly ignore it, sb -> sb doesn't do anything but order
+                cmd._runPre = function()
+                    return redir.cmd.run(redir.cmd.args)
+                end
             end
         else
             error("cannot pipe cmd into stdout or stderr")
@@ -53,6 +59,8 @@ local function setGocmdStdio(cmd, name)
         error("invalid redir type: " .. tostring(redir.type))
     end
 end
+
+-- TODO: Make Lua cmds stdout a reader that when first read from runs the code
 
 local superBuiltins = {}
 function superBuiltins.cd(args)
@@ -65,6 +73,9 @@ function superBuiltins.exit(args)
 end
 function superBuiltins.pwd(_)
     return 0, os.getwd()
+end
+function superBuiltins.echo(args)
+    return 0, table.concat(args, " ", 2)
 end
 
 function M.run(strAdd, lineNo, prev)
@@ -120,6 +131,9 @@ function M.run(strAdd, lineNo, prev)
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
                 if cmd.run then
+                    if cmd._runPre then
+                        _, _ = cmd._runPre()
+                    end
                     _, stdout = cmd.run(cmd.args)
                     if cmd._stdout then
                         cmd._stdout:write(stdout)
@@ -133,6 +147,9 @@ function M.run(strAdd, lineNo, prev)
             else
                 if not skipNext then
                     if cmd.run then
+                        if cmd._runPre then
+                            _, _ = cmd._runPre()
+                        end
                         exitCode, stdout = cmd.run(cmd.args)
                         if cmd._stdout then
                             cmd._stdout:write(stdout)
