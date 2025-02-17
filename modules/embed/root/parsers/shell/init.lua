@@ -22,7 +22,7 @@ local function cmdRun(cmd)
         else
             stderr = ""
         end
-        stderr = stderr .. "\n" .. "exit code: " .. exitCode
+        stderr = stderr .. "Lua error: " .. exitCode .. "\n"
         exitCode = 1
     end
 
