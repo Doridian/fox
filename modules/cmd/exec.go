@@ -32,7 +32,7 @@ func (c *Cmd) doWaitCmdNoLock() {
 }
 
 func doWaitCmdNoLock(L *lua.LState, c *Cmd) int {
-	c.waitDepStdio(L, true)
+	c.runPreReqs(L)
 	c.doWaitCmdNoLock()
 	return handleCmdExitNoLock(L, nil, c.gocmd.ProcessState.ExitCode(), c)
 }
@@ -118,7 +118,7 @@ func (c *Cmd) prepareAndStartNoLock(L *lua.LState, foreground bool) error {
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		_ = c.waitDepStdio(L, false)
+		_ = c.waitDepStdio(L)
 		_ = c.gocmd.Wait()
 		c.waitSync.Done()
 	}()

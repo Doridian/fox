@@ -32,9 +32,6 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	})
 
 	mod.RawSetString("null", ToUserdata(L, &nullPipe))
-	mod.RawSetString("stdin", ToUserdata(L, &stdinPipe))
-	mod.RawSetString("stderr", ToUserdata(L, &stderrPipe))
-	mod.RawSetString("stdout", ToUserdata(L, &stdoutPipe))
 
 	mod.RawSetString(LuaTypeName, mt)
 

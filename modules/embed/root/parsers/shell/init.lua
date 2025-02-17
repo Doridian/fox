@@ -36,7 +36,7 @@ local function cmdRun(cmd)
 
     local ok, exitCode = pcall(cmd.run, ctx, cmd.args)
     if not ok then
-        (ctx.stderr or pipe.stderr):write(exitCode)
+        (ctx.stderr or os.stderr):write(exitCode)
         exitCode = 1
     end
     cmdHandler.closeCtx(ctx)
@@ -146,12 +146,12 @@ function M.run(strAdd, lineNo, prev)
 
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        pipe.stderr:write("shell.tokenizer error: " .. err .. "\n")
+        os.stderr:write("shell.tokenizer error: " .. err .. "\n")
         return ""
     end
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        pipe.stderr:write("shell.splitter error: " .. err .. "\n")
+        os.stderr:write("shell.splitter error: " .. err .. "\n")
         return ""
     end
 
@@ -159,9 +159,10 @@ function M.run(strAdd, lineNo, prev)
 
     for _, cmd in pairs(cmds) do
         cmd._null = pipe.null
-        cmd._stdin = pipe.stdin
-        cmd._stdout = pipe.stdout
-        cmd._stderr = pipe.stderr
+        cmd._stdin = os.stdin
+        cmd._stdout = os.stdout
+        cmd._stderr = os.stderr
+        cmd._background = cmd.background or false
 
         local cmdObj, _ = cmdHandler.get(cmd.args[1])
         if cmdObj then
@@ -171,29 +172,37 @@ function M.run(strAdd, lineNo, prev)
         else
             cmd.gocmd = gocmd.new(cmd.args)
         end
+
         rootCmds[cmd] = cmd
     end
 
     -- Do this after so all gocmd structures are for sure filled
     for _, cmd in pairs(cmds) do
-        cmd._background = cmd.background or false
-
         local stdin = cmd.stdin
+        local chainHasNonGoCmd = not cmd.gocmd
         while stdin and stdin.type == splitter.RedirTypeCmd do
             rootCmds[stdin.cmd] = nil
-            stdin.cmd._background = cmd._background
+            if not stdin.cmd.gocmd then
+                if chainHasNonGoCmd then
+                    luaCmdToGocmd(stdin.cmd)
+                end
+                chainHasNonGoCmd = true
+            end
+            stdin.cmd._background = stdin.cmd._background or cmd._background
             stdin = stdin.cmd.stdin
         end
-
-        setGocmdStdio(cmd, "stdin")
-        setGocmdStdio(cmd, "stdout")
-        setGocmdStdio(cmd, "stderr")
     end
 
     for _, cmd in pairs(cmds) do
         if cmd._background then
             luaCmdToGocmd(cmd)
         end
+    end
+
+    for   _, cmd in pairs(cmds) do
+        setGocmdStdio(cmd, "stdin")
+        setGocmdStdio(cmd, "stdout")
+        setGocmdStdio(cmd, "stderr")
     end
 
     return function()

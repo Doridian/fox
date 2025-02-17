@@ -264,15 +264,15 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 	return nil
 }
 
-func (c *Cmd) waitDepStdio(L *lua.LState, inSync bool) error {
-	if inSync {
-		for _, preReq := range c.preReqs {
-			L.Push(preReq)
-			L.Call(0, 0)
-		}
-		c.preReqs = []*lua.LFunction{}
+func (c *Cmd) runPreReqs(L *lua.LState) {
+	for _, preReq := range c.preReqs {
+		L.Push(preReq)
+		L.Call(0, 0)
 	}
+	c.preReqs = []*lua.LFunction{}
+}
 
+func (c *Cmd) waitDepStdio(L *lua.LState) error {
 	c.lock.RLock()
 	stdin := c.stdin
 	c.lock.RUnlock()
