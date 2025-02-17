@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"sync"
@@ -16,22 +17,24 @@ const (
 )
 
 type Cmd struct {
-	stdout      interface{}
-	closeStdout bool
-	stderr      interface{}
-	closeStderr bool
-	stdin       interface{}
-	closeStdin  bool
+	stdout       interface{}
+	stdoutCloser io.Closer
+	stderr       interface{}
+	stderrCloser io.Closer
+	stdin        interface{}
+	stdinCloser  io.Closer
 
 	awaited    bool
 	foreground bool
 	waitSync   sync.WaitGroup
 	startLock  sync.Mutex
 
-	iCmd    integrated.Cmd
-	iCtx    context.Context
-	iCancel context.CancelFunc
-	iExit   int
+	iCmd     integrated.Cmd
+	iCtx     context.Context
+	iCancel  context.CancelFunc
+	iExit    int
+	iErr     error
+	iCmdWait sync.WaitGroup
 
 	lock            sync.RWMutex
 	gocmd           *exec.Cmd

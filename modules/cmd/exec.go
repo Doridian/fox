@@ -11,8 +11,20 @@ import (
 
 func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd) int {
 	_ = c.releaseStdioNoLock()
+
 	if L == nil {
 		return 0
+	}
+
+	if nonExitError == nil {
+		nonExitError = c.iErr
+	}
+
+	if exitCode == 0 {
+		exitCode = c.iExit
+		if c.gocmd.ProcessState != nil {
+			exitCode = c.gocmd.ProcessState.ExitCode()
+		}
 	}
 
 	exitCodeL := lua.LNumber(exitCode)
@@ -31,19 +43,14 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 	return 1
 }
 
-func (c *Cmd) doWaitCmdNoLock(L *lua.LState) {
+func (c *Cmd) doWaitCmdNoLock() {
 	c.awaited = true
-	_ = c.waitDepStdio(L, true)
 	c.waitSync.Wait()
 }
 
-func doWaitCmdNoLock(L *lua.LState, c *Cmd) int {
-	c.doWaitCmdNoLock(L)
-	exitCode := c.iExit
-	if c.gocmd.ProcessState != nil {
-		exitCode = c.gocmd.ProcessState.ExitCode()
-	}
-	return handleCmdExitNoLock(L, nil, exitCode, c)
+func doWaitCmdNoLock(L *lua.LState, c *Cmd, forceErr error) int {
+	c.doWaitCmdNoLock()
+	return handleCmdExitNoLock(L, forceErr, 0, c)
 }
 
 func doWait(L *lua.LState) int {
@@ -54,7 +61,7 @@ func doWait(L *lua.LState) int {
 
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	return doWaitCmdNoLock(L, c)
+	return doWaitCmdNoLock(L, c, nil)
 }
 
 func doRun(L *lua.LState) int {
@@ -73,7 +80,7 @@ func (c *Cmd) doRun(L *lua.LState) int {
 	if err != nil {
 		return handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c)
 	}
-	return doWaitCmdNoLock(L, c)
+	return doWaitCmdNoLock(L, c, nil)
 }
 
 func doStart(L *lua.LState) int {
@@ -108,24 +115,35 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 
 	var err error
 
-	path := c.gocmd.Args[0]
-	if c.AutoLookPath && !strings.ContainsRune(path, '/') {
-		path, err = exec.LookPath(path)
-		if err != nil {
-			return err
+	c.iCmd = integrated.LookupCmd(c.gocmd.Args[0])
+	if c.iCmd == nil {
+		path := c.gocmd.Args[0]
+		if c.AutoLookPath && !strings.ContainsRune(path, '/') {
+			path, err = exec.LookPath(path)
+			if err != nil {
+				return err
+			}
 		}
+		c.gocmd.Path = path
 	}
-	c.gocmd.Path = path
 
 	err = c.setupStdio(foreground)
 	if err != nil {
 		return err
 	}
 
-	c.iCmd = integrated.LookupCmd(c.gocmd.Args[0])
 	if c.iCmd != nil {
 		c.iCtx, c.iCancel = context.WithCancel(context.Background())
 		c.iCmd.SetContext(c.iCtx)
+
+		c.iCmdWait.Add(1)
+		go func() {
+			code, err := c.iCmd.RunAs(c.gocmd)
+			c.iErr = err
+			c.iExit = code
+			c.iCancel()
+			c.iCmdWait.Done()
+		}()
 	} else {
 		err = c.gocmd.Start()
 		if err != nil {
@@ -133,17 +151,17 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 		}
 	}
 
+	_ = c.waitDepStdio(nil, false)
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
-		_ = c.waitDepStdio(nil, false)
 		if c.iCmd != nil {
-			code, err := c.iCmd.RunAs(c.gocmd)
-			c.iExit = code
-			handleCmdExitNoLock(nil, err, c.iExit, c)
+			c.iCmdWait.Wait()
 		} else {
 			_ = c.gocmd.Wait()
 		}
+		_ = c.waitDepStdio(nil, true)
+		handleCmdExitNoLock(nil, nil, 0, c)
 		c.waitSync.Done()
 	}()
 
@@ -163,7 +181,7 @@ func (c *Cmd) ensureRan(L *lua.LState, doAwait bool) error {
 	}
 
 	if doAwait {
-		c.doWaitCmdNoLock(L)
+		c.doWaitCmdNoLock()
 	}
 	return nil
 }

@@ -30,7 +30,7 @@ func setStdin(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stdin = nil
-		c.closeStdin = false
+		c.stdinCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -52,7 +52,11 @@ func setStdin(L *lua.LState) int {
 	}
 
 	c.stdin = pipeIo
-	c.closeStdin = doClose
+	if doClose {
+		c.stdinCloser, _ = pipeIo.(io.Closer)
+	} else {
+		c.stdinCloser = nil
+	}
 	c.lock.Unlock()
 	L.Push(ud)
 	return 1
@@ -80,7 +84,7 @@ func acquireStdinPipe(L *lua.LState) int {
 
 	p := pipe.NewPipe(c, "stdin", c.gocmd.Stdin, stdinPipe, stdinPipe)
 	c.stdin = p
-	c.closeStdin = true
+	c.stdinCloser, _ = c.gocmd.Stdin.(io.Closer)
 	c.lock.Unlock()
 	return p.PushNew(L)
 }
@@ -106,7 +110,7 @@ func setStderr(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stderr = nil
-		c.closeStderr = false
+		c.stderrCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -128,7 +132,11 @@ func setStderr(L *lua.LState) int {
 	}
 
 	c.stderr = pipeIo
-	c.closeStderr = doClose
+	if doClose {
+		c.stderrCloser, _ = pipeIo.(io.Closer)
+	} else {
+		c.stderrCloser = nil
+	}
 	c.lock.Unlock()
 	L.Push(ud)
 	return 1
@@ -156,7 +164,7 @@ func acquireStderrPipe(L *lua.LState) int {
 
 	p := pipe.NewPipe(c, "stdout", stderrPipe, c.gocmd.Stderr, stderrPipe)
 	c.stderr = p
-	c.closeStderr = true
+	c.stderrCloser, _ = c.gocmd.Stderr.(io.Closer)
 	c.lock.Unlock()
 	return p.PushNew(L)
 }
@@ -182,7 +190,7 @@ func setStdout(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stdout = nil
-		c.closeStdout = false
+		c.stdoutCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
@@ -204,7 +212,11 @@ func setStdout(L *lua.LState) int {
 	}
 
 	c.stdout = pipeIo
-	c.closeStdout = doClose
+	if doClose {
+		c.stdoutCloser, _ = pipeIo.(io.Closer)
+	} else {
+		c.stdoutCloser = nil
+	}
 	c.lock.Unlock()
 	L.Push(ud)
 	return 1
@@ -231,7 +243,7 @@ func acquireStdoutPipe(L *lua.LState) int {
 	}
 	p := pipe.NewPipe(c, "stdout", stdoutPipe, c.gocmd.Stdout, stdoutPipe)
 	c.stdout = p
-	c.closeStdout = true
+	c.stdoutCloser, _ = c.gocmd.Stdout.(io.Closer)
 	c.lock.Unlock()
 	return p.PushNew(L)
 }
@@ -290,23 +302,18 @@ func (c *Cmd) waitDepStdio(L *lua.LState, doAwait bool) error {
 }
 
 func (c *Cmd) releaseStdioNoLock() error {
-	if c.stdin != nil {
-		if c.closeStdin {
-			_ = ioClose(c.stdin)
-		}
-		c.stdin = nil
+	if c.stdinCloser != nil {
+		_ = ioClose(c.stdinCloser)
+		c.stdinCloser = nil
 	}
-	if c.stdout != nil {
-		if c.closeStdout {
-			_ = ioClose(c.stdout)
-		}
-		c.stdout = nil
+	if c.stdoutCloser != nil {
+		_ = ioClose(c.stdoutCloser)
+		c.stdoutCloser = nil
 	}
-	if c.stderr != nil {
-		if c.closeStderr {
-			_ = ioClose(c.stderr)
-		}
-		c.stderr = nil
+	if c.stderrCloser != nil {
+		_ = ioClose(c.stderrCloser)
+		c.stderrCloser = nil
 	}
+
 	return nil
 }

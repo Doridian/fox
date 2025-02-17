@@ -3,15 +3,15 @@ package integrated
 import (
 	"context"
 	"io"
-	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
 
-type SetCmd struct {
+type ExportCmd struct {
 }
 
-func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	varKey := gocmd.Args[1]
 	var varVal string
 
@@ -27,14 +27,11 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		varKey = varKey[:eqPos]
 	}
 
-	// TODO: Set some global table thingie
-	log.Printf("VAR %s = %s", varKey, varVal)
-
-	return 0, nil
+	return 0, os.Setenv(varKey, varVal)
 }
 
-func (c *SetCmd) SetContext(ctx context.Context) {
+func (c *ExportCmd) SetContext(ctx context.Context) {
 
 }
 
-var _ Cmd = &SetCmd{}
+var _ Cmd = &ExportCmd{}
