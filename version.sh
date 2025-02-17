@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 source ./PKGBUILD
-echo "${pkgver}-${pkgrel}"
+echo "${pkgver}"

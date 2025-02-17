@@ -21,7 +21,12 @@ jobs:
         run: |
           set -x
           go generate ./...
-          git status --porcelain || (echo 'go generate is out of date' && exit 1)
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            echo 'go generate is out of date'
+            exit 1
+          fi
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
