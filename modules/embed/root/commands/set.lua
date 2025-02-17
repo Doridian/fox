@@ -1,5 +1,3 @@
-local env = require("go:env")
-
 local M = {}
 
 function M.run(ctx, _, varSet)
