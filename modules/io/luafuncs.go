@@ -180,16 +180,28 @@ func ioPrint(L *lua.LState) int {
 		return 0
 	}
 
+	var err error
 	for i := 2; i <= L.GetTop(); i++ {
 		lvRaw := L.Get(i)
 		lvStrL := L.ToStringMeta(lvRaw)
 		lvStr := lua.LVAsString(lvStrL)
 
 		if i > 2 {
-			w.Write([]byte("\t"))
+			_, err = w.Write([]byte("\t"))
+			if err != nil {
+				break
+			}
 		}
-		w.Write([]byte(lvStr))
+		_, err = w.Write([]byte(lvStr))
+		if err != nil {
+			break
+		}
 	}
-	w.Write([]byte("\n"))
+	if err == nil {
+		_, err = w.Write([]byte("\n"))
+	}
+	if err != nil {
+		L.RaiseError("%v", err)
+	}
 	return 0
 }
