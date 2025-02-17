@@ -69,11 +69,21 @@ function M.run(tokens)
                 if #curCmd.args > 0 then
                     return nil, "cannot have \"" .. token.raw .. "\" in the middle of a command"
                 end
-                invertNextCmd = (token.len % 2) == 1
+                local invLen = token.len
+                if invertNextCmd then
+                    invLen = invLen + 1
+                end
+                invertNextCmd = (invLen % 2) == 1
             elseif token.val == "<" or token.val == ">" then
                 if #curCmd.args < 1 then
                     return nil, "cannot redirect stdin/out/err of nothing"
                 end
+                if token.val == ">" and token.len > 2 then
+                    return nil, "cannot have more than 2 of " .. token.val .. " in a row"
+                elseif token.val == "<" and token.len > 1 then
+                    return nil, "cannot have more than 1 of " .. token.val .. " in a row"
+                end
+
                 idx = idx + 1
                 local outFile = tokens[idx]
                 if outFile.type ~= tokenizer.ArgTypeString then
