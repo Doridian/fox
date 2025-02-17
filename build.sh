@@ -11,6 +11,3 @@ srcdir=~/.local/bin
 startdir="$(pwd)"
 prepare
 build
-echo 'Done, exec...'
-
-exec fox
