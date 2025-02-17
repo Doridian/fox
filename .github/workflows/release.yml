@@ -7,6 +7,9 @@ name: Release
 env:
   RELEASE_NAME: ''
 
+permissions:
+  contents: write
+
 jobs:
   check:
     uses: ./.github/workflows/check.yml
