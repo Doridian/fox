@@ -237,7 +237,7 @@ func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 		mod:             m,
 		gocmd:           &exec.Cmd{},
 		AutoLookPath:    true,
-		RaiseForBadExit: true,
+		RaiseForBadExit: false,
 	}
 
 	// new|run|start([args, [dir, [env]]])
@@ -260,12 +260,14 @@ func (m *LuaModule) newCmd(L *lua.LState) int {
 
 func (m *LuaModule) runCmd(L *lua.LState) int {
 	c, ud := m.newCmdInt(L)
-	return c.doRun(L, ud)
+	L.Push(ud)
+	return c.doRun(L) + 1
 }
 
 func (m *LuaModule) startCmd(L *lua.LState) int {
 	c, ud := m.newCmdInt(L)
-	return c.doStart(L, ud)
+	L.Push(ud)
+	return c.doStart(L) + 1
 }
 
 func (m *LuaModule) getRunning(L *lua.LState) int {

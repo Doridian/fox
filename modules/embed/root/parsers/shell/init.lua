@@ -98,10 +98,32 @@ function M.run(strAdd, lineNo, prev)
             cmd.gocmd:start()
         end
 
+        local skipNext = false
+        local exitSuccess = true
         for _, cmd in pairs(rootCmds) do
             -- print("ROOT", table.concat(cmd.args, " "))
             -- TODO: Command chaining decision operators (&&, ||)
-            cmd.gocmd:run()
+            if not skipNext then
+                local exitCode = cmd.gocmd:run()
+                exitSuccess = exitCode == 0
+                if cmd.invert then
+                    exitSuccess = not exitSuccess
+                end
+            else
+                skipNext = false
+            end
+
+            if cmd.chainToNext == "&&" then
+                if not exitSuccess then
+                    skipNext = true
+                end
+            elseif cmd.chainToNext == "||" then
+                if exitSuccess then
+                    skipNext = true
+                end
+            elseif cmd.chainToNext then
+                error("invalid chainToNext: " .. tostring(cmd.chainToNext))
+            end
         end
     end
 end

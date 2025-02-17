@@ -24,9 +24,9 @@ function shell.setHistoryFile(file)
 end
 shell.setHistoryFile(baseDir .. "/history")
 
-local cmdh = require("embed:commandHandler")
+local cmdHandler = require("embed:commandHandler")
 shell.runCommand = function(cmd)
-    return cmdh.run(cmd, shell.args())
+    return cmdHandler.run(cmd, shell.args())
 end
 
 if shell.interactive() then
