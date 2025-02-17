@@ -5,7 +5,6 @@ function M.run(ctx, _, ...)
     return 0
 end
 
-M.canLua = true
 M.mustLua = true
 
 return M

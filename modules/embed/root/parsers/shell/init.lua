@@ -174,10 +174,10 @@ function M.run(strAdd, lineNo, prev)
             cmd.run = function(ctx, subargs)
                 return cmdObj.run(ctx, table.unpack(subargs))
             end
+            cmd.mustLua = cmdObj.mustLua
             if not cmdObj.canLua then
                 luaCmdToGocmd(cmd)
             end
-            cmd.mustLua = cmdObj.mustLua
         else
             cmd.gocmd = gocmd.new(cmd.args)
         end
