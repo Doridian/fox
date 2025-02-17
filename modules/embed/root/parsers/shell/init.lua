@@ -21,7 +21,7 @@ local function cmdRun(cmd)
             pcall(cmd._stdout.write, cmd._stdout, stdout)
         end
         pcall(cmd._stdout.close, cmd._stdout)
-    else
+    elseif stdout then
         pipe.stdout:write(stdout)
     end
     return exitCode or 0
