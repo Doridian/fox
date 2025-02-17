@@ -265,6 +265,13 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 }
 
 func (c *Cmd) setupRemoteStdio(L *lua.LState, actuallyWait bool) error {
+	if actuallyWait {
+		for _, preReq := range c.preReqs {
+			L.Push(preReq)
+			L.Call(0, 0)
+		}
+	}
+
 	c.lock.RLock()
 	stdin := c.stdin
 	c.lock.RUnlock()

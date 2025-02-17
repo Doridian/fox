@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+
+	lua "github.com/yuin/gopher-lua"
 )
 
 const (
@@ -29,6 +31,7 @@ type Cmd struct {
 	AutoLookPath    bool
 	RaiseForBadExit bool
 	mod             *LuaModule
+	preReqs         []*lua.LFunction
 }
 
 func (c *Cmd) ToString() string {

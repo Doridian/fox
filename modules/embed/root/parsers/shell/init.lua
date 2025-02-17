@@ -11,14 +11,25 @@ local exe = os.executable()
 
 local M = {}
 
+local function cmdRun(cmd)
+    if cmd._runPre then
+        cmd._runPre()
+    end
+
+    local exitCode, stdout = cmd.run(cmd.args)
+    if cmd._stdout then
+        pcall(cmd._stdout.write, cmd._stdout, stdout)
+        pcall(cmd._stdout.close, cmd._stdout)
+    else
+        pipe.stdout:write(stdout)
+    end
+    return exitCode or 0
+end
+
 local function setGocmdStdio(cmd, name)
     local redir = cmd[name]
     if not redir then
         return
-    end
-
-    if not cmd.gocmd then
-        error("cannot redirect superbuiltin: " .. tostring(cmd.args[1]))
     end
 
     if redir.type == splitter.RedirTypeFile then
@@ -41,15 +52,18 @@ local function setGocmdStdio(cmd, name)
                     return
                 end
                 redir.cmd._stdout = cmd.gocmd:stdinPipe()
+                cmd.gocmd:addPreReq(function()
+                    cmdRun(redir.cmd)
+                end)
             elseif redir.cmd.gocmd then
-                cmd._stdout = redir.cmd.gocmd:stdoutPipe()
+                redir.cmd.gocmd:stdout(pipe.null)
                 cmd._runPre = function()
-                    return redir.cmd.gocmd:run()
+                    redir.cmd.gocmd:run()
                 end
             else
                 -- mostly ignore it, sb -> sb doesn't do anything but order
                 cmd._runPre = function()
-                    return redir.cmd.run(redir.cmd.args)
+                    cmdRun(redir.cmd)
                 end
             end
         else
@@ -59,8 +73,6 @@ local function setGocmdStdio(cmd, name)
         error("invalid redir type: " .. tostring(redir.type))
     end
 end
-
--- TODO: Make Lua cmds stdout a reader that when first read from runs the code
 
 local superBuiltins = {}
 function superBuiltins.cd(args)
@@ -72,10 +84,10 @@ function superBuiltins.exit(args)
     return 0
 end
 function superBuiltins.pwd(_)
-    return 0, os.getwd()
+    return 0, os.getwd() .. "\n"
 end
 function superBuiltins.echo(args)
-    return 0, table.concat(args, " ", 2)
+    return 0, table.concat(args, " ", 2) .. "\n"
 end
 
 function M.run(strAdd, lineNo, prev)
@@ -126,37 +138,18 @@ function M.run(strAdd, lineNo, prev)
     return function()
         local skipNext = false
         local exitSuccess = true
-        local stdout
         local exitCode
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
                 if cmd.run then
-                    if cmd._runPre then
-                        _, _ = cmd._runPre()
-                    end
-                    _, stdout = cmd.run(cmd.args)
-                    if cmd._stdout then
-                        cmd._stdout:write(stdout)
-                        cmd._stdout:close()
-                    else
-                        print(stdout)
-                    end
+                    cmdRun(cmd)
                 else
                     cmd.gocmd:start()
                 end
             else
                 if not skipNext then
                     if cmd.run then
-                        if cmd._runPre then
-                            _, _ = cmd._runPre()
-                        end
-                        exitCode, stdout = cmd.run(cmd.args)
-                        if cmd._stdout then
-                            cmd._stdout:write(stdout)
-                            cmd._stdout:close()
-                        else
-                            print(stdout)
-                        end
+                        exitCode = cmdRun(cmd)
                     else
                         exitCode = cmd.gocmd:run()
                     end

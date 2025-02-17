@@ -92,6 +92,9 @@ func (p *Pipe) ToString() string {
 	if p.wr != nil {
 		mode += "w"
 	}
+	if p.cl != nil {
+		mode += "c"
+	}
 
 	creatorStr := "nil"
 	if p.creator != nil {

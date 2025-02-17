@@ -59,6 +59,8 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"getStdin":   getStdin,
 		"stdinPipe":  acquireStdinPipe,
 
+		"addPreReq": cmdAddPreReq,
+
 		"run":   doRun,
 		"start": doStart,
 		"wait":  doWait,
