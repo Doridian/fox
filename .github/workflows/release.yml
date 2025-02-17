@@ -6,6 +6,7 @@ name: Release
 
 env:
   RELEASE_NAME: ''
+  RELEASE_TAG: ''
 
 permissions:
   contents: write
@@ -21,22 +22,19 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      - run: echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
       - run: echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
       - name: Release create
         uses: ncipollo/release-action@v1.15.0
         with:
           name: ${{ env.RELEASE_NAME }}
-          tag: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_TAG }}
           commit: ${{ github.sha }}
           allowUpdates: true
           artifactErrorsFailBuild: true
           omitBody: true
           omitBodyDuringUpdate: true
           removeArtifacts: true
-      - uses: rickstaa/action-create-tag@v1.7.2
-        with:
-          tag: ${{ env.RELEASE_NAME }}
-          force_push_tag: true
   release:
     needs: [check, create_release]
     strategy:
@@ -51,6 +49,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      - run: echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
       - run: echo "RELEASE_NAME=$(./version.sh)" >> $GITHUB_ENV
       - uses: actions/setup-go@v5
         with:
@@ -62,7 +61,7 @@ jobs:
         uses: ncipollo/release-action@v1.15.0
         with:
           name: ${{ env.RELEASE_NAME }}
-          tag: ${{ env.RELEASE_NAME }}
+          tag: ${{ env.RELEASE_TAG }}
           commit: ${{ github.sha }}
           artifacts: ./src/fox
           allowUpdates: true
