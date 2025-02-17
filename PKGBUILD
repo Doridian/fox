@@ -11,8 +11,6 @@ if [ -n "$(git status --porcelain)" ]; then
   tag_suffix="dev"
 fi
 
-echo "Latest suffix: ${tag_suffix}"
-
 pkgname=fox
 pkgver="${latest_tag}.${commits_since_tag}${tag_suffix}"
 pkgrel="1"
