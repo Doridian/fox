@@ -1,6 +1,5 @@
 *.exe
 *.dll
-.vscode
 /src
 /pkg
 /.SRCINFO
