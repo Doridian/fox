@@ -42,7 +42,7 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           tag: ${{ env.RELEASE_TAG }}
           commit: ${{ github.sha }}
-          artifacts: ./src/*
+          artifacts: ./pkg/*
           allowUpdates: true
           artifactErrorsFailBuild: true
           omitBody: true

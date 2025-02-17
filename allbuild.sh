@@ -6,14 +6,14 @@ source ./PKGBUILD
 startdir="$(pwd)"
 mkdir -p pkg src
 
+pkgdir="${startdir}/pkg"
 srcdir="${startdir}/src"
 
 prepare
-cd "${startdir}"
 
 dobuild() {
     build
-    cd "${startdir}"
+
     XSUFFIX=""
     OSSUFFIX="-${GOOS}"
     ARCHSUFFIX="-${GOARCH}"
@@ -29,7 +29,7 @@ dobuild() {
             ARCHSUFFIX=""
         fi
     fi
-    mv src/fox "pkg/fox${OSSUFFIX}${ARCHSUFFIX}${XSUFFIX}"
+    mv "${srcdir}/fox" "${pkgdir}/fox${OSSUFFIX}${ARCHSUFFIX}${XSUFFIX}"
 }
 
 GOOS=linux GOARCH=amd64 dobuild
