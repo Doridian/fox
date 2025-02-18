@@ -6,6 +6,7 @@ import (
 
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
+	"github.com/Doridian/fox/modules/vars"
 	"github.com/Doridian/fox/shell"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -82,7 +83,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Dependencies() []string {
-	return []string{shell.LuaName}
+	return []string{shell.LuaName, vars.LuaName}
 }
 
 func (m *LuaModule) Name() string {
