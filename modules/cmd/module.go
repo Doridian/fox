@@ -15,16 +15,16 @@ const LuaName = "go:cmd"
 const LuaTypeName = "Cmd"
 const LuaType = LuaName + ":" + LuaTypeName
 
+var allCmds = make(map[*Cmd]bool)
+var cmdRegLock sync.Mutex
+
 type LuaModule struct {
-	allCmds    map[*Cmd]bool
-	cmdRegLock sync.Mutex
-	loader     *loader.LuaModule
+	loader *loader.LuaModule
 }
 
 func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{
-		allCmds: make(map[*Cmd]bool),
-		loader:  loader,
+		loader: loader,
 	}
 }
 
@@ -91,11 +91,11 @@ func (m *LuaModule) Name() string {
 }
 
 func (m *LuaModule) Interrupt() bool {
-	m.cmdRegLock.Lock()
-	defer m.cmdRegLock.Unlock()
+	cmdRegLock.Lock()
+	defer cmdRegLock.Unlock()
 
 	triedKill := false
-	for cmd := range m.allCmds {
+	for cmd := range allCmds {
 		if !cmd.foreground {
 			continue
 		}
@@ -110,11 +110,11 @@ func (m *LuaModule) Interrupt() bool {
 }
 
 func (m *LuaModule) PrePrompt() {
-	m.cmdRegLock.Lock()
-	defer m.cmdRegLock.Unlock()
+	cmdRegLock.Lock()
+	defer cmdRegLock.Unlock()
 
 	toDelete := make([]*Cmd, 0)
-	for cmd := range m.allCmds {
+	for cmd := range allCmds {
 		exited := cmd.gocmd.Process == nil
 		exitCode := 0
 		if cmd.gocmd.ProcessState != nil {
@@ -139,14 +139,14 @@ func (m *LuaModule) PrePrompt() {
 	}
 
 	for _, cmd := range toDelete {
-		delete(m.allCmds, cmd)
+		delete(allCmds, cmd)
 	}
 }
 
 func (m *LuaModule) addCmd(cmd *Cmd) {
-	m.cmdRegLock.Lock()
-	m.allCmds[cmd] = true
-	m.cmdRegLock.Unlock()
+	cmdRegLock.Lock()
+	allCmds[cmd] = true
+	cmdRegLock.Unlock()
 }
 
 func init() {

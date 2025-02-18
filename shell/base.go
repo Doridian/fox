@@ -28,17 +28,11 @@ var ErrShellNotInited = errors.New("shell not initialized")
 // TODO: Handle SIGTERM
 
 func New(mCtx context.Context) *Shell {
-	rl, err := readline.New("?fox?> ")
-	if err != nil {
-		log.Panicf("Error initializing readline: %v", err)
-	}
-
 	s := &Shell{
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs:        true,
 			IncludeGoStackTrace: true,
 		}),
-		rl:         rl,
 		stdin:      os.Stdin,
 		stdout:     os.Stdout,
 		stderr:     os.Stderr,
@@ -121,6 +115,14 @@ func (s *Shell) Init(args []string, interactive bool) error {
 	}
 	s.args = args
 	s.interactive = interactive
+
+	if interactive {
+		rl, err := readline.New("?fox?> ")
+		if err != nil {
+			log.Fatalf("Error initializing readline: %v", err)
+		}
+		s.rl = rl
+	}
 
 	s.l.Pop(lua.OpenBase(s.l))
 	s.l.Pop(lua.OpenPackage(s.l))

@@ -20,6 +20,7 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	}
 
 	subShell := shell.New(c.ctx)
+	subShell.ShowErrors = false
 	defer subShell.Close()
 
 	err := subShell.Init(gocmd.Args[1:], false)

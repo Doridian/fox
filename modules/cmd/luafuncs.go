@@ -272,7 +272,7 @@ func (m *LuaModule) startCmd(L *lua.LState) int {
 
 func (m *LuaModule) getRunning(L *lua.LState) int {
 	res := L.NewTable()
-	for job := range m.allCmds {
+	for job := range allCmds {
 		res.Append(ToUserdata(L, job))
 	}
 	L.Push(res)
