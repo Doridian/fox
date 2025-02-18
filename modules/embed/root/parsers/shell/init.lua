@@ -4,7 +4,8 @@ local splitter = require("embed:parsers.shell.splitter")
 local gocmd = require("go:cmd")
 local fs = require("go:fs")
 
--- TODO: Implement "(echo A && echo B) | grep A" type subshells
+-- TODO?: Implement "(echo A && echo B) | grep A" type subshells
+-- TODO?: Implement \ escaping
 
 local M = {}
 

@@ -3,7 +3,7 @@ local vars = require("embed:parsers.shell.vars")
 
 local M = {}
 
--- TODO: Implement $(cmd) interpolation
+-- TODO?: Implement $(cmd) interpolation
 
 -- return true to indicate that glob processing mode should be enabled
 function M.run(str, escapeGlobs)
