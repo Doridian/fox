@@ -64,20 +64,6 @@ func (p *Pipe) CanWrite() bool {
 	return p.wr != nil || p.isNull
 }
 
-func (p *Pipe) GetReader() io.Reader {
-	if p.isNull {
-		return p
-	}
-	return p.rd
-}
-
-func (p *Pipe) GetWriter() io.Writer {
-	if p.isNull {
-		return p
-	}
-	return p.wr
-}
-
 func (p *Pipe) Creator() interface{} {
 	return p.creator
 }

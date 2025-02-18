@@ -18,8 +18,7 @@ type Shell struct {
 	l     *lua.LState
 	lLock sync.Mutex
 
-	mod   *lua.LTable
-	print *lua.LFunction
+	mod *lua.LTable
 
 	ctx       context.Context
 	cancelCtx context.CancelFunc

@@ -3,7 +3,6 @@ package os
 import (
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
-	"github.com/Doridian/fox/modules/pipe"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -12,7 +11,7 @@ const LuaName = "go:os"
 type LuaModule struct {
 }
 
-func newLuaModule() modules.LuaModule {
+func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{}
 }
 
@@ -22,9 +21,6 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		"chdir":      osChdir,
 		"getwd":      osGetwd,
 	})
-	mod.RawSetString("stdin", pipe.ToUserdata(L, stdinPipe))
-	mod.RawSetString("stderr", pipe.ToUserdata(L, stderrPipe))
-	mod.RawSetString("stdout", pipe.ToUserdata(L, stdoutPipe))
 	L.Push(mod)
 	return 1
 }

@@ -11,6 +11,7 @@ import (
 
 	_ "embed"
 
+	"github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
@@ -103,8 +104,6 @@ func (s *Shell) Init(args []string, interactive bool) error {
 	s.l.Pop(lua.OpenChannel(s.l))
 	s.l.Pop(lua.OpenCoroutine(s.l))
 
-	s.print = s.l.GetGlobal("print").(*lua.LFunction)
-
 	mainMod := loader.NewLuaModule()
 	err := mainMod.ManualRegisterModuleDefault(s)
 	if err != nil {
@@ -114,6 +113,10 @@ func (s *Shell) Init(args []string, interactive bool) error {
 	s.mainMod = mainMod
 
 	s.signalInit()
+
+	s.mod.RawSetString("stdout", io.ToUserdata(s.l, stdoutPipe))
+	s.mod.RawSetString("stderr", io.ToUserdata(s.l, stderrPipe))
+	s.mod.RawSetString("stdin", io.ToUserdata(s.l, stdinPipe))
 
 	s.startLuaLock()
 	defer s.endLuaLock(false, nil)
@@ -349,11 +352,7 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 	defer s.lLock.Unlock()
 
 	if printStack {
-		retC := s.l.GetTop()
-		if retC > 0 {
-			s.l.Insert(s.print, 0)
-			s.l.Call(retC, 0)
-		}
+		io.StackPrint(s.l, s.Stdout())
 	}
 
 	cancelCtx := s.cancelCtx

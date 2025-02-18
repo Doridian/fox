@@ -37,3 +37,13 @@ func IndexFuncs() map[string]lua.LGFunction {
 		"print":     ioPrint,
 	}
 }
+
+func StackPrint(L *lua.LState, f interface{}) {
+	retC := L.GetTop()
+	if retC > 0 {
+		ud := ToUserdata(L, f)
+		L.Insert(L.NewFunction(ioPrint), 1)
+		L.Insert(ud, 2)
+		L.Call(retC+1, 0)
+	}
+}

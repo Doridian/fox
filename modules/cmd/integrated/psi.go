@@ -3,7 +3,6 @@ package integrated
 import (
 	"context"
 	"io"
-	"os"
 	"os/exec"
 )
 
@@ -15,7 +14,7 @@ func (c *PSICmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	_, _ = os.Stdout.Write(varB)
+	_, _ = gocmd.Stdout.Write(varB)
 
 	return 0, nil
 }

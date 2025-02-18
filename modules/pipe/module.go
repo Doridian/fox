@@ -2,7 +2,7 @@ package pipe
 
 import (
 	"github.com/Doridian/fox/modules"
-	"github.com/Doridian/fox/modules/io"
+	luaio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/util"
 	lua "github.com/yuin/gopher-lua"
@@ -15,14 +15,14 @@ const LuaType = LuaName + ":" + LuaTypeName
 type LuaModule struct {
 }
 
-func newLuaModule() modules.LuaModule {
+func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{}
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mt := L.NewTypeMetatable(LuaType)
 
-	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), util.MergeMaps(io.IndexFuncs(), map[string]lua.LGFunction{
+	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), util.MergeMaps(luaio.IndexFuncs(), map[string]lua.LGFunction{
 		"isNull": pipeIsNull,
 	})))
 	mt.RawSetString("__tostring", L.NewFunction(pipeToString))

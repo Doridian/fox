@@ -13,7 +13,7 @@ type ModuleInstance struct {
 }
 
 type ModuleCtor struct {
-	ctor func() modules.LuaModule
+	ctor func(loader *LuaModule) modules.LuaModule
 	cfg  ModuleConfig
 }
 

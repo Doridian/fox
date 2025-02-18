@@ -14,7 +14,7 @@ const LuaType = LuaName + ":" + LuaTypeName
 type LuaModule struct {
 }
 
-func newLuaModule() modules.LuaModule {
+func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{}
 }
 

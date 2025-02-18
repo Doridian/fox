@@ -1,4 +1,4 @@
-local os = require("go:os")
+local shell = require("go:shell")
 local tokenizer = require("embed:parsers.shell.tokenizer")
 local splitter = require("embed:parsers.shell.splitter")
 local gocmd = require("go:cmd")
@@ -60,12 +60,12 @@ function M.run(strAdd, lineNo, prev)
 
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        os.stderr:print("shell.tokenizer error", err)
+        shell.stderr:print("shell.tokenizer error", err)
         return ""
     end
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        os.stderr:print("shell.splitter error", err)
+        shell.stderr:print("shell.splitter error", err)
         return ""
     end
 
@@ -88,7 +88,7 @@ function M.run(strAdd, lineNo, prev)
     end
 
     -- for _, cmd in pairs(cmds) do
-    --     os.stderr:print(cmd.args[1], cmd.run and "lua" or "cmd")
+    --     shell.stderr:print(cmd.args[1], cmd.run and "lua" or "cmd")
     -- end
 
     return function()

@@ -7,6 +7,7 @@ import (
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/modules/pipe"
+	"github.com/Doridian/fox/shell"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -17,11 +18,13 @@ const LuaType = LuaName + ":" + LuaTypeName
 type LuaModule struct {
 	allCmds    map[*Cmd]bool
 	cmdRegLock sync.Mutex
+	loader     *loader.LuaModule
 }
 
-func newLuaModule() modules.LuaModule {
+func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{
 		allCmds: make(map[*Cmd]bool),
+		loader:  loader,
 	}
 }
 
@@ -80,7 +83,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Dependencies() []string {
-	return []string{pipe.LuaName}
+	return []string{shell.LuaName, pipe.LuaName}
 }
 
 func (m *LuaModule) Name() string {

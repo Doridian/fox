@@ -49,7 +49,7 @@ func SetDefaultConfig(cfg DefaultModuleConfig) {
 }
 
 type LuaModule struct {
-	gomods     []*ModuleInstance
+	gomods     map[string]*ModuleInstance
 	loaderLock sync.Mutex
 
 	loaded bool
@@ -59,7 +59,9 @@ type LuaModule struct {
 }
 
 func NewLuaModule() *LuaModule {
-	return &LuaModule{}
+	return &LuaModule{
+		gomods: make(map[string]*ModuleInstance),
+	}
 }
 
 func (m *LuaModule) preLoadMod(L *lua.LState, inst *ModuleInstance) {
@@ -81,10 +83,10 @@ func (m *LuaModule) ManualRegisterModule(mod modules.LuaModule, cfg ModuleConfig
 		return errors.New("cannot manually register modules after the loader has been loaded")
 	}
 
-	m.gomods = append(m.gomods, &ModuleInstance{
+	m.gomods[mod.Name()] = &ModuleInstance{
 		mod: mod,
 		cfg: cfg,
-	})
+	}
 	return nil
 }
 
@@ -95,10 +97,11 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	if !m.loaded {
 		ctorLock.Lock()
 		for _, ctor := range ctors {
-			m.gomods = append(m.gomods, &ModuleInstance{
-				mod: ctor.ctor(),
+			mod := ctor.ctor(m)
+			m.gomods[mod.Name()] = &ModuleInstance{
+				mod: mod,
 				cfg: ctor.cfg,
-			})
+			}
 		}
 		ctorLock.Unlock()
 

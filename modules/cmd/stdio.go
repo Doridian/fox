@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"io"
-	"os"
 
 	luaio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/pipe"
+	"github.com/Doridian/fox/shell"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -254,21 +254,21 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 			c.gocmd.Stdout = c.stdout.(io.Writer)
 		}
 	} else {
-		c.gocmd.Stdout = os.Stdout
+		c.gocmd.Stdout = shell.StdoutFor(c.mod.loader)
 	}
 	if c.stderr != nil {
 		if !c.ioIsSelf(c.stderr) {
 			c.gocmd.Stderr = c.stderr.(io.Writer)
 		}
 	} else {
-		c.gocmd.Stderr = os.Stderr
+		c.gocmd.Stderr = shell.StderrFor(c.mod.loader)
 	}
 	if c.stdin != nil {
 		if !c.ioIsSelf(c.stdin) {
 			c.gocmd.Stdin = c.stdin.(io.Reader)
 		}
 	} else if defaultStdin {
-		c.gocmd.Stdin = os.Stdin
+		c.gocmd.Stdin = shell.StdinFor(c.mod.loader)
 	} else {
 		c.gocmd.Stdin = nil
 	}

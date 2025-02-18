@@ -1,8 +1,12 @@
 local shell = require("go:shell")
 local env = require("go:env")
 local fs = require("go:fs")
-local os = require("go:os")
 local cmd = require("go:cmd")
+
+local p = print
+function _G.print(...)
+    shell.stdout:print(...)
+end
 
 ---@diagnostic disable-next-line: deprecated
 table.unpack = table.unpack or _G.unpack
@@ -44,5 +48,3 @@ if fs.stat(initLua) then
         print("Error loading user init.lua: " .. tostring(err))
     end
 end
-
-_G.print = nil

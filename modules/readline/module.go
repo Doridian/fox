@@ -4,6 +4,7 @@ import (
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/modules/readline/config"
+	"github.com/Doridian/fox/shell"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -14,7 +15,7 @@ const LuaType = LuaName + ":" + LuaTypeName
 type LuaModule struct {
 }
 
-func newLuaModule() modules.LuaModule {
+func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 	return &LuaModule{}
 }
 
@@ -49,7 +50,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 }
 
 func (m *LuaModule) Dependencies() []string {
-	return []string{}
+	return []string{shell.LuaName}
 }
 
 func (m *LuaModule) Name() string {
