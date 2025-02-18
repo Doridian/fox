@@ -1,19 +1,21 @@
-package integrated
+package builtin
 
 import (
 	"context"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/Doridian/fox/modules/vars"
+	lua "github.com/yuin/gopher-lua"
 )
 
-type ExportCmd struct {
+type SetCmd struct {
 }
 
-var _ Cmd = &ExportCmd{}
+var _ Cmd = &SetCmd{}
 
-func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		_, _ = gocmd.Stderr.Write([]byte("missing variable name\n"))
 		return 1, nil
@@ -35,13 +37,15 @@ func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		varKey = varKey[:eqPos]
 	}
 
-	return 0, os.Setenv(varKey, varVal)
+	vars.Set(varKey, lua.LString(varVal))
+
+	return 0, nil
 }
 
-func (c *ExportCmd) SetContext(ctx context.Context) {
+func (c *SetCmd) SetContext(ctx context.Context) {
 
 }
 
 func init() {
-	Register("export", func() Cmd { return &ExportCmd{} })
+	Register("set", func() Cmd { return &SetCmd{} })
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Doridian/fox/modules/cmd/integrated"
+	"github.com/Doridian/fox/modules/cmd/builtin"
 )
 
 const (
@@ -34,7 +34,7 @@ type Cmd struct {
 	waitSync   sync.WaitGroup
 	startLock  sync.Mutex
 
-	iCmd    integrated.Cmd
+	iCmd    builtin.Cmd
 	iCtx    context.Context
 	iCancel context.CancelFunc
 	iExit   int

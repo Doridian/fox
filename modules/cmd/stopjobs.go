@@ -4,13 +4,13 @@ import (
 	"context"
 	"os/exec"
 
-	"github.com/Doridian/fox/modules/cmd/integrated"
+	"github.com/Doridian/fox/modules/cmd/builtin"
 )
 
 type StopJobsCmd struct {
 }
 
-var _ integrated.Cmd = &StopJobsCmd{}
+var _ builtin.Cmd = &StopJobsCmd{}
 
 func (c *StopJobsCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	cmdRegLock.Lock()
@@ -26,5 +26,5 @@ func (c *StopJobsCmd) SetContext(ctx context.Context) {
 }
 
 func init() {
-	integrated.Register("stopjobs", func() integrated.Cmd { return &StopJobsCmd{} })
+	builtin.Register("stopjobs", func() builtin.Cmd { return &StopJobsCmd{} })
 }

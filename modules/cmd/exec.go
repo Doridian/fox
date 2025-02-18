@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Doridian/fox/modules/cmd/integrated"
+	"github.com/Doridian/fox/modules/cmd/builtin"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -120,7 +120,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 
 	var err error
 
-	c.iCmd = integrated.Lookup(c.gocmd.Args[0])
+	c.iCmd = builtin.Lookup(c.gocmd.Args[0])
 	if c.iCmd == nil {
 		path := c.gocmd.Args[0]
 		if c.AutoLookPath && !strings.ContainsRune(path, '/') {
