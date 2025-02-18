@@ -45,3 +45,7 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *SetCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("set", func() Cmd { return &SetCmd{} })
+}

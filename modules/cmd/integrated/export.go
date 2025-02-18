@@ -41,3 +41,7 @@ func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *ExportCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("export", func() Cmd { return &ExportCmd{} })
+}

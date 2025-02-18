@@ -35,3 +35,7 @@ func (c *SleepCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *SleepCmd) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
+
+func init() {
+	Register("sleep", func() Cmd { return &SleepCmd{} })
+}

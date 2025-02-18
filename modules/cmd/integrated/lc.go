@@ -38,3 +38,7 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *LCCmd) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
+
+func init() {
+	Register("lc", func() Cmd { return &LCCmd{} })
+}

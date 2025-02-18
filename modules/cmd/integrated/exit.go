@@ -31,3 +31,7 @@ func (c *ExitCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *ExitCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("exit", func() Cmd { return &ExitCmd{} })
+}

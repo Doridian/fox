@@ -10,25 +10,16 @@ type Cmd interface {
 	RunAs(gocmd *exec.Cmd) (int, error)
 }
 
-func Lookup(arg0 string) Cmd {
-	switch arg0 {
-	case "echo":
-		return &EchoCmd{}
-	case "export":
-		return &ExportCmd{}
-	case "set":
-		return &SetCmd{}
-	case "lc":
-		return &LCCmd{}
-	case "cd":
-		return &CDCmd{}
-	case "pwd":
-		return &PwdCmd{}
-	case "exit":
-		return &ExitCmd{}
-	case "sleep":
-		return &SleepCmd{}
-	}
+var cmdMap = make(map[string]func() Cmd)
 
-	return nil
+func Lookup(arg0 string) Cmd {
+	ctor := cmdMap[arg0]
+	if ctor == nil {
+		return nil
+	}
+	return ctor()
+}
+
+func Register(arg0 string, ctor func() Cmd) {
+	cmdMap[arg0] = ctor
 }

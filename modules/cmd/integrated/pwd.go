@@ -24,3 +24,7 @@ func (c *PwdCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *PwdCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("pwd", func() Cmd { return &PwdCmd{} })
+}

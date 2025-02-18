@@ -28,3 +28,7 @@ func (c *EchoCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *EchoCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("echo", func() Cmd { return &EchoCmd{} })
+}

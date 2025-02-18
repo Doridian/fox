@@ -29,3 +29,7 @@ func (c *CDCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *CDCmd) SetContext(ctx context.Context) {
 
 }
+
+func init() {
+	Register("cd", func() Cmd { return &CDCmd{} })
+}
