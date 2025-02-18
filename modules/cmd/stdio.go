@@ -268,15 +268,15 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 
 func (c *Cmd) releaseStdioNoLock() error {
 	if c.stdinCloser != nil {
-		_ = ioClose(c.stdinCloser)
+		_ = c.stderrCloser.Close()
 		c.stdinCloser = nil
 	}
 	if c.stdoutCloser != nil {
-		_ = ioClose(c.stdoutCloser)
+		_ = c.stdoutCloser.Close()
 		c.stdoutCloser = nil
 	}
 	if c.stderrCloser != nil {
-		_ = ioClose(c.stderrCloser)
+		_ = c.stderrCloser.Close()
 		c.stderrCloser = nil
 	}
 
