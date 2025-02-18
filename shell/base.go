@@ -367,8 +367,10 @@ func (s *Shell) RunPrompt() error {
 	var err error
 	running := true
 	for running {
+		s.mainMod.PrePrompt()
 		running, err = s.runPromptOne()
 	}
+	s.mainMod.PrePrompt()
 	return err
 }
 
@@ -399,8 +401,6 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 
 func (s *Shell) runPromptOne() (bool, error) {
 	var parseRes lua.LValue = lua.LNil
-
-	s.mainMod.PrePrompt()
 
 	lineNo := 1
 	needMore := true
