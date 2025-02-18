@@ -149,7 +149,8 @@ function M.run(strAdd, lineNo, prev)
                     exitCode = cmd.gocmd:wait()
                     exitCmd = cmd
                     if errorOnPipeFail and not okSub then
-                        error("piped command " .. tostring(cmdSub and cmdSub.gocmd) .. " exited with code " .. ecSub)
+                        shell.stderr:print("piped command " .. tostring(cmdSub and cmdSub.gocmd) .. " exited with code " .. ecSub)
+                        return
                     end
                     exitSuccess = exitCode == 0
                     if cmd.invert then
@@ -168,14 +169,15 @@ function M.run(strAdd, lineNo, prev)
                         skipNext = true
                     end
                 elseif cmd.chainToNext then
-                    error("invalid chainToNext: " .. tostring(cmd.chainToNext))
+                    shell.stderr:print("invalid chainToNext: " .. tostring(cmd.chainToNext))
+                    return
                 end
             end
         end
 
         print("exitCode", exitCode)
         if errorOnFail and not exitSuccess then
-            error("command " .. tostring(exitCmd and exitCmd.gocmd) .. " exited with code " .. exitCode)
+            shell.stderr:print("command " .. tostring(exitCmd and exitCmd.gocmd) .. " exited with code " .. exitCode)
         end
     end
 end
