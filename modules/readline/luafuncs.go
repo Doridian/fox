@@ -8,9 +8,13 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func newReadline(L *lua.LState) int {
-	prompt := L.OptString(1, "> ")
-	rl, err := goreadline.New(prompt)
+func (m *LuaModule) newReadline(L *lua.LState) int {
+	cfg := &goreadline.Config{
+		Prompt: L.OptString(1, "> "),
+	}
+	cfg = fixConfig(m.loader, cfg)
+
+	rl, err := goreadline.NewFromConfig(cfg)
 	if err != nil {
 		L.RaiseError("%v", err)
 		return 0
@@ -18,11 +22,13 @@ func newReadline(L *lua.LState) int {
 	return PushNew(L, rl)
 }
 
-func newReadlineFromConfig(L *lua.LState) int {
+func (m *LuaModule) newReadlineFromConfig(L *lua.LState) int {
 	cfg, _ := config.Check(L, 1)
 	if cfg == nil {
 		return 0
 	}
+
+	cfg = fixConfig(m.loader, cfg)
 
 	rl, err := goreadline.NewFromConfig(cfg)
 	if err != nil {
@@ -62,13 +68,15 @@ func rlSetHistory(L *lua.LState) int {
 	return 1
 }
 
-func rlSetConfig(L *lua.LState) int {
+func (m *LuaModule) rlSetConfig(L *lua.LState) int {
 	rl, ud := Check(L, 1)
 	if rl == nil {
 		return 0
 	}
 
 	cfg, _ := config.Check(L, 2)
+	cfg = fixConfig(m.loader, cfg)
+
 	err := rl.SetConfig(cfg)
 	if err != nil {
 		L.RaiseError("%v", err)
@@ -88,12 +96,13 @@ func rlGetConfig(L *lua.LState) int {
 	return config.PushNew(L, rl.GetConfig())
 }
 
-func rlReadLineWithConfig(L *lua.LState) int {
+func (m *LuaModule) rlReadLineWithConfig(L *lua.LState) int {
 	rl, _ := Check(L, 1)
 	if rl == nil {
 		return 0
 	}
 	cfg, _ := config.Check(L, 2)
+	cfg = fixConfig(m.loader, cfg)
 
 	val, err := rl.ReadLineWithConfig(cfg)
 	return rlResultHandler(L, val, err)

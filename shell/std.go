@@ -1,43 +1,34 @@
 package shell
 
 import (
-	"os"
+	"io"
 
 	"github.com/Doridian/fox/modules/loader"
-	"github.com/Doridian/fox/modules/pipe"
 )
 
-var osPipeCreator = pipe.FixedPipeCreator{
-	Name: LuaName,
+func (s *Shell) Stdout() io.Writer {
+	return s.stdout
 }
 
-var stderrPipe = pipe.NewPipe(&osPipeCreator, "stderr", nil, os.Stderr, nil)
-var stdoutPipe = pipe.NewPipe(&osPipeCreator, "stdout", nil, os.Stdout, nil)
-var stdinPipe = pipe.NewPipe(&osPipeCreator, "stdin", os.Stdin, nil, nil)
-
-func (s *Shell) Stdout() *pipe.Pipe {
-	return stdoutPipe
+func (s *Shell) Stderr() io.Writer {
+	return s.stderr
 }
 
-func (s *Shell) Stderr() *pipe.Pipe {
-	return stderrPipe
+func (s *Shell) Stdin() io.Reader {
+	return s.stdin
 }
 
-func (s *Shell) Stdin() *pipe.Pipe {
-	return stdinPipe
-}
-
-func StdoutFor(loader *loader.LuaModule) *pipe.Pipe {
+func StdoutFor(loader *loader.LuaModule) io.Writer {
 	shellMod := loader.GetModule(LuaName).(*Shell)
 	return shellMod.Stdout()
 }
 
-func StderrFor(loader *loader.LuaModule) *pipe.Pipe {
+func StderrFor(loader *loader.LuaModule) io.Writer {
 	shellMod := loader.GetModule(LuaName).(*Shell)
 	return shellMod.Stderr()
 }
 
-func StdinFor(loader *loader.LuaModule) *pipe.Pipe {
+func StdinFor(loader *loader.LuaModule) io.Reader {
 	shellMod := loader.GetModule(LuaName).(*Shell)
 	return shellMod.Stdin()
 }

@@ -3,6 +3,8 @@ package readline
 import (
 	"errors"
 
+	"github.com/Doridian/fox/modules/loader"
+	"github.com/Doridian/fox/shell"
 	goreadline "github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -46,4 +48,12 @@ func rlResultHandler(L *lua.LState, val string, err error) int {
 
 	L.Push(lua.LString(val))
 	return 1
+}
+
+func fixConfig(loader *loader.LuaModule, cfg *goreadline.Config) *goreadline.Config {
+	shellMod := loader.GetModule(LuaName).(*shell.Shell)
+	cfg.Stdout = shellMod.Stdout()
+	cfg.Stderr = shellMod.Stderr()
+	cfg.Stdin = shellMod.Stdin()
+	return cfg
 }

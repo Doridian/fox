@@ -2,6 +2,7 @@ package shell
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	"github.com/Doridian/fox/modules"
@@ -29,6 +30,10 @@ type Shell struct {
 	rl     *readline.Instance
 
 	ShowErrors bool
+
+	stdin  io.Reader
+	stdout io.Writer
+	stderr io.Writer
 }
 
 func (s *Shell) Dependencies() []string {

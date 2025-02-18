@@ -13,16 +13,19 @@ const LuaTypeName = "Readline"
 const LuaType = LuaName + ":" + LuaTypeName
 
 type LuaModule struct {
+	loader *loader.LuaModule
 }
 
 func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
-	return &LuaModule{}
+	return &LuaModule{
+		loader: loader,
+	}
 }
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"new":           newReadline,
-		"newFromConfig": newReadlineFromConfig,
+		"new":           m.newReadline,
+		"newFromConfig": m.newReadlineFromConfig,
 	})
 
 	config.Load(L, mod)
@@ -31,13 +34,13 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
 		"default": rlSetDefault,
 
-		"config":    rlSetConfig,
+		"config":    m.rlSetConfig,
 		"getConfig": rlGetConfig,
 
 		"history": rlSetHistory,
 
 		"readLine":            rlReadLine,
-		"readLineWithConfig":  rlReadLineWithConfig,
+		"readLineWithConfig":  m.rlReadLineWithConfig,
 		"readLineWithDefault": rlReadLineWithDefault,
 
 		"close": rlClose,

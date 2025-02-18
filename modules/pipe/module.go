@@ -58,3 +58,11 @@ func (m *LuaModule) PrePrompt() {
 func init() {
 	loader.AddModuleDefault(newLuaModule)
 }
+
+var nullPipe = Pipe{
+	isNull: true,
+}
+
+func GetNullPipe() *Pipe {
+	return &nullPipe
+}

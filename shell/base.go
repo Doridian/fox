@@ -11,7 +11,9 @@ import (
 
 	_ "embed"
 
-	"github.com/Doridian/fox/modules/io"
+	"io"
+
+	luaio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
@@ -37,10 +39,36 @@ func New() *Shell {
 			IncludeGoStackTrace: true,
 		}),
 		rl:         rl,
+		stdin:      os.Stdin,
+		stdout:     os.Stdout,
+		stderr:     os.Stderr,
 		ShowErrors: true,
 	}
 
 	return s
+}
+
+func (s *Shell) SetStdio(in io.Reader, out io.Writer, err io.Writer) {
+	s.stdin = in
+	s.stdout = out
+	s.stderr = err
+	s.setStdioThru()
+}
+
+func (s *Shell) setStdioThru() {
+	cfg := s.rl.GetConfig()
+	cfg.Stdin = s.stdin
+	cfg.Stdout = s.stdout
+	cfg.Stderr = s.stderr
+	s.rl.SetConfig(cfg)
+
+	if s.mod == nil {
+		return
+	}
+
+	s.mod.RawSetString("stdout", luaio.ToUserdata(s.l, s.stdout))
+	s.mod.RawSetString("stderr", luaio.ToUserdata(s.l, s.stderr))
+	s.mod.RawSetString("stdin", luaio.ToUserdata(s.l, s.stdin))
 }
 
 func (s *Shell) sendInterrupt() {
@@ -113,10 +141,7 @@ func (s *Shell) Init(args []string, interactive bool) error {
 	s.mainMod = mainMod
 
 	s.signalInit()
-
-	s.mod.RawSetString("stdout", io.ToUserdata(s.l, stdoutPipe))
-	s.mod.RawSetString("stderr", io.ToUserdata(s.l, stderrPipe))
-	s.mod.RawSetString("stdin", io.ToUserdata(s.l, stdinPipe))
+	s.setStdioThru()
 
 	s.startLuaLock()
 	defer s.endLuaLock(false, nil)
@@ -352,7 +377,7 @@ func (s *Shell) endLuaLock(printStack bool, err error) {
 	defer s.lLock.Unlock()
 
 	if printStack {
-		io.StackPrint(s.l, s.Stdout())
+		luaio.StackPrint(s.l, s.Stdout())
 	}
 
 	cancelCtx := s.cancelCtx
