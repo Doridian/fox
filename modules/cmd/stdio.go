@@ -268,7 +268,7 @@ func (c *Cmd) setupStdio(defaultStdin bool) error {
 
 func (c *Cmd) releaseStdioNoLock() error {
 	if c.stdinCloser != nil {
-		_ = c.stderrCloser.Close()
+		_ = c.stdinCloser.Close()
 		c.stdinCloser = nil
 	}
 	if c.stdoutCloser != nil {

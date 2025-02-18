@@ -54,6 +54,9 @@ end
 local function startGoCmdDeep(cmd, wait)
     local cmds = {}
     while cmd do
+        if wait and not cmd.stdin then
+            cmd.gocmd:stdin(shell.stdin, false)
+        end
         cmd.gocmd:start()
         table.insert(cmds, cmd.gocmd)
         if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
