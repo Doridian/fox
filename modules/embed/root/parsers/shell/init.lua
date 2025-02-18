@@ -65,7 +65,7 @@ local function startGoCmdDeep(rootCmd, wait)
             cmd.gocmd:stdin(shell.stdin, false)
         end
         cmd.gocmd:start()
-        table.insert(cmds, cmd)
+        table.insert(cmds, 1, cmd)
         if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
             cmd = cmd.stdin.cmd
         else
@@ -77,8 +77,6 @@ local function startGoCmdDeep(rootCmd, wait)
         return 0
     end
 
-    local exitCode = 0
-    local exitCmd = nil
     local exitOK = true
     for _, c in pairs(cmds) do
         local exitCodeS = c.gocmd:wait()
@@ -87,12 +85,13 @@ local function startGoCmdDeep(rootCmd, wait)
             exitOKSub = not exitOKSub
         end
         if (not exitOKSub) and c ~= rootCmd then
-            exitCode = exitCodeS
-            exitCmd = c
             exitOK = false
+            if errorOnPipeFail then
+                shell.stderr:print("piped command " .. tostring(c and c.gocmd) .. " exited with code " .. exitCodeS)
+            end
         end
     end
-    return exitCode, exitOK, exitCmd
+    return exitOK
 end
 
 function M.run(strAdd, lineNo, prev)
@@ -145,16 +144,16 @@ function M.run(strAdd, lineNo, prev)
                 startGoCmdDeep(cmd, false)
             else
                 if not skipNext then
-                    local ecSub, okSub, cmdSub = startGoCmdDeep(cmd, true)
+                    local okSub = startGoCmdDeep(cmd, true)
                     exitCode = cmd.gocmd:wait()
                     exitCmd = cmd
-                    if errorOnPipeFail and not okSub then
-                        shell.stderr:print("piped command " .. tostring(cmdSub and cmdSub.gocmd) .. " exited with code " .. ecSub)
-                        return
-                    end
                     exitSuccess = exitCode == 0
                     if cmd.invert then
                         exitSuccess = not exitSuccess
+                    end
+
+                    if errorOnPipeFail and not okSub then
+                        break
                     end
                 else
                     skipNext = false
