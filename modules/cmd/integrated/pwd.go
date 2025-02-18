@@ -16,8 +16,8 @@ func (c *PwdCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	gocmd.Stdout.Write([]byte(wd))
-	gocmd.Stdout.Write([]byte("\n"))
+	_, _ = gocmd.Stdout.Write([]byte(wd))
+	_, _ = gocmd.Stdout.Write([]byte("\n"))
 	return 0, nil
 }
 

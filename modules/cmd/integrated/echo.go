@@ -17,11 +17,11 @@ func (c *EchoCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 
 	for i, arg := range gocmd.Args[1:] {
 		if i > 0 {
-			gocmd.Stdout.Write([]byte(" "))
+			_, _ = gocmd.Stdout.Write([]byte(" "))
 		}
-		gocmd.Stdout.Write([]byte(arg))
+		_, _ = gocmd.Stdout.Write([]byte(arg))
 	}
-	gocmd.Stdout.Write([]byte("\n"))
+	_, _ = gocmd.Stdout.Write([]byte("\n"))
 	return 0, nil
 }
 

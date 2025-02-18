@@ -15,7 +15,7 @@ var _ Cmd = &SetCmd{}
 
 func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
-		gocmd.Stderr.Write([]byte("set: missing variable name\n"))
+		_, _ = gocmd.Stderr.Write([]byte("set: missing variable name\n"))
 		return 1, nil
 	}
 

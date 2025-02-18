@@ -15,7 +15,7 @@ var _ Cmd = &ExportCmd{}
 
 func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
-		gocmd.Stderr.Write([]byte("export: missing variable name\n"))
+		_, _ = gocmd.Stderr.Write([]byte("export: missing variable name\n"))
 		return 1, nil
 	}
 

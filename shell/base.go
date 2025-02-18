@@ -61,7 +61,7 @@ func (s *Shell) setStdioThru() {
 	cfg.Stdin = s.stdin
 	cfg.Stdout = s.stdout
 	cfg.Stderr = s.stderr
-	s.rl.SetConfig(cfg)
+	_ = s.rl.SetConfig(cfg)
 
 	if s.mod == nil {
 		return
