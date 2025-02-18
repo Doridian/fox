@@ -143,7 +143,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	}
 
 	c.waitSync.Add(1)
-	c.mod.addCmd(c)
+	addCmd(c)
 	go func() {
 		if c.iCmd != nil {
 			code, err := c.iCmd.RunAs(c.gocmd)

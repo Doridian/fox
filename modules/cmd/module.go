@@ -143,7 +143,7 @@ func (m *LuaModule) PrePrompt() {
 	}
 }
 
-func (m *LuaModule) addCmd(cmd *Cmd) {
+func addCmd(cmd *Cmd) {
 	cmdRegLock.Lock()
 	allCmds[cmd] = true
 	cmdRegLock.Unlock()
