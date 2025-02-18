@@ -12,4 +12,5 @@ import (
 	_ "github.com/Doridian/fox/modules/os"
 	_ "github.com/Doridian/fox/modules/readline"
 	_ "github.com/Doridian/fox/modules/time"
+	_ "github.com/Doridian/fox/modules/vars"
 )

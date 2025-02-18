@@ -3,9 +3,11 @@ package integrated
 import (
 	"context"
 	"io"
-	"log"
 	"os/exec"
 	"strings"
+
+	"github.com/Doridian/fox/modules/vars"
+	lua "github.com/yuin/gopher-lua"
 )
 
 type SetCmd struct {
@@ -34,8 +36,7 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		varKey = varKey[:eqPos]
 	}
 
-	// TODO: Set some global table thingie
-	log.Printf("VAR %s = %s", varKey, varVal)
+	vars.Set(varKey, lua.LString(varVal))
 
 	return 0, nil
 }

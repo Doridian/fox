@@ -1,4 +1,4 @@
-package info
+package vars
 
 import (
 	"github.com/Doridian/fox/modules"
@@ -6,15 +6,9 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const LuaName = "go:info"
+const LuaName = "go:vars"
 
-var infoTable map[string]lua.LString
-
-func init() {
-	infoTable = make(map[string]lua.LString)
-	infoTable["version"] = lua.LString(version)
-	infoTable["gitrev"] = lua.LString(gitrev)
-}
+var varTable = make(map[string]lua.LString)
 
 type LuaModule struct {
 }
@@ -25,8 +19,9 @@ func newLuaModule(loader *loader.LuaModule) modules.LuaModule {
 
 func (m *LuaModule) Loader(L *lua.LState) int {
 	mod := L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"__index": infoIndex,
-		"__call":  infoCall,
+		"__index":    varsIndex,
+		"__newindex": varsNewIndex,
+		"__call":     varsCall,
 	})
 	L.SetMetatable(mod, mod)
 	L.Push(mod)
@@ -50,12 +45,7 @@ func (m *LuaModule) PrePrompt() {
 }
 
 func init() {
-	loader.AddModuleDefault(newLuaModule)
-}
-
-func Register(key string, val lua.LString) {
-	if _, ok := infoTable[key]; ok {
-		panic("Info key already registered: " + key)
-	}
-	infoTable[key] = val
+	loader.AddModule(newLuaModule, loader.ModuleConfig{
+		GlobalName: "V",
+	})
 }
