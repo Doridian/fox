@@ -31,6 +31,7 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 			return 1, err
 		}
 		varVal = string(varB)
+		varVal = strings.TrimSuffix(varVal, "\n")
 	} else {
 		varVal = varKey[eqPos+1:]
 		varKey = varKey[:eqPos]
