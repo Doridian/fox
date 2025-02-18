@@ -10,7 +10,7 @@ type Cmd interface {
 	RunAs(gocmd *exec.Cmd) (int, error)
 }
 
-func LookupCmd(arg0 string) Cmd {
+func Lookup(arg0 string) Cmd {
 	switch arg0 {
 	case "echo":
 		return &EchoCmd{}

@@ -115,7 +115,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 
 	var err error
 
-	c.iCmd = integrated.LookupCmd(c.gocmd.Args[0])
+	c.iCmd = integrated.Lookup(c.gocmd.Args[0])
 	if c.iCmd == nil {
 		path := c.gocmd.Args[0]
 		if c.AutoLookPath && !strings.ContainsRune(path, '/') {
