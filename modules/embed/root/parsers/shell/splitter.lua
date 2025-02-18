@@ -70,6 +70,7 @@ function M.run(tokens)
                 if #curCmd.args > 0 then
                     return nil, "cannot have \"" .. token.raw .. "\" in the middle of a command"
                 end
+                curCmd = nil
                 local invLen = token.len
                 if invertNextCmd then
                     invLen = invLen + 1

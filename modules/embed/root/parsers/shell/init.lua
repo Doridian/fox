@@ -7,6 +7,9 @@ local fs = require("go:fs")
 -- TODO?: Implement "(echo A && echo B) | grep A" type subshells
 -- TODO?: Implement \ escaping
 
+local errorOnFail = true
+local errorOnPipeFail = true
+
 local M = {}
 
 local function setGocmdStdio(cmd, name)
@@ -54,14 +57,15 @@ local function setGocmdStdio(cmd, name)
     end
 end
 
-local function startGoCmdDeep(cmd, wait)
+local function startGoCmdDeep(rootCmd, wait)
     local cmds = {}
+    local cmd = rootCmd
     while cmd do
         if wait and not cmd.stdin then
             cmd.gocmd:stdin(shell.stdin, false)
         end
         cmd.gocmd:start()
-        table.insert(cmds, cmd.gocmd)
+        table.insert(cmds, cmd)
         if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
             cmd = cmd.stdin.cmd
         else
@@ -70,11 +74,25 @@ local function startGoCmdDeep(cmd, wait)
     end
 
     if not wait then
-        return
+        return 0
     end
+
+    local exitCode = 0
+    local exitCmd = nil
+    local exitOK = true
     for _, c in pairs(cmds) do
-        c:wait()
+        local exitCodeS = c.gocmd:wait()
+        local exitOKSub = exitCodeS == 0
+        if c.invert then
+            exitOKSub = not exitOKSub
+        end
+        if (not exitOKSub) and c ~= rootCmd then
+            exitCode = exitCodeS
+            exitCmd = c
+            exitOK = false
+        end
     end
+    return exitCode, exitOK, exitCmd
 end
 
 function M.run(strAdd, lineNo, prev)
@@ -120,14 +138,19 @@ function M.run(strAdd, lineNo, prev)
     return function()
         local skipNext = false
         local exitSuccess = true
-        local exitCode
+        local exitCode = 0
+        local exitCmd = nil
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
                 startGoCmdDeep(cmd, false)
             else
                 if not skipNext then
-                    startGoCmdDeep(cmd, true)
+                    local ecSub, okSub, cmdSub = startGoCmdDeep(cmd, true)
                     exitCode = cmd.gocmd:wait()
+                    exitCmd = cmd
+                    if errorOnPipeFail and not okSub then
+                        error("piped command " .. tostring(cmdSub and cmdSub.gocmd) .. " exited with code " .. ecSub)
+                    end
                     exitSuccess = exitCode == 0
                     if cmd.invert then
                         exitSuccess = not exitSuccess
@@ -148,6 +171,11 @@ function M.run(strAdd, lineNo, prev)
                     error("invalid chainToNext: " .. tostring(cmd.chainToNext))
                 end
             end
+        end
+
+        print("exitCode", exitCode)
+        if errorOnFail and not exitSuccess then
+            error("command " .. tostring(exitCmd and exitCmd.gocmd) .. " exited with code " .. exitCode)
         end
     end
 end
