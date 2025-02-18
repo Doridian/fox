@@ -3,6 +3,7 @@ package integrated
 import (
 	"context"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
@@ -19,9 +20,16 @@ func (c *SleepCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	}
 	dur, err := time.ParseDuration(gocmd.Args[1])
 	if err != nil {
-		_, _ = gocmd.Stderr.Write([]byte(err.Error()))
-		_, _ = gocmd.Stderr.Write([]byte("\n"))
-		return 1, nil
+		durF, errF := strconv.ParseFloat(gocmd.Args[1], 64)
+		if errF == nil {
+			dur = time.Duration(durF * float64(time.Second))
+		} else {
+			_, _ = gocmd.Stderr.Write([]byte(err.Error()))
+			_, _ = gocmd.Stderr.Write([]byte("\n"))
+			_, _ = gocmd.Stderr.Write([]byte(errF.Error()))
+			_, _ = gocmd.Stderr.Write([]byte("\n"))
+			return 1, nil
+		}
 	}
 
 	select {
