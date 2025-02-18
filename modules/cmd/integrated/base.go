@@ -26,6 +26,8 @@ func LookupCmd(arg0 string) Cmd {
 		return &PwdCmd{}
 	case "exit":
 		return &ExitCmd{}
+	case "sleep":
+		return &SleepCmd{}
 	}
 
 	return nil

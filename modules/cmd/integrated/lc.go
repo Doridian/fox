@@ -15,7 +15,7 @@ var _ Cmd = &LCCmd{}
 
 func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
-		_, _ = gocmd.Stderr.Write([]byte("lc: missing command name\n"))
+		_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
 		return 1, nil
 	}
 

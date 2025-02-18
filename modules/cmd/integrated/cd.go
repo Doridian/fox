@@ -13,7 +13,7 @@ var _ Cmd = &CDCmd{}
 
 func (c *CDCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
-		_, _ = gocmd.Stderr.Write([]byte("cd: missing dir\n"))
+		_, _ = gocmd.Stderr.Write([]byte("missing dir\n"))
 		return 1, nil
 	}
 
