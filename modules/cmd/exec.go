@@ -142,7 +142,6 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 		}
 	}
 
-	_ = c.waitDepStdio(nil, false)
 	c.waitSync.Add(1)
 	c.mod.addCmd(c)
 	go func() {
@@ -154,29 +153,10 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 		} else {
 			_ = c.gocmd.Wait()
 		}
-		_ = c.waitDepStdio(nil, true)
 		handleCmdExitNoLock(nil, nil, 0, c)
 		c.waitSync.Done()
 	}()
 
-	return nil
-}
-
-func (c *Cmd) ensureRan(L *lua.LState, doAwait bool) error {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
-	if err := c.prepareAndStartNoLock(true); err != nil {
-		retC := handleCmdExitNoLock(L, err, ExitCodeProcessCouldNotStart, c)
-		if retC > 0 {
-			L.Pop(retC)
-		}
-		return err
-	}
-
-	if doAwait {
-		c.doWaitCmdNoLock()
-	}
 	return nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"io"
 
 	luaio "github.com/Doridian/fox/modules/io"
-	"github.com/Doridian/fox/modules/pipe"
 	"github.com/Doridian/fox/shell"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -30,14 +29,16 @@ func setStdin(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stdin = nil
+		c.stdinPipe = nil
 		c.stdinCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	pipeIo, ud := luaio.Check(L, 2)
-	if !ioCanRead(pipeIo) {
+	ioL, ud := luaio.Check(L, 2)
+	r, ok := ioL.(io.Reader)
+	if !ok {
 		L.ArgError(2, "pipe must be a reader")
 		return 0
 	}
@@ -45,19 +46,15 @@ func setStdin(L *lua.LState) int {
 	doClose := L.OptBool(3, true)
 
 	c.lock.Lock()
-	if c.stdin != nil && !ioIsNull(c.stdin) && ioCanWrite(c.stdin) {
-		c.lock.Unlock()
-		L.RaiseError("stdin piped, can't redirect")
-		return 0
-	}
+	defer c.lock.Unlock()
 
-	c.stdin = pipeIo
+	c.stdin = r
+	c.stdinPipe = nil
 	if doClose {
-		c.stdinCloser, _ = pipeIo.(io.Closer)
+		c.stdinCloser, _ = ioL.(io.Closer)
 	} else {
 		c.stdinCloser = nil
 	}
-	c.lock.Unlock()
 	L.Push(ud)
 	return 1
 }
@@ -69,8 +66,8 @@ func acquireStdinPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stdin != nil && !ioIsNull(c.stdin) && ioCanWrite(c.stdin) {
-		p := c.stdin
+	if c.stdinPipe != nil {
+		p := c.stdinPipe
 		c.lock.Unlock()
 		return luaio.PushNew(L, p)
 	}
@@ -82,11 +79,11 @@ func acquireStdinPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewPipe(c, "stdin", c.gocmd.Stdin, stdinPipe, stdinPipe)
-	c.stdin = p
+	c.stdin = nil
+	c.stdinPipe = stdinPipe
 	c.stdinCloser, _ = c.gocmd.Stdin.(io.Closer)
 	c.lock.Unlock()
-	return p.PushNew(L)
+	return luaio.PushNew(L, stdinPipe)
 }
 
 func getStderr(L *lua.LState) int {
@@ -110,14 +107,16 @@ func setStderr(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stderr = nil
+		c.stderrPipe = nil
 		c.stderrCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	pipeIo, ud := luaio.Check(L, 2)
-	if !ioCanWrite(pipeIo) {
+	ioL, ud := luaio.Check(L, 2)
+	w, ok := ioL.(io.Writer)
+	if !ok {
 		L.ArgError(2, "pipe must be a writer")
 		return 0
 	}
@@ -125,19 +124,15 @@ func setStderr(L *lua.LState) int {
 	doClose := L.OptBool(3, true)
 
 	c.lock.Lock()
-	if c.stderr != nil && !ioIsNull(c.stderr) && ioCanRead(c.stderr) {
-		c.lock.Unlock()
-		L.RaiseError("stderr piped, can't redirect")
-		return 0
-	}
+	defer c.lock.Unlock()
 
-	c.stderr = pipeIo
+	c.stderr = w
+	c.stderrPipe = nil
 	if doClose {
-		c.stderrCloser, _ = pipeIo.(io.Closer)
+		c.stderrCloser, _ = ioL.(io.Closer)
 	} else {
 		c.stderrCloser = nil
 	}
-	c.lock.Unlock()
 	L.Push(ud)
 	return 1
 }
@@ -149,8 +144,8 @@ func acquireStderrPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stderr != nil && !ioIsNull(c.stderr) && ioCanRead(c.stderr) {
-		p := c.stderr
+	if c.stderrPipe != nil {
+		p := c.stderrPipe
 		c.lock.Unlock()
 		return luaio.PushNew(L, p)
 	}
@@ -162,11 +157,11 @@ func acquireStderrPipe(L *lua.LState) int {
 		return 0
 	}
 
-	p := pipe.NewPipe(c, "stdout", stderrPipe, c.gocmd.Stderr, stderrPipe)
-	c.stderr = p
+	c.stderr = nil
+	c.stderrPipe = stderrPipe
 	c.stderrCloser, _ = c.gocmd.Stderr.(io.Closer)
 	c.lock.Unlock()
-	return p.PushNew(L)
+	return luaio.PushNew(L, stderrPipe)
 }
 
 func getStdout(L *lua.LState) int {
@@ -190,14 +185,16 @@ func setStdout(L *lua.LState) int {
 	if L.Get(2) == lua.LNil {
 		c.lock.Lock()
 		c.stdout = nil
+		c.stdoutPipe = nil
 		c.stdoutCloser = nil
 		c.lock.Unlock()
 		L.Push(ud)
 		return 1
 	}
 
-	pipeIo, ud := luaio.Check(L, 2)
-	if !ioCanWrite(pipeIo) {
+	ioL, ud := luaio.Check(L, 2)
+	w, ok := ioL.(io.Writer)
+	if !ok {
 		L.ArgError(2, "pipe must be a writer")
 		return 0
 	}
@@ -205,19 +202,15 @@ func setStdout(L *lua.LState) int {
 	doClose := L.OptBool(3, true)
 
 	c.lock.Lock()
-	if c.stdout != nil && !ioIsNull(c.stdout) && ioCanRead(c.stdout) {
-		c.lock.Unlock()
-		L.RaiseError("stdout piped, can't redirect")
-		return 0
-	}
+	defer c.lock.Unlock()
 
-	c.stdout = pipeIo
+	c.stdout = w
+	c.stdoutPipe = nil
 	if doClose {
-		c.stdoutCloser, _ = pipeIo.(io.Closer)
+		c.stdoutCloser, _ = ioL.(io.Closer)
 	} else {
 		c.stdoutCloser = nil
 	}
-	c.lock.Unlock()
 	L.Push(ud)
 	return 1
 }
@@ -229,8 +222,8 @@ func acquireStdoutPipe(L *lua.LState) int {
 	}
 
 	c.lock.Lock()
-	if c.stdout != nil && !ioIsNull(c.stdout) && ioCanRead(c.stdout) {
-		p := c.stdout
+	if c.stdoutPipe != nil {
+		p := c.stdoutPipe
 		c.lock.Unlock()
 		return luaio.PushNew(L, p)
 	}
@@ -241,64 +234,36 @@ func acquireStdoutPipe(L *lua.LState) int {
 		L.RaiseError("%v", err)
 		return 0
 	}
-	p := pipe.NewPipe(c, "stdout", stdoutPipe, c.gocmd.Stdout, stdoutPipe)
-	c.stdout = p
+
+	c.stdout = nil
+	c.stdoutPipe = stdoutPipe
 	c.stdoutCloser, _ = c.gocmd.Stdout.(io.Closer)
 	c.lock.Unlock()
-	return p.PushNew(L)
+	return luaio.PushNew(L, stdoutPipe)
 }
 
 func (c *Cmd) setupStdio(defaultStdin bool) error {
 	if c.stdout != nil {
-		if !c.ioIsSelf(c.stdout) {
-			c.gocmd.Stdout = c.stdout.(io.Writer)
-		}
-	} else {
+		c.gocmd.Stdout = c.stdout
+	} else if c.stdoutPipe == nil {
 		c.gocmd.Stdout = shell.StdoutFor(c.mod.loader)
 	}
 	if c.stderr != nil {
-		if !c.ioIsSelf(c.stderr) {
-			c.gocmd.Stderr = c.stderr.(io.Writer)
-		}
-	} else {
+		c.gocmd.Stderr = c.stderr
+	} else if c.stderrPipe == nil {
 		c.gocmd.Stderr = shell.StderrFor(c.mod.loader)
 	}
 	if c.stdin != nil {
-		if !c.ioIsSelf(c.stdin) {
-			c.gocmd.Stdin = c.stdin.(io.Reader)
+		c.gocmd.Stdin = c.stdin
+	} else if c.stdinPipe == nil {
+		if defaultStdin {
+			c.gocmd.Stdin = shell.StdinFor(c.mod.loader)
+		} else {
+			c.gocmd.Stdin = nil
 		}
-	} else if defaultStdin {
-		c.gocmd.Stdin = shell.StdinFor(c.mod.loader)
-	} else {
-		c.gocmd.Stdin = nil
 	}
 
 	return nil
-}
-
-func (c *Cmd) waitDepStdio(L *lua.LState, doAwait bool) error {
-	c.lock.RLock()
-	stdin := c.stdin
-	c.lock.RUnlock()
-
-	if stdin == nil {
-		return nil
-	}
-	stdinPipe, ok := stdin.(*pipe.Pipe)
-	if !ok {
-		return nil
-	}
-	creator := stdinPipe.Creator()
-	if creator == nil {
-		return nil
-	}
-
-	cmd, ok := creator.(*Cmd)
-	if !ok || cmd == nil || cmd == c {
-		return nil
-	}
-
-	return cmd.ensureRan(L, doAwait)
 }
 
 func (c *Cmd) releaseStdioNoLock() error {

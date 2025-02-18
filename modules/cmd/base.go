@@ -17,12 +17,17 @@ const (
 )
 
 type Cmd struct {
-	stdout       interface{}
+	stdout       io.Writer
+	stdoutPipe   io.Reader
 	stdoutCloser io.Closer
-	stderr       interface{}
+
+	stderr       io.Writer
 	stderrCloser io.Closer
-	stdin        interface{}
-	stdinCloser  io.Closer
+	stderrPipe   io.Reader
+
+	stdin       io.Reader
+	stdinCloser io.Closer
+	stdinPipe   io.Writer
 
 	awaited    bool
 	foreground bool

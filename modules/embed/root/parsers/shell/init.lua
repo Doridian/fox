@@ -51,6 +51,26 @@ local function setGocmdStdio(cmd, name)
     end
 end
 
+local function startGoCmdDeep(cmd, wait)
+    local cmds = {}
+    while cmd do
+        cmd.gocmd:start()
+        table.insert(cmds, cmd.gocmd)
+        if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
+            cmd = cmd.stdin.cmd
+        else
+            cmd = nil
+        end
+    end
+
+    if not wait then
+        return
+    end
+    for _, c in pairs(cmds) do
+        c:wait()
+    end
+end
+
 function M.run(strAdd, lineNo, prev)
     local parsed = (prev or "") .. strAdd .. "\n"
 
@@ -97,10 +117,11 @@ function M.run(strAdd, lineNo, prev)
         local exitCode
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
-                cmd.gocmd:start()
+                startGoCmdDeep(cmd, false)
             else
                 if not skipNext then
-                    exitCode = cmd.gocmd:run()
+                    startGoCmdDeep(cmd, true)
+                    exitCode = cmd.gocmd:wait()
                     exitSuccess = exitCode == 0
                     if cmd.invert then
                         exitSuccess = not exitSuccess
