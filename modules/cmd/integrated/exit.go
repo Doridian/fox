@@ -20,8 +20,8 @@ func (c *ExitCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 
 	code, err := strconv.ParseInt(gocmd.Args[1], 10, 32)
 	if err != nil {
-		gocmd.Stderr.Write([]byte(err.Error()))
-		gocmd.Stderr.Write([]byte("\n"))
+		_, _ = gocmd.Stderr.Write([]byte(err.Error()))
+		_, _ = gocmd.Stderr.Write([]byte("\n"))
 		code = 1
 	}
 	os.Exit(int(code))
