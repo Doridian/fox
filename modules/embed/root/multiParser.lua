@@ -66,7 +66,7 @@ function M.run(cmdAdd, lineNo, prev)
             return prev, true
         elseif cmdPrefix == "=" or cmdAdd:sub(1, 2) == "--" then
             -- noop
-        elseif cmdPrefix == "/" then
+        elseif cmdPrefix == "\\" then
             cmdAdd = cmdAdd:sub(2)
         elseif M.defaultParser then
             prev.parser = mustGetParser(M.defaultParser)
