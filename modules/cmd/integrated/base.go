@@ -24,6 +24,8 @@ func LookupCmd(arg0 string) Cmd {
 		return &CDCmd{}
 	case "pwd":
 		return &PwdCmd{}
+	case "exit":
+		return &ExitCmd{}
 	}
 
 	return nil
