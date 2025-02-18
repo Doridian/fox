@@ -1,6 +1,7 @@
 package fox
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"log"
@@ -38,7 +39,7 @@ var skipArg0 = false
 
 func Main() error {
 	var err error
-	s := shell.New()
+	s := shell.New(context.Background())
 
 	forceShell := false
 	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {

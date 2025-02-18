@@ -30,9 +30,11 @@ function shell.setHistoryFile(file)
 end
 shell.setHistoryFile(baseDir .. "/history")
 
-shell.runCommand = function(_)
-    local gocmd = cmd:new(shell.args())
-    return gocmd:run()
+shell.runCommand = function(cmd)
+    print("Running", cmd, "with args")
+    for i, arg in pairs(shell.args()) do
+        print("ARG", i, arg)
+    end
 end
 
 if shell.interactive() then

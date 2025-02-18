@@ -27,7 +27,7 @@ var ErrShellNotInited = errors.New("shell not initialized")
 
 // TODO: Handle SIGTERM
 
-func New() *Shell {
+func New(mCtx context.Context) *Shell {
 	rl, err := readline.New("?fox?> ")
 	if err != nil {
 		log.Panicf("Error initializing readline: %v", err)
@@ -43,6 +43,7 @@ func New() *Shell {
 		stdout:     os.Stdout,
 		stderr:     os.Stderr,
 		ShowErrors: true,
+		mCtx:       mCtx,
 	}
 
 	return s
@@ -369,7 +370,7 @@ func (s *Shell) RunPrompt() error {
 
 func (s *Shell) startLuaLock() {
 	s.lLock.Lock()
-	s.ctx, s.cancelCtx = context.WithCancel(context.Background())
+	s.ctx, s.cancelCtx = context.WithCancel(s.mCtx)
 	s.l.SetContext(s.ctx)
 }
 

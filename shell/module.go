@@ -15,6 +15,7 @@ const LuaName = "go:shell"
 type Shell struct {
 	args        []string
 	interactive bool
+	mCtx        context.Context
 
 	l     *lua.LState
 	lLock sync.Mutex
@@ -46,6 +47,14 @@ func (s *Shell) Interrupt() bool {
 
 func (s *Shell) Name() string {
 	return LuaName
+}
+
+func (s *Shell) Close() {
+	_ = s.rl.Close()
+	s.l.Close()
+	if s.cancelCtx != nil {
+		s.cancelCtx()
+	}
 }
 
 func (s *Shell) PrePrompt() {

@@ -18,8 +18,8 @@ func LookupCmd(arg0 string) Cmd {
 		return &ExportCmd{}
 	case "set":
 		return &SetCmd{}
-	case "psi":
-		return &PSICmd{}
+	case "lc":
+		return &LCCmd{}
 	}
 
 	return nil
