@@ -8,7 +8,9 @@ import (
 func varsIndex(L *lua.LState) int {
 	k := L.CheckString(2)
 
+	varLock.Lock()
 	v, ok := varTable[k]
+	varLock.Unlock()
 	if !ok {
 		L.Push(lua.LNil)
 		return 1
@@ -22,7 +24,10 @@ func varsIndex(L *lua.LState) int {
 func varsNewIndex(L *lua.LState) int {
 	k := L.CheckString(2)
 	v := L.CheckString(3)
+
+	varLock.Lock()
 	varTable[k] = lua.LString(v)
+	varLock.Unlock()
 
 	return 1
 }
@@ -31,9 +36,11 @@ func varsNewIndex(L *lua.LState) int {
 func varsCall(L *lua.LState) int {
 	ret := L.NewTable()
 
+	varLock.Lock()
 	for name, val := range varTable {
 		ret.RawSetString(name, val)
 	}
+	varLock.Unlock()
 
 	L.Push(ret)
 	return 1

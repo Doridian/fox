@@ -1,6 +1,8 @@
 package vars
 
 import (
+	"sync"
+
 	"github.com/Doridian/fox/modules"
 	"github.com/Doridian/fox/modules/loader"
 	lua "github.com/yuin/gopher-lua"
@@ -9,6 +11,7 @@ import (
 const LuaName = "go:vars"
 
 var varTable = make(map[string]lua.LString)
+var varLock sync.Mutex
 
 type LuaModule struct {
 }
