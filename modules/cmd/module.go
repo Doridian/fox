@@ -17,6 +17,7 @@ const LuaType = LuaName + ":" + LuaTypeName
 
 var allCmds = make(map[*Cmd]bool)
 var cmdRegLock sync.Mutex
+var interactiveModeNeeded = false
 
 type LuaModule struct {
 	loader *loader.LuaModule
@@ -112,6 +113,7 @@ func (m *LuaModule) Interrupt() bool {
 func (m *LuaModule) PrePrompt() {
 	cmdRegLock.Lock()
 	defer cmdRegLock.Unlock()
+	interactiveModeNeeded = true
 
 	toDelete := make([]*Cmd, 0)
 	for cmd := range allCmds {
@@ -151,6 +153,12 @@ func (m *LuaModule) PrePrompt() {
 func addCmd(cmd *Cmd) {
 	cmdRegLock.Lock()
 	allCmds[cmd] = true
+	cmdRegLock.Unlock()
+}
+
+func delCmd(cmd *Cmd) {
+	cmdRegLock.Lock()
+	delete(allCmds, cmd)
 	cmdRegLock.Unlock()
 }
 
