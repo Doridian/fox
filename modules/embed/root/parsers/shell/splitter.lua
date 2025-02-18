@@ -19,7 +19,7 @@ function M.run(tokens)
         if not curCmd then
             curCmd = {
                 args = {},
-                invert = invertNextCmd,
+                invert = false,
                 stdin = stdinNextCmd,
                 stdout = nil,
                 stderr = nil,
@@ -27,7 +27,6 @@ function M.run(tokens)
                 background = false,
             }
             stdinNextCmd = nil
-            invertNextCmd = false
         end
 
         if token.type == tokenizer.ArgTypeString then
@@ -70,12 +69,11 @@ function M.run(tokens)
                 if #curCmd.args > 0 then
                     return nil, "cannot have \"" .. token.raw .. "\" in the middle of a command"
                 end
-                curCmd = nil
                 local invLen = token.len
-                if invertNextCmd then
+                if curCmd.invert then
                     invLen = invLen + 1
                 end
-                invertNextCmd = (invLen % 2) == 1
+                curCmd.invert = (invLen % 2) == 1
             elseif token.val == "<" or token.val == ">" then
                 if #curCmd.args < 1 then
                     return nil, "cannot redirect stdin/out/err of nothing"
