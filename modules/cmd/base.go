@@ -39,6 +39,7 @@ type Cmd struct {
 	iCancel context.CancelFunc
 	iExit   int
 	iErr    error
+	iDone   bool
 
 	lock            sync.RWMutex
 	gocmd           *exec.Cmd

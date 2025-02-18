@@ -101,7 +101,7 @@ func (m *LuaModule) Interrupt() bool {
 		}
 
 		if cmd.gocmd.ProcessState == nil && cmd.gocmd.Process != nil {
-			_ = cmd.gocmd.Process.Kill()
+			cmd.Stop()
 			triedKill = true
 		}
 	}
@@ -120,6 +120,11 @@ func (m *LuaModule) PrePrompt() {
 		if cmd.gocmd.ProcessState != nil {
 			exited = true
 			exitCode = cmd.gocmd.ProcessState.ExitCode()
+		}
+
+		if cmd.iCmd != nil {
+			exitCode = cmd.iExit
+			exited = cmd.iDone
 		}
 
 		if !exited {

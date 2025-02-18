@@ -149,6 +149,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 			code, err := c.iCmd.RunAs(c.gocmd)
 			c.iErr = err
 			c.iExit = code
+			c.iDone = true
 			c.iCancel()
 		} else {
 			_ = c.gocmd.Wait()
@@ -166,6 +167,12 @@ func doKill(L *lua.LState) int {
 		return 0
 	}
 
+	c.Stop()
+	L.Push(ud)
+	return 1
+}
+
+func (c *Cmd) Stop() {
 	c.startLock.Lock()
 	defer c.startLock.Unlock()
 
@@ -175,7 +182,4 @@ func doKill(L *lua.LState) int {
 	if c.iCancel != nil {
 		c.iCancel()
 	}
-
-	L.Push(ud)
-	return 1
 }
