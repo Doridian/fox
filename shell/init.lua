@@ -23,21 +23,22 @@ fs.mkdirAll(baseDir)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-function shell.setHistoryFile(file)
-    local readlineConfig = shell.getReadlineConfig()
-    readlineConfig:historyFile(file)
-    shell.readlineConfig(readlineConfig)
-end
-shell.setHistoryFile(baseDir .. "/history")
 
-shell.runCommand = function(cmd)
-    print("Running", cmd, "with args")
+shell.runCommand = function(arg0)
+    print("Running", arg0, "with args")
     for i, arg in pairs(shell.args()) do
         print("ARG", i, arg)
     end
 end
 
 if shell.interactive() then
+    function shell.setHistoryFile(file)
+        local readlineConfig = shell.getReadlineConfig()
+        readlineConfig:historyFile(file)
+        shell.readlineConfig(readlineConfig)
+    end
+    shell.setHistoryFile(baseDir .. "/history")
+
     local mp = require("embed:multiParser")
     mp.defaultParser = "shell"
     shell.parser = mp.run

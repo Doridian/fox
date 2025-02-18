@@ -111,37 +111,56 @@ func (m *LuaModule) Interrupt() bool {
 }
 
 func (m *LuaModule) PrePrompt() {
+	interactiveModeNeeded = true
+	cleanupProcs()
+}
+
+func cleanupProc(cmd *Cmd) {
 	cmdRegLock.Lock()
 	defer cmdRegLock.Unlock()
-	interactiveModeNeeded = true
+
+	if cleanupProcNoLock(cmd) {
+		delete(allCmds, cmd)
+	}
+}
+
+func cleanupProcNoLock(cmd *Cmd) bool {
+	exited := cmd.gocmd.Process == nil
+	exitCode := 0
+	if cmd.gocmd.ProcessState != nil {
+		exited = true
+		exitCode = cmd.gocmd.ProcessState.ExitCode()
+	}
+
+	if cmd.iCmd != nil {
+		exitCode = cmd.iExit
+		exited = cmd.iDone
+	}
+
+	if !exited {
+		return false
+	}
+
+	if cmd.awaited {
+		return true
+	}
+
+	if exitCode == 0 {
+		log.Printf("job %s exited", cmd.ToString())
+	} else {
+		log.Printf("job %s exited with code %d", cmd.ToString(), exitCode)
+	}
+	return true
+}
+
+func cleanupProcs() {
+	cmdRegLock.Lock()
+	defer cmdRegLock.Unlock()
 
 	toDelete := make([]*Cmd, 0)
 	for cmd := range allCmds {
-		exited := cmd.gocmd.Process == nil
-		exitCode := 0
-		if cmd.gocmd.ProcessState != nil {
-			exited = true
-			exitCode = cmd.gocmd.ProcessState.ExitCode()
-		}
-
-		if cmd.iCmd != nil {
-			exitCode = cmd.iExit
-			exited = cmd.iDone
-		}
-
-		if !exited {
-			continue
-		}
-		toDelete = append(toDelete, cmd)
-
-		if cmd.awaited {
-			continue
-		}
-
-		if exitCode == 0 {
-			log.Printf("job %s exited", cmd.ToString())
-		} else {
-			log.Printf("job %s exited with code %d", cmd.ToString(), exitCode)
+		if cleanupProcNoLock(cmd) {
+			toDelete = append(toDelete, cmd)
 		}
 	}
 

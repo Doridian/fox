@@ -34,6 +34,15 @@ func (s *Shell) luaSetReadlineConfig(L *lua.LState) int {
 		return 0
 	}
 
+	if s.rl == nil {
+		L.Push(lua.LNil)
+		return 1
+	}
+
+	cfg.Stdin = s.stdin
+	cfg.Stdout = s.stdout
+	cfg.Stderr = s.stderr
+
 	rl, err := goreadline.NewFromConfig(cfg)
 	if err != nil {
 		L.RaiseError("%v", err)
@@ -47,6 +56,10 @@ func (s *Shell) luaSetReadlineConfig(L *lua.LState) int {
 }
 
 func (s *Shell) luaGetReadlineConfig(L *lua.LState) int {
+	if s.rl == nil {
+		L.Push(lua.LNil)
+		return 1
+	}
 	config.PushNew(L, s.rl.GetConfig())
 	return 1
 }

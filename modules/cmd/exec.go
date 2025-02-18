@@ -11,8 +11,10 @@ import (
 
 func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd) int {
 	_ = c.releaseStdioNoLock()
-	if c.awaited || !interactiveModeNeeded {
+	if c.awaited {
 		delCmd(c)
+	} else if !interactiveModeNeeded {
+		cleanupProc(c)
 	}
 
 	if L == nil {

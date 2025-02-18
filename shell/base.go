@@ -51,11 +51,13 @@ func (s *Shell) SetStdio(in io.Reader, out io.Writer, err io.Writer) {
 }
 
 func (s *Shell) setStdioThru() {
-	cfg := s.rl.GetConfig()
-	cfg.Stdin = s.stdin
-	cfg.Stdout = s.stdout
-	cfg.Stderr = s.stderr
-	_ = s.rl.SetConfig(cfg)
+	if s.rl != nil {
+		cfg := s.rl.GetConfig()
+		cfg.Stdin = s.stdin
+		cfg.Stdout = s.stdout
+		cfg.Stderr = s.stderr
+		_ = s.rl.SetConfig(cfg)
+	}
 
 	if s.mod == nil {
 		return
