@@ -175,7 +175,6 @@ function M.run(strAdd, lineNo, prev)
             end
         end
 
-        print("exitCode", exitCode)
         if errorOnFail and not exitSuccess then
             shell.stderr:print("command " .. tostring(exitCmd and exitCmd.gocmd) .. " exited with code " .. exitCode)
         end
