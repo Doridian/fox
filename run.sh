@@ -11,6 +11,7 @@ goldflags="${GOLDFLAGS-}"
 startdir="$(pwd)"
 mkdir -p src
 srcdir="${startdir}/src"
+rm -rf ./src/fox
 
 prepare
 build
