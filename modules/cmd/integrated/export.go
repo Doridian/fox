@@ -11,7 +11,14 @@ import (
 type ExportCmd struct {
 }
 
+var _ Cmd = &ExportCmd{}
+
 func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+	if len(gocmd.Args) < 2 {
+		gocmd.Stderr.Write([]byte("export: missing variable name\n"))
+		return 1, nil
+	}
+
 	varKey := gocmd.Args[1]
 	var varVal string
 
@@ -33,5 +40,3 @@ func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *ExportCmd) SetContext(ctx context.Context) {
 
 }
-
-var _ Cmd = &ExportCmd{}

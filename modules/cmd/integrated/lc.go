@@ -11,7 +11,14 @@ type LCCmd struct {
 	ctx context.Context
 }
 
+var _ Cmd = &LCCmd{}
+
 func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+	if len(gocmd.Args) < 2 {
+		gocmd.Stderr.Write([]byte("lc: missing command name\n"))
+		return 1, nil
+	}
+
 	subShell := shell.New(c.ctx)
 	defer subShell.Close()
 
@@ -30,5 +37,3 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *LCCmd) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
-
-var _ Cmd = &LCCmd{}

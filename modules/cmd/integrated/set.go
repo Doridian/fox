@@ -11,7 +11,14 @@ import (
 type SetCmd struct {
 }
 
+var _ Cmd = &SetCmd{}
+
 func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+	if len(gocmd.Args) < 2 {
+		gocmd.Stderr.Write([]byte("set: missing variable name\n"))
+		return 1, nil
+	}
+
 	varKey := gocmd.Args[1]
 	var varVal string
 
@@ -36,5 +43,3 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 func (c *SetCmd) SetContext(ctx context.Context) {
 
 }
-
-var _ Cmd = &SetCmd{}

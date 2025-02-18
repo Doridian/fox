@@ -20,6 +20,10 @@ func LookupCmd(arg0 string) Cmd {
 		return &SetCmd{}
 	case "lc":
 		return &LCCmd{}
+	case "cd":
+		return &CDCmd{}
+	case "pwd":
+		return &PwdCmd{}
 	}
 
 	return nil
