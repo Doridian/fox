@@ -4,19 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 
-	_ "embed"
-
-	"io"
-
 	luaio "github.com/Doridian/fox/modules/io"
 	"github.com/Doridian/fox/modules/loader"
 	"github.com/ergochat/readline"
 	lua "github.com/yuin/gopher-lua"
+
+	_ "embed"
 )
 
 //go:embed init.lua
@@ -25,7 +24,8 @@ var initCode string
 var ErrNeedMore = errors.New("need more input")
 var ErrShellNotInited = errors.New("shell not initialized")
 
-// TODO: Handle SIGTERM
+// TODO?: Handle SIGTERM
+// TODO: Wait or stop jobs on shell exit
 
 func New(mCtx context.Context) *Shell {
 	s := &Shell{
