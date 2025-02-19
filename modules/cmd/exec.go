@@ -36,6 +36,7 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 
 	exitCodeL := lua.LNumber(exitCode)
 
+        // TODO: RaiseForBadExit should always be true!
 	if c.RaiseForBadExit && exitCode != 0 {
 		L.RaiseError("command exited with code %d", exitCode)
 		return 0
