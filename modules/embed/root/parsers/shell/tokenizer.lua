@@ -33,8 +33,8 @@ function M.run(parsed)
 
         subEscaped = sub
         if container ~= "'" then
-            getFunc, err = interpolate.run(sub, not container)
-            subEscaped = getFunc()
+            getFunc, err = interpolate.run(sub)
+            subEscaped = interpolate.eval(getFunc, not container)
             sub = subEscaped
             if not getFunc then
                 return nil, "shell.interpolate error: " .. tostring(err)

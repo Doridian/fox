@@ -16,11 +16,11 @@ local M = {}
 -- TODO: Implement ${..-default}
 
 -- return true to indicate that glob processing mode should be enabled
-function M.run(str, escapeGlobs)
+function M.run(str, toks)
     local i = 1
     local varStart, varEnd, varTmp, varType
 
-    local retLazy = {}
+    toks = toks or {}
 
     while i <= #str do
         varStart = str:find("[$%%]", i)
@@ -28,7 +28,7 @@ function M.run(str, escapeGlobs)
             break
         end
 
-        table.insert(retLazy, {
+        table.insert(toks, {
             type = "str",
             value = str:sub(i, varStart - 1)
         })
@@ -50,9 +50,9 @@ function M.run(str, escapeGlobs)
         end
         varTmp = str:sub(varStart + 1, varEnd - 1)
 
-        table.insert(retLazy, {
+        table.insert(toks, {
             type = "func",
-            escape = true,
+            escapeGlobs = true,
             value = function()
                 return vars.get(varType, varTmp)
             end
@@ -61,27 +61,29 @@ function M.run(str, escapeGlobs)
         i = varEnd + 1
     end
 
-    table.insert(retLazy, {
+    table.insert(toks, {
         type = "str",
         value = str:sub(i)
     })
 
-    return function()
-        local ret = ""
-        for _, tok in ipairs(retLazy) do
-            local v
-            if tok.type == "str" then
-                v = tok.value
-            elseif tok.type == "func" then
-                v = tok.value()
-            end
-            if tok.escape and escapeGlobs then
-                v = fs.globEscape(v)
-            end
-            ret = ret .. v
+    return toks
+end
+
+function M.eval(toks, escapeGlobs)
+    local ret = ""
+    for _, tok in ipairs(toks) do
+        local v
+        if tok.type == "str" then
+            v = tok.value
+        elseif tok.type == "func" then
+            v = tok.value()
         end
-        return ret
+        if tok.escapeGlobs and escapeGlobs then
+            v = fs.globEscape(v)
+        end
+        ret = ret .. v
     end
+    return ret
 end
 
 return M
