@@ -5,15 +5,16 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type SleepCmd struct {
-	ctx context.Context
 }
 
 var _ Cmd = &SleepCmd{}
 
-func (c *SleepCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *SleepCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		_, _ = gocmd.Stderr.Write([]byte("missing duration\n"))
 		return 1, nil
@@ -33,15 +34,11 @@ func (c *SleepCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	}
 
 	select {
-	case <-c.ctx.Done():
+	case <-ctx.Done():
 		return 1, nil
 	case <-time.After(dur):
 		return 0, nil
 	}
-}
-
-func (c *SleepCmd) SetContext(ctx context.Context) {
-	c.ctx = ctx
 }
 
 func init() {

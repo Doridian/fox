@@ -3,6 +3,8 @@ package builtin
 import (
 	"context"
 	"os/exec"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type EchoCmd struct {
@@ -10,7 +12,7 @@ type EchoCmd struct {
 
 var _ Cmd = &EchoCmd{}
 
-func (c *EchoCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *EchoCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		return 0, nil
 	}
@@ -23,10 +25,6 @@ func (c *EchoCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	}
 	_, _ = gocmd.Stdout.Write([]byte("\n"))
 	return 0, nil
-}
-
-func (c *EchoCmd) SetContext(ctx context.Context) {
-
 }
 
 func init() {

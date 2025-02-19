@@ -23,6 +23,16 @@ func (s *Shell) luaGetArgs(L *lua.LState) int {
 	return 1
 }
 
+func (s *Shell) luaPopArgs(L *lua.LState) int {
+	if len(s.args) == 0 {
+		return 0
+	}
+
+	count := L.CheckInt(1)
+	s.args = s.args[count:]
+	return 0
+}
+
 func (s *Shell) luaIsInteractive(L *lua.LState) int {
 	L.Push(lua.LBool(s.interactive))
 	return 1

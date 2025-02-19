@@ -95,6 +95,7 @@ func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":        luaExit,
 		"args":        s.luaGetArgs,
+		"popArgs":     s.luaPopArgs,
 		"interactive": s.luaIsInteractive,
 
 		"readlineConfig":    s.luaSetReadlineConfig,

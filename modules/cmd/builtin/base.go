@@ -3,11 +3,12 @@ package builtin
 import (
 	"context"
 	"os/exec"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type Cmd interface {
-	SetContext(ctx context.Context)
-	RunAs(gocmd *exec.Cmd) (int, error)
+	RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error)
 }
 
 var cmdMap = make(map[string]func() Cmd)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"os/exec"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type PwdCmd struct {
@@ -11,7 +13,7 @@ type PwdCmd struct {
 
 var _ Cmd = &PwdCmd{}
 
-func (c *PwdCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *PwdCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return 1, err

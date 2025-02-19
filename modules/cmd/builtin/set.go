@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/modules/vars"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -17,7 +18,7 @@ type SetCmd struct {
 
 var _ Cmd = &SetCmd{}
 
-func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *SetCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	flags := flag.NewFlagSet("set", flag.ContinueOnError)
 	flags.SetOutput(gocmd.Stderr)
 	rawPtr := flags.Bool("r", false, "raw (do not strip trailing newline)")

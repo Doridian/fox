@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type ExitCmd struct {
@@ -12,7 +14,7 @@ type ExitCmd struct {
 
 var _ Cmd = &ExitCmd{}
 
-func (c *ExitCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *ExitCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		os.Exit(0)
 		return 0, nil
@@ -26,10 +28,6 @@ func (c *ExitCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 	}
 	os.Exit(int(code))
 	return int(code), nil
-}
-
-func (c *ExitCmd) SetContext(ctx context.Context) {
-
 }
 
 func init() {

@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type ExportCmd struct {
@@ -15,7 +17,7 @@ type ExportCmd struct {
 
 var _ Cmd = &ExportCmd{}
 
-func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *ExportCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	flags := flag.NewFlagSet("set", flag.ContinueOnError)
 	flags.SetOutput(gocmd.Stderr)
 	rawPtr := flags.Bool("r", false, "raw (do not strip trailing newline)")
@@ -47,10 +49,6 @@ func (c *ExportCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		varVal = strings.TrimSuffix(varVal, "\n")
 	}
 	return 0, os.Setenv(varKey, varVal)
-}
-
-func (c *ExportCmd) SetContext(ctx context.Context) {
-
 }
 
 func init() {

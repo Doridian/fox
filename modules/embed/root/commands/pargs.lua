@@ -3,7 +3,7 @@ local shell = require("go:shell")
 local M = {}
 
 function M.run(...)
-    local args = shell.rootArgs()
+    local args = shell.args()
     for i, v in ipairs(args) do
         print(i, v)
     end

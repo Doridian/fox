@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"os/exec"
+
+	"github.com/Doridian/fox/modules/loader"
 )
 
 type CDCmd struct {
@@ -11,7 +13,7 @@ type CDCmd struct {
 
 var _ Cmd = &CDCmd{}
 
-func (c *CDCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *CDCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		_, _ = gocmd.Stderr.Write([]byte("missing dir\n"))
 		return 1, nil
@@ -24,10 +26,6 @@ func (c *CDCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		return 1, nil
 	}
 	return 0, nil
-}
-
-func (c *CDCmd) SetContext(ctx context.Context) {
-
 }
 
 func init() {

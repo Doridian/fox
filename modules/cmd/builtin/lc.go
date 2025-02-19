@@ -4,16 +4,16 @@ import (
 	"context"
 	"os/exec"
 
+	"github.com/Doridian/fox/modules/loader"
 	"github.com/Doridian/fox/shell"
 )
 
 type LCCmd struct {
-	ctx context.Context
 }
 
 var _ Cmd = &LCCmd{}
 
-func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
+func (c *LCCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
 		return 1, nil
@@ -21,17 +21,18 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 
 	subArgs := gocmd.Args[1:]
 
-	if gocmd.Args[1] == "-p" {
-		if len(gocmd.Args) < 3 {
+	if subArgs[0] == "-p" {
+		if len(subArgs) < 2 {
 			_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
 			return 1, nil
 		}
 
-		var currentShell *shell.Shell // TODO: How to get the current shell?
-		subArgs = currentShell.GetArgs()
+		subArgs = subArgs[1:]
+		currentShell := loader.GetModule(shell.LuaName).(*shell.Shell)
+		subArgs = append(subArgs, currentShell.GetArgs()...)
 	}
 
-	subShell := shell.New(c.ctx)
+	subShell := shell.New(ctx)
 	subShell.ShowErrors = false
 	defer subShell.Close()
 
@@ -40,15 +41,11 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		return 1, err
 	}
 	subShell.SetStdio(gocmd.Stdin, gocmd.Stdout, gocmd.Stderr)
-	err = subShell.RunCommand(gocmd.Args[1])
+	err = subShell.RunCommand(subArgs[0])
 	if err != nil {
 		return 1, err
 	}
 	return 0, nil
-}
-
-func (c *LCCmd) SetContext(ctx context.Context) {
-	c.ctx = ctx
 }
 
 func init() {

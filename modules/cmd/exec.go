@@ -36,7 +36,7 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 
 	exitCodeL := lua.LNumber(exitCode)
 
-        // TODO: RaiseForBadExit should always be true!
+	// TODO: RaiseForBadExit should always be true!
 	if c.RaiseForBadExit && exitCode != 0 {
 		L.RaiseError("command exited with code %d", exitCode)
 		return 0
@@ -142,7 +142,6 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 
 	if c.iCmd != nil {
 		c.iCtx, c.iCancel = context.WithCancel(context.Background())
-		c.iCmd.SetContext(c.iCtx)
 	} else {
 		err = c.gocmd.Start()
 		if err != nil {
@@ -154,7 +153,7 @@ func (c *Cmd) prepareAndStartNoLock(foreground bool) error {
 	addCmd(c)
 	go func() {
 		if c.iCmd != nil {
-			code, err := c.iCmd.RunAs(c.gocmd)
+			code, err := c.iCmd.RunAs(c.iCtx, c.mod.loader, c.gocmd)
 			c.iErr = err
 			c.iExit = code
 			c.iDone = true
