@@ -27,6 +27,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), IndexFuncs()))
+	mt.RawSetString("__tostring", L.NewFunction(ioToString))
 	mod.RawSetString(LuaTypeName, mt)
 
 	L.Push(mod)

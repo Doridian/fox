@@ -83,7 +83,7 @@ function M.singleToken(str, escapeGlobs)
     }
 end
 
-function M.eval(toks)
+function M.eval(toks, noFuncs, noGlobs)
     local ret = {}
     local retEsc = {}
 
@@ -94,9 +94,12 @@ function M.eval(toks)
             v = tok.value
         elseif tok.type == M.InterpTypeFunc then
             v = tok.value()
+            if noFuncs then
+                return nil, nil
+            end
         end
         vEsc = v
-        if fs.hasGlob(v) then
+        if (not noGlobs) and fs.hasGlob(v) then
             if tok.escapeGlobs then
                 vEsc = fs.globEscape(v)
             else

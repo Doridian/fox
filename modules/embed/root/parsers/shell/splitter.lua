@@ -28,7 +28,7 @@ function M.run(tokens)
             stdinNextCmd = nil
         end
 
-        if token.type == tokenizer.ArgTypeString or token.type == tokenizer.ArgTypeStringFunc then
+        if token.type == tokenizer.ArgTypeStringFunc then
             table.insert(curCmd.args, token)
         elseif token.type == tokenizer.ArgTypeOp then
             if token.value == "|" or token.value == "&" or token.value == ";" then
@@ -85,8 +85,14 @@ function M.run(tokens)
 
                 idx = idx + 1
                 local outFile = tokens[idx]
-                if outFile.type ~= tokenizer.ArgTypeString and outFile.type ~= tokenizer.ArgTypeStringFunc then
-                    return nil, "expected string after " .. token.raw
+                local hasAmpersand = false
+                if outFile.type == tokenizer.ArgTypeOp and outFile.raw == "&" then
+                    hasAmpersand = true
+                    idx = idx + 1
+                    outFile = tokens[idx]
+                end
+                if outFile.type ~= tokenizer.ArgTypeStringFunc then
+                    return nil, "expected string or &ref after " .. token.raw
                 end
 
                 local fileInfo = {
@@ -95,8 +101,9 @@ function M.run(tokens)
                     append = token.len > 1,
                 }
 
-                if token.hasAmpersand then
-                    local referTo = tonumber(outFile.val)
+                local staticOutFile = tokenizer.oneStringVal(outFile, true, true)
+                if hasAmpersand then
+                    local referTo = tonumber(staticOutFile)
                     if referTo == 1 then
                         fileInfo.type = M.RedirTypeRefer
                         fileInfo.ref = "stdout"
@@ -104,7 +111,7 @@ function M.run(tokens)
                         fileInfo.type = M.RedirTypeRefer
                         fileInfo.ref = "stderr"
                     else
-                        return nil, "&ref to invalid stream: " .. outFile.val
+                        return nil, "&ref to invalid stream: " .. staticOutFile
                     end
                 end
 

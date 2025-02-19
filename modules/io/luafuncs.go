@@ -2,6 +2,7 @@ package io
 
 import (
 	"errors"
+	"fmt"
 	goio "io"
 
 	lua "github.com/yuin/gopher-lua"
@@ -204,4 +205,25 @@ func ioPrint(L *lua.LState) int {
 		L.RaiseError("%v", err)
 	}
 	return 0
+}
+
+func ioToString(L *lua.LState) int {
+	f, _ := Check(L, 1)
+	if f == nil {
+		return 0
+	}
+
+	ioModes := ""
+	if _, ok := f.(goio.Reader); ok {
+		ioModes += "r"
+	}
+	if _, ok := f.(goio.Writer); ok {
+		ioModes += "w"
+	}
+	if _, ok := f.(goio.Closer); ok {
+		ioModes += "c"
+	}
+
+	L.Push(lua.LString(fmt.Sprintf("%s{"+ioModes+", %p}", LuaType, f)))
+	return 1
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 
@@ -93,7 +94,7 @@ func setDir(L *lua.LState) int {
 	return 1
 }
 
-func getCmd(L *lua.LState) int {
+func getArgs(L *lua.LState) int {
 	c, _ := Check(L, 1)
 	if c == nil {
 		return 0
@@ -109,7 +110,7 @@ func getCmd(L *lua.LState) int {
 	return 1
 }
 
-func setCmd(L *lua.LState) int {
+func setArgs(L *lua.LState) int {
 	c, ud := Check(L, 1)
 	if c == nil {
 		return 0
@@ -236,6 +237,7 @@ func (m *LuaModule) newCmdInt(L *lua.LState) (*Cmd, *lua.LUserData) {
 	c := &Cmd{
 		mod:             m,
 		gocmd:           &exec.Cmd{},
+		closeQueue:      make([]io.Closer, 0),
 		AutoLookPath:    true,
 		RaiseForBadExit: false,
 	}

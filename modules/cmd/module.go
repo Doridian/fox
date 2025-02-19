@@ -46,12 +46,12 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 
 	mt := L.NewTypeMetatable(LuaType)
 	mt.RawSetString("__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction{
-		"getDir": getDir,
-		"dir":    setDir,
-		"getCmd": getCmd,
-		"cmd":    setCmd,
-		"getEnv": getEnv,
-		"env":    setEnv,
+		"getDir":  getDir,
+		"dir":     setDir,
+		"getArgs": getArgs,
+		"args":    setArgs,
+		"getEnv":  getEnv,
+		"env":     setEnv,
 
 		"stdout":     setStdout,
 		"getStdout":  getStdout,

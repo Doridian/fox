@@ -12,13 +12,35 @@ local errorOnPipeFail = true
 
 local M = {}
 
-local function setGocmdStdio(cmd, name)
+local GETTER_FUNCS = {
+    stdin = "getStdin",
+    stdout = "getStdout",
+    stderr = "getStderr",
+}
+
+local PIPE_FUNCS = {
+    stdin = "stdinPip",
+    stdout = "stdoutPipe",
+    stderr = "stderrPipe",
+}
+
+local function setGocmdStdio(cmd, name, phase)
     local redir = cmd[name]
     if not redir then
+        if phase ~= 2 or name == "stdin" then
+            return
+        end
+        if not cmd.gocmd[GETTER_FUNCS[name]](cmd.gocmd) then
+            cmd.gocmd[name](cmd.gocmd, shell[name], false)
+        end
         return
     end
 
     if redir.type == splitter.RedirTypeFile then
+        if phase ~= 1 then
+            return
+        end
+
         local fMode
         if name == "stdin" then
             fMode = "r"
@@ -34,18 +56,17 @@ local function setGocmdStdio(cmd, name)
 
         cmd.gocmd[name](cmd.gocmd, fh)
     elseif redir.type == splitter.RedirTypeRefer then
-        local refObj
-        if redir.ref == "stdout" then
-            refObj = cmd.gocmd:stdoutPipe()
-        elseif redir.ref == "stderr" then
-            refObj = cmd.gocmd:stderrPipe()
-        elseif redir.ref == "stdin" then
-            refObj = cmd.gocmd:stdinPipe()
-        else
-            error("invalid refer type: " .. tostring(redir.ref))
+        if phase ~= 2 then
+            return
         end
-        cmd.gocmd[name](cmd.gocmd, refObj)
+
+        local refObj = cmd.gocmd[GETTER_FUNCS[redir.ref]](cmd.gocmd)
+        cmd.gocmd[name](cmd.gocmd, refObj, false)
     elseif redir.type == splitter.RedirTypeCmd then
+        if phase ~= 1 then
+            return
+        end
+
         if name ~= "stdin" then
             error("cannot pipe cmd into stdout or stderr")
         end
@@ -65,22 +86,30 @@ local function startGoCmdDeep(rootCmd, wait)
         for _, arg in pairs(cmd.args) do
             tokenizer.stringVals(arg, args)
         end
-        cmd.gocmd = gocmd.new(args)
+        cmd.gocmd:args(args)
 
-        setGocmdStdio(cmd, "stdin")
-        setGocmdStdio(cmd, "stdout")
-        setGocmdStdio(cmd, "stderr")
+        setGocmdStdio(cmd, "stdin", 1)
+        setGocmdStdio(cmd, "stdout", 1)
+        setGocmdStdio(cmd, "stderr", 1)
 
         if wait and not cmd.stdin then
             cmd.gocmd:stdin(shell.stdin, false)
         end
-        cmd.gocmd:start()
+
         table.insert(cmds, 1, cmd)
         if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
             cmd = cmd.stdin.cmd
         else
             cmd = nil
         end
+    end
+
+    for _, cmd in pairs(cmds) do
+        setGocmdStdio(cmd, "stdin", 2)
+        setGocmdStdio(cmd, "stdout", 2)
+        setGocmdStdio(cmd, "stderr", 2)
+
+        cmd.gocmd:start()
     end
 
     if not wait then
@@ -126,6 +155,7 @@ function M.run(strAdd, lineNo, prev)
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
+        cmd.gocmd = gocmd.new()
         rootCmds[cmd] = cmd
     end
 

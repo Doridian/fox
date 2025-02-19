@@ -19,17 +19,14 @@ const (
 )
 
 type Cmd struct {
-	stdout       io.Writer
-	stdoutPipe   io.Reader
-	stdoutCloser io.Closer
+	stdout     io.Writer
+	stdoutPipe io.Reader ``
 
-	stderr       io.Writer
-	stderrCloser io.Closer
-	stderrPipe   io.Reader
+	stderr     io.Writer
+	stderrPipe io.Reader
 
-	stdin       io.Reader
-	stdinCloser io.Closer
-	stdinPipe   io.Writer
+	stdin     io.Reader
+	stdinPipe io.Writer
 
 	awaited    bool
 	foreground bool
@@ -48,6 +45,8 @@ type Cmd struct {
 	AutoLookPath    bool
 	RaiseForBadExit bool
 	mod             *LuaModule
+
+	closeQueue []io.Closer
 }
 
 func (c *Cmd) ToString() string {

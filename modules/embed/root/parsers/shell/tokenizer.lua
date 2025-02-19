@@ -3,15 +3,14 @@ local interpolate = require("embed:parsers.shell.interpolate")
 
 local M = {}
 
-M.ArgTypeString = 1
-M.ArgTypeStringFunc = 2
-M.ArgTypeOp = 3
+M.ArgTypeStringFunc = 1
+M.ArgTypeOp = 2
 
 -- TODO: Variable sub-parser should decide end of variables
 --       This makes ${} variables fully work
 
-local function resolveStringFunc(token, args)
-    local str, strEscaped, hasGlobs = interpolate.eval(token.sub)
+local function resolveStringFunc(token, args, noFuncs, noGlobs)
+    local str, strEscaped, hasGlobs = interpolate.eval(token.sub, noFuncs, noGlobs)
 
     args = args or {}
     if hasGlobs then
@@ -27,20 +26,14 @@ local function resolveStringFunc(token, args)
     return args
 end
 
-function M.oneStringVal(token)
-    local v = M.stringVals(token)
+function M.oneStringVal(token, noFuncs, noGlobs)
+    local v = M.stringVals(token, nil, noFuncs, noGlobs)
     return v and v[1]
 end
 
-function M.stringVals(token, args)
-    if token.type == M.ArgTypeString then
-        if args then
-            table.insert(args, token.value)
-            return args
-        end
-        return { token.value }
-    elseif token.type == M.ArgTypeStringFunc then
-        return token:value(args)
+function M.stringVals(token, args, noFuncs, noGlobs)
+    if token.type == M.ArgTypeStringFunc then
+        return token:value(args, noFuncs, noGlobs)
     end
     error("invalid token type for stringVals")
 end
@@ -85,9 +78,9 @@ function M.run(parsed)
     end
     local function manualPushToken()
         if #curToken.sub > 0 then
-            local arg = curToken
+            local token = curToken
             curToken = nil
-            table.insert(tokens, arg)
+            table.insert(tokens, token)
         end
     end
     local function pushToken(container)
@@ -122,18 +115,10 @@ function M.run(parsed)
             end
 
             controlEndIdx = nextControlIdx
-            local hasAmpersand = false
             while true do
                 local nextC = parsed:sub(controlEndIdx + 1, controlEndIdx + 1)
                 if nextC ~= nextControl then
-                    if nextC == "&" then
-                        if hasAmpersand then
-                            return nil, "cannot have && right after >"
-                        end
-                        hasAmpersand = true
-                    else
-                        break
-                    end
+                    break
                 end
                 controlEndIdx = controlEndIdx + 1
             end
@@ -143,7 +128,6 @@ function M.run(parsed)
                 value = nextControl,
                 len = controlEndIdx - nextControlIdx + 1,
                 raw = parsed:sub(nextControlIdx, controlEndIdx),
-                hasAmpersand = hasAmpersand,
                 type = M.ArgTypeOp,
             })
             curToken = nil
