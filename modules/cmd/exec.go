@@ -21,15 +21,17 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 		return 0
 	}
 
-	if nonExitError == nil {
-		nonExitError = c.iErr
+	if nonExitError != nil {
+		c.iErr = nonExitError
 	}
 
 	if exitCode == 0 {
 		exitCode = c.iExit
-		if c.gocmd.ProcessState != nil {
+		if exitCode == 0 && c.gocmd.ProcessState != nil {
 			exitCode = c.gocmd.ProcessState.ExitCode()
 		}
+	} else {
+		c.iExit = exitCode
 	}
 
 	exitCodeL := lua.LNumber(exitCode)
@@ -39,8 +41,8 @@ func handleCmdExitNoLock(L *lua.LState, nonExitError error, exitCode int, c *Cmd
 		return 0
 	}
 
-	if nonExitError != nil {
-		L.RaiseError("%v", nonExitError)
+	if c.iErr != nil {
+		L.RaiseError("%v", c.iErr)
 		return 0
 	}
 

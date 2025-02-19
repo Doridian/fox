@@ -109,7 +109,7 @@ local function startGoCmdDeep(rootCmd, wait)
         setGocmdStdio(cmd, "stdout", 2)
         setGocmdStdio(cmd, "stderr", 2)
 
-        cmd.gocmd:start()
+        pcall(cmd.gocmd.start, cmd.gocmd)
     end
 
     if not wait then
@@ -126,7 +126,7 @@ local function startGoCmdDeep(rootCmd, wait)
         if (not exitOKSub) and c ~= rootCmd then
             exitOK = false
             if errorOnPipeFail then
-                shell.stderr:print("piped command " .. tostring(c and c.gocmd) .. " exited with code " .. exitCodeS)
+                shell.stderr:print("piped command " .. tostring(c.gocmd) .. " exited with code " .. exitCodeS)
             end
         end
     end
