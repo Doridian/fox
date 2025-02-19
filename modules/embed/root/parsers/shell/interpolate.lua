@@ -10,6 +10,7 @@ local M = {}
 
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
+-- TODO: Implement $0/1/2/3/4/... which means passthru of args from shell/init.lua/lineFunc
 
 M.InterpTypeString = 1
 M.InterpTypeFunc = 2

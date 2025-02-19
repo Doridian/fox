@@ -145,14 +145,14 @@ function M.run(strAdd, lineNo, prev)
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
-    return M.lineFunc(parsed)
+    return M.lineFunc(parsed, shell.args())
 end
 
-function M.runLine(str)
-    return M.lineFunc(str)()
+function M.runLine(str, args)
+    return M.lineFunc(str, args)()
 end
 
-function M.lineFunc(parsed)
+function M.lineFunc(parsed, args)
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
         error("shell.tokenizer error " .. tostring(err))
