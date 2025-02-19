@@ -4,6 +4,11 @@ local vars = require("embed:parsers.shell.vars")
 local M = {}
 
 -- TODO?: Implement $(cmd) interpolation
+-- SEMANTICS IMPORTANT:
+-- $ (echo A "$(echo B > /dev/stderr)" >/dev/stderr || echo C "$(echo D > /dev/stderr)" >/dev/stderr) > /dev/null
+-- B
+-- A
+
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
 
