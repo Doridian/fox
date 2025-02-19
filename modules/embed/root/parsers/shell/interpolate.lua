@@ -8,6 +8,9 @@ local M = {}
 --       And also correct behaviour
 
 -- TODO?: Implement $(cmd) interpolation (LAZY EVAL CRITICAL)
+--        This basically requires () subshell parsing
+--        such that we can make a stoppable parser that ends when
+--        $() actually ends and not on a random ) char inside some string or whatever
 
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
