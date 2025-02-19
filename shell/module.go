@@ -50,7 +50,9 @@ func (s *Shell) Name() string {
 }
 
 func (s *Shell) Close() {
-	_ = s.rl.Close()
+	if s.rl != nil {
+		_ = s.rl.Close()
+	}
 	s.l.Close()
 	if s.cancelCtx != nil {
 		s.cancelCtx()

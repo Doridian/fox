@@ -7,10 +7,10 @@ local fs = require("go:fs")
 -- TODO?: Implement "(echo A && echo B) | grep A" type subshells
 -- TODO?: Implement \ escaping
 
-local errorOnFail = true
-local errorOnPipeFail = true
-
-local M = {}
+local M = {
+    errorOnFail = true,
+    errorOnPipeFail = true,
+}
 
 local GETTER_FUNCS = {
     stdin = "getStdin",
@@ -117,7 +117,7 @@ local function startGoCmdDeep(rootCmd, wait)
     end
 
     local exitOK = true
-    local ok, err
+    local err
     for _, c in pairs(cmds) do
         local ok, exitCodeS = pcall(c.gocmd.wait, c.gocmd)
         if not ok then
@@ -130,8 +130,8 @@ local function startGoCmdDeep(rootCmd, wait)
         end
         if (not exitOKSub) and c ~= rootCmd then
             exitOK = false
-            if errorOnPipeFail then
-                shell.stderr:print("piped command " .. tostring(c.gocmd) .. " " .. (err or ("exited with code " .. exitCodeS)))
+            if M.errorOnPipeFail then
+                error("piped command " .. tostring(c.gocmd) .. " " .. (err or ("exited with code " .. exitCodeS)))
             end
         end
     end
@@ -145,10 +145,14 @@ function M.run(strAdd, lineNo, prev)
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
-    return M.runLine(parsed)
+    return M.lineFunc(parsed)
 end
 
-function M.runLine(parsed)
+function M.runLine(str)
+    return M.lineFunc(str)()
+end
+
+function M.lineFunc(parsed)
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
         error("shell.tokenizer error " .. tostring(err))
@@ -200,7 +204,7 @@ function M.runLine(parsed)
                         exitSuccess = not exitSuccess
                     end
 
-                    if errorOnPipeFail and not okSub then
+                    if M.errorOnPipeFail and not okSub then
                         break
                     end
                 else
@@ -221,7 +225,7 @@ function M.runLine(parsed)
             end
         end
 
-        if errorOnFail and not exitSuccess then
+        if M.errorOnFail and not exitSuccess then
             error("command " .. tostring(exitCmd and exitCmd.gocmd) .. " " .. (err or ("exited with code " .. exitCode)))
         end
     end

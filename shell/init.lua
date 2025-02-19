@@ -23,13 +23,8 @@ fs.mkdirAll(baseDir)
 package.path = baseDir .. "/modules/?.lua;" .. baseDir .. "/modules/?/init.lua"
 package.cpath = ""
 
-
-shell.runCommand = function(arg0)
-    print("Running", arg0, "with args")
-    for i, arg in pairs(shell.args()) do
-        print("ARG", i, arg)
-    end
-end
+local cmdHandler = require("embed:commandHandler")
+shell.runCommand = cmdHandler.run
 
 if shell.interactive() then
     function shell.setHistoryFile(file)
