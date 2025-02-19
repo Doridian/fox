@@ -27,7 +27,7 @@ local function setGocmdStdio(cmd, name)
         else
             fMode = "w"
         end
-        local fh, err = fs.open(redir.name, fMode)
+        local fh, err = fs.open(tokenizer.oneStringVal(redir.name), fMode)
         if not fh then
             error(err)
         end
@@ -61,6 +61,16 @@ local function startGoCmdDeep(rootCmd, wait)
     local cmds = {}
     local cmd = rootCmd
     while cmd do
+        local args = {}
+        for _, arg in pairs(cmd.args) do
+            tokenizer.stringVals(arg, args)
+        end
+        cmd.gocmd = gocmd.new(args)
+
+        setGocmdStdio(cmd, "stdin")
+        setGocmdStdio(cmd, "stdout")
+        setGocmdStdio(cmd, "stderr")
+
         if wait and not cmd.stdin then
             cmd.gocmd:stdin(shell.stdin, false)
         end
@@ -106,6 +116,7 @@ function M.run(strAdd, lineNo, prev)
         shell.stderr:print("shell.tokenizer error", err)
         return ""
     end
+
     local cmds, err = splitter.run(tokens)
     if not cmds then
         shell.stderr:print("shell.splitter error", err)
@@ -115,16 +126,11 @@ function M.run(strAdd, lineNo, prev)
     local rootCmds = {}
 
     for _, cmd in pairs(cmds) do
-        cmd.gocmd = gocmd.new(cmd.args)
         rootCmds[cmd] = cmd
     end
 
     -- Do this after rootCmds is prefilled
     for _, cmd in pairs(cmds) do
-        setGocmdStdio(cmd, "stdin")
-        setGocmdStdio(cmd, "stdout")
-        setGocmdStdio(cmd, "stderr")
-
         if cmd.stdin and cmd.stdin.type == splitter.RedirTypeCmd then
             rootCmds[cmd.stdin.cmd] = nil
         end

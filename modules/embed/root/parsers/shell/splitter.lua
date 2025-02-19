@@ -9,7 +9,6 @@ M.RedirTypeRefer = 3
 function M.run(tokens)
     local cmds = {}
     local curCmd = nil
-    local invertNextCmd = false
     local stdinNextCmd = nil
     local token
     local idx = 1
@@ -29,18 +28,18 @@ function M.run(tokens)
             stdinNextCmd = nil
         end
 
-        if token.type == tokenizer.ArgTypeString then
-            table.insert(curCmd.args, token.val)
+        if token.type == tokenizer.ArgTypeString or token.type == tokenizer.ArgTypeStringFunc then
+            table.insert(curCmd.args, token)
         elseif token.type == tokenizer.ArgTypeOp then
-            if token.val == "|" or token.val == "&" or token.val == ";" then
-                if token.val == ";" then
+            if token.value == "|" or token.value == "&" or token.value == ";" then
+                if token.value == ";" then
                     if #curCmd.args < 1 and (curCmd.invert or curCmd.stdin) then
-                        return nil, "Cannot have " .. token.val .. " after " .. curCmd.invert and "!" or "|"
+                        return nil, "Cannot have " .. token.value .. " after " .. curCmd.invert and "!" or "|"
                     end
                 elseif #curCmd.args < 1 then
                     return nil, "cannot have " .. token.raw .. " at the start of a command!"
                 else
-                    if token.val == "|" and token.len == 1 then
+                    if token.value == "|" and token.len == 1 then
                         stdinNextCmd = {
                             type = M.RedirTypeCmd,
                             cmd = curCmd,
@@ -48,11 +47,11 @@ function M.run(tokens)
                         if curCmd.background then
                             return nil, "cannot pipe (" .. token.raw .. ") after background command (&)"
                         end
-                    elseif token.val == "&" and token.len == 1 then
+                    elseif token.value == "&" and token.len == 1 then
                         curCmd.background = true
                     else
                         if token.len > 2 then
-                            return nil, "cannot have more than 2 of " .. token.val .. " in a row"
+                            return nil, "cannot have more than 2 of " .. token.value .. " in a row"
                         end
                         -- Must have || or && here
                         if curCmd.background then
@@ -65,7 +64,7 @@ function M.run(tokens)
                     table.insert(cmds, curCmd)
                 end
                 curCmd = nil
-            elseif token.val == "!" then
+            elseif token.value == "!" then
                 if #curCmd.args > 0 then
                     return nil, "cannot have \"" .. token.raw .. "\" in the middle of a command"
                 end
@@ -74,25 +73,25 @@ function M.run(tokens)
                     invLen = invLen + 1
                 end
                 curCmd.invert = (invLen % 2) == 1
-            elseif token.val == "<" or token.val == ">" then
+            elseif token.value == "<" or token.value == ">" then
                 if #curCmd.args < 1 then
                     return nil, "cannot redirect stdin/out/err of nothing"
                 end
-                if token.val == ">" and token.len > 2 then
-                    return nil, "cannot have more than 2 of " .. token.val .. " in a row"
-                elseif token.val == "<" and token.len > 1 then
-                    return nil, "cannot have more than 1 of " .. token.val .. " in a row"
+                if token.value == ">" and token.len > 2 then
+                    return nil, "cannot have more than 2 of " .. token.value .. " in a row"
+                elseif token.value == "<" and token.len > 1 then
+                    return nil, "cannot have more than 1 of " .. token.value .. " in a row"
                 end
 
                 idx = idx + 1
                 local outFile = tokens[idx]
-                if outFile.type ~= tokenizer.ArgTypeString then
+                if outFile.type ~= tokenizer.ArgTypeString and outFile.type ~= tokenizer.ArgTypeStringFunc then
                     return nil, "expected string after " .. token.raw
                 end
 
                 local fileInfo = {
                     type = M.RedirTypeFile,
-                    name = outFile.val,
+                    name = outFile,
                     append = token.len > 1,
                 }
 
@@ -109,12 +108,12 @@ function M.run(tokens)
                     end
                 end
 
-                if token.val == "<" then
+                if token.value == "<" then
                     if token.pre and token.pre ~= "" then
                         return nil, "expected nothing before " .. token.raw
                     end
                     curCmd.stdin = fileInfo
-                elseif token.val == ">" then
+                elseif token.value == ">" then
                     if token.pre == "2" then
                         curCmd.stderr = fileInfo
                     elseif token.pre == "1" or token.pre == "" or not token.pre then

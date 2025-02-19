@@ -4,25 +4,61 @@ local interpolate = require("embed:parsers.shell.interpolate")
 local M = {}
 
 M.ArgTypeString = 1
-M.ArgTypeOp = 2
+M.ArgTypeStringFunc = 2
+M.ArgTypeOp = 3
 
 -- TODO: Variable sub-parser should decide end of variables
 --       This makes ${} variables fully work
 
+local function resolveStringFunc(token, args)
+    local str, strEscaped, hasGlobs = interpolate.eval(token.sub)
+
+    args = args or {}
+    if hasGlobs then
+        local matches = fs.glob(strEscaped)
+        if #matches > 0 then
+            for _, match in pairs(matches) do
+                table.insert(args, match)
+            end
+            return
+        end
+    end
+    table.insert(args, str)
+    return args
+end
+
+function M.oneStringVal(token)
+    local v = M.stringVals(token)
+    return v and v[1]
+end
+
+function M.stringVals(token, args)
+    if token.type == M.ArgTypeString then
+        if args then
+            table.insert(args, token.value)
+            return args
+        end
+        return { token.value }
+    elseif token.type == M.ArgTypeStringFunc then
+        return token:value(args)
+    end
+    error("invalid token type for stringVals")
+end
+
 function M.run(parsed)
     local i = 1
     local tokens = {}
-    local curToken, nextControlIdx, nextControl, controlEndIdx, foundGlobs
+    local curToken, nextControlIdx, nextControl, controlEndIdx
     local function bufToken(container)
         if not curToken then
             curToken = {
-                buf = "",
-                bufEscaped = "",
-                isGlob = false,
+                type = M.ArgTypeStringFunc,
+                sub = {},
+                value = resolveStringFunc,
             }
         end
 
-        local sub, subEscaped, getFunc, err
+        local sub, err
         if nextControlIdx then
             sub = parsed:sub(i, nextControlIdx - 1)
             i = nextControlIdx + 1
@@ -31,54 +67,31 @@ function M.run(parsed)
             i = #parsed + 1
         end
 
-        subEscaped = sub
-        if container ~= "'" then
-            getFunc, err = interpolate.run(sub)
-            subEscaped = interpolate.eval(getFunc, not container)
-            sub = subEscaped
-            if not getFunc then
-                return nil, "shell.interpolate error: " .. tostring(err)
-            end
-
-            if not container then
-                curToken.isGlob = true
-            end
-        end
-
-        if curToken.isGlob then
+        if sub ~= "" then
+            local escapeGlobs = false
             if container then
-                subEscaped = fs.globEscape(sub)
+                escapeGlobs = true
             end
-            curToken.bufEscaped = curToken.bufEscaped .. subEscaped
-        elseif (not container) and fs.hasGlob(sub) then
-            curToken.isGlob = true
-            -- We can only get here if nothing previously could be a glob
-            -- so we can just escape everything in buf lazily here
-            curToken.bufEscaped = fs.globEscape(curToken.buf) .. sub
-        end
 
-        curToken.buf = curToken.buf .. sub
+            if container ~= "'" then
+                _, err = interpolate.run(sub, curToken.sub, escapeGlobs)
+                if err then
+                    return nil, "shell.interpolate error: " .. tostring(err)
+                end
+            else
+                table.insert(curToken.sub, {
+                    type = "str",
+                    value = sub,
+                    escapeGlobs = escapeGlobs,
+                })
+            end
+        end
     end
     local function manualPushToken()
-        if #curToken.buf > 0 then
+        if #curToken.sub > 0 then
             local arg = curToken
             curToken = nil
-            if arg.isGlob then
-                local matches = fs.glob(arg.bufEscaped)
-                if #matches > 0 then
-                    for _, match in pairs(matches) do
-                        table.insert(tokens, {
-                            val = match,
-                            type = M.ArgTypeString,
-                        })
-                    end
-                    return
-                end
-            end
-            table.insert(tokens, {
-                val = arg.buf,
-                type = M.ArgTypeString,
-            })
+            table.insert(tokens, arg)
         end
     end
     local function pushToken(container)
@@ -106,7 +119,9 @@ function M.run(parsed)
             pushToken()
         else
             bufToken()
-            if (nextControl ~= "<" and nextControl ~= ">") or not (curToken and tonumber(curToken.buf)) then
+            local curTokenSub = curToken and curToken.sub
+            local curTokenSubOne = curTokenSub and curTokenSub[1]
+            if (nextControl ~= "<" and nextControl ~= ">") or not (curTokenSubOne and #curTokenSub == 1 and tonumber(curTokenSubOne.value)) then
                 manualPushToken()
             end
 
@@ -128,8 +143,8 @@ function M.run(parsed)
             end
 
             table.insert(tokens, {
-                pre = curToken and curToken.buf,
-                val = nextControl,
+                pre = curTokenSubOne and curTokenSubOne.value,
+                value = nextControl,
                 len = controlEndIdx - nextControlIdx + 1,
                 raw = parsed:sub(nextControlIdx, controlEndIdx),
                 hasAmpersand = hasAmpersand,

@@ -3,10 +3,6 @@ local vars = require("embed:parsers.shell.vars")
 
 local M = {}
 
--- TODO: Lazy interpolation, only once the string is actually grabbed/neeeded
---       PreReq for $(cmd) interpolation
---       And also correct behaviour
-
 -- TODO?: Implement $(cmd) interpolation (LAZY EVAL CRITICAL)
 --        This basically requires () subshell parsing
 --        such that we can make a stoppable parser that ends when
@@ -15,8 +11,7 @@ local M = {}
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
 
--- return true to indicate that glob processing mode should be enabled
-function M.run(str, toks)
+function M.run(str, toks, escapeAllGlobs)
     local i = 1
     local varStart, varEnd, varTmp, varType
 
@@ -28,10 +23,13 @@ function M.run(str, toks)
             break
         end
 
-        table.insert(toks, {
-            type = "str",
-            value = str:sub(i, varStart - 1)
-        })
+        if i < varStart then
+            table.insert(toks, {
+                type = "str",
+                escapeGlobs = escapeAllGlobs,
+                value = str:sub(i, varStart - 1)
+            })
+        end
 
         varType = str:sub(varStart, varStart)
 
@@ -61,29 +59,44 @@ function M.run(str, toks)
         i = varEnd + 1
     end
 
+    if i > #str then
+        return toks
+    end
+
     table.insert(toks, {
         type = "str",
+        escapeGlobs = escapeAllGlobs,
         value = str:sub(i)
     })
 
     return toks
 end
 
-function M.eval(toks, escapeGlobs)
-    local ret = ""
+function M.eval(toks)
+    local ret = {}
+    local retEsc = {}
+
+    local hasGlobs = false
     for _, tok in ipairs(toks) do
-        local v
+        local v, vEsc
         if tok.type == "str" then
             v = tok.value
         elseif tok.type == "func" then
             v = tok.value()
         end
-        if tok.escapeGlobs and escapeGlobs then
-            v = fs.globEscape(v)
+        vEsc = v
+        if fs.hasGlob(v) then
+            if tok.escapeGlobs then
+                vEsc = fs.globEscape(v)
+            else
+                hasGlobs = true
+            end
         end
-        ret = ret .. v
+        table.insert(ret, v)
+        table.insert(retEsc, vEsc)
     end
-    return ret
+
+    return table.concat(ret, ""), table.concat(retEsc, ""), hasGlobs
 end
 
 return M
