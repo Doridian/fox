@@ -3,6 +3,9 @@ local vars = require("embed:parsers.shell.vars")
 
 local M = {}
 
+-- TODO: Lazy interpolation, only once the string is actually grabbed/neeeded
+--       PreReq for $(cmd) interpolation
+
 -- TODO?: Implement $(cmd) interpolation
 -- SEMANTICS IMPORTANT:
 -- $ (echo A "$(echo B > /dev/stderr)" >/dev/stderr || echo C "$(echo D > /dev/stderr)" >/dev/stderr) > /dev/null
