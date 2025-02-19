@@ -145,16 +145,18 @@ function M.run(strAdd, lineNo, prev)
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
+    return M.runLine(parsed)
+end
+
+function M.runLine(parsed)
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
-        shell.stderr:print("shell.tokenizer error", err)
-        return ""
+        error("shell.tokenizer error " .. tostring(err))
     end
 
     local cmds, err = splitter.run(tokens)
     if not cmds then
-        shell.stderr:print("shell.splitter error", err)
-        return ""
+        error("shell.splitter error " .. tostring(err))
     end
 
     local rootCmds = {}
@@ -214,14 +216,13 @@ function M.run(strAdd, lineNo, prev)
                         skipNext = true
                     end
                 elseif cmd.chainToNext then
-                    shell.stderr:print("invalid chainToNext: " .. tostring(cmd.chainToNext))
-                    return
+                    error("invalid chainToNext: " .. tostring(cmd.chainToNext))
                 end
             end
         end
 
         if errorOnFail and not exitSuccess then
-            shell.stderr:print("command " .. tostring(exitCmd and exitCmd.gocmd) .. " " .. (err or ("exited with code " .. exitCode)))
+            error("command " .. tostring(exitCmd and exitCmd.gocmd) .. " " .. (err or ("exited with code " .. exitCode)))
         end
     end
 end
