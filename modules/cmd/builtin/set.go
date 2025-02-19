@@ -2,6 +2,8 @@ package builtin
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"io"
 	"os/exec"
 	"strings"
@@ -16,12 +18,19 @@ type SetCmd struct {
 var _ Cmd = &SetCmd{}
 
 func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
-	if len(gocmd.Args) < 2 {
-		_, _ = gocmd.Stderr.Write([]byte("missing variable name\n"))
-		return 1, nil
+	flags := flag.NewFlagSet("set", flag.ContinueOnError)
+	flags.SetOutput(gocmd.Stderr)
+	rawPtr := flags.Bool("r", false, "raw (do not strip trailing newline)")
+	err := flags.Parse(gocmd.Args[1:])
+	if err != nil {
+		return 1, err
 	}
 
-	varKey := gocmd.Args[1]
+	if flags.NArg() < 1 {
+		return 1, errors.New("missing variable name")
+	}
+
+	varKey := flags.Arg(0)
 	var varVal string
 
 	eqPos := strings.IndexRune(varKey, '=')
@@ -31,12 +40,14 @@ func (c *SetCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 			return 1, err
 		}
 		varVal = string(varB)
-		varVal = strings.TrimSuffix(varVal, "\n")
 	} else {
 		varVal = varKey[eqPos+1:]
 		varKey = varKey[:eqPos]
 	}
 
+	if !*rawPtr {
+		varVal = strings.TrimSuffix(varVal, "\n")
+	}
 	vars.Set(varKey, lua.LString(varVal))
 
 	return 0, nil
