@@ -117,8 +117,13 @@ local function startGoCmdDeep(rootCmd, wait)
     end
 
     local exitOK = true
+    local ok, err
     for _, c in pairs(cmds) do
-        local exitCodeS = c.gocmd:wait()
+        local ok, exitCodeS = pcall(c.gocmd.wait, c.gocmd)
+        if not ok then
+            err = exitCodeS
+            exitCodeS = 1
+        end
         local exitOKSub = exitCodeS == 0
         if c.invert then
             exitOKSub = not exitOKSub
@@ -126,7 +131,7 @@ local function startGoCmdDeep(rootCmd, wait)
         if (not exitOKSub) and c ~= rootCmd then
             exitOK = false
             if errorOnPipeFail then
-                shell.stderr:print("piped command " .. tostring(c.gocmd) .. " exited with code " .. exitCodeS)
+                shell.stderr:print("piped command " .. tostring(c.gocmd) .. " " .. (err or ("exited with code " .. exitCodeS)))
             end
         end
     end
@@ -175,13 +180,18 @@ function M.run(strAdd, lineNo, prev)
         local exitSuccess = true
         local exitCode = 0
         local exitCmd = nil
+        local err, ok
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
                 startGoCmdDeep(cmd, false)
             else
                 if not skipNext then
                     local okSub = startGoCmdDeep(cmd, true)
-                    exitCode = cmd.gocmd:wait()
+                    ok, exitCode = pcall(cmd.gocmd.wait, cmd.gocmd)
+                    if not ok then
+                        err = exitCode
+                        exitCode = 1
+                    end
                     exitCmd = cmd
                     exitSuccess = exitCode == 0
                     if cmd.invert then
@@ -211,7 +221,7 @@ function M.run(strAdd, lineNo, prev)
         end
 
         if errorOnFail and not exitSuccess then
-            shell.stderr:print("command " .. tostring(exitCmd and exitCmd.gocmd) .. " exited with code " .. exitCode)
+            shell.stderr:print("command " .. tostring(exitCmd and exitCmd.gocmd) .. " " .. (err or ("exited with code " .. exitCode)))
         end
     end
 end
