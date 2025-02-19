@@ -24,7 +24,7 @@ local PIPE_FUNCS = {
     stderr = "stderrPipe",
 }
 
-local function setGocmdStdio(cmd, name, phase)
+local function setGocmdStdio(cmd, name, phase, shArgs)
     local redir = cmd[name]
     if not redir then
         if phase ~= 2 or name == "stdin" then
@@ -49,7 +49,7 @@ local function setGocmdStdio(cmd, name, phase)
         else
             fMode = "w"
         end
-        local fh, err = fs.open(tokenizer.oneStringVal(redir.name), fMode)
+        local fh, err = fs.open(tokenizer.oneStringVal(redir.name, false, false, shArgs), fMode)
         if not fh then
             error(err)
         end
@@ -78,13 +78,13 @@ local function setGocmdStdio(cmd, name, phase)
     end
 end
 
-local function startGoCmdDeep(rootCmd, wait)
+local function startGoCmdDeep(rootCmd, wait, shArgs)
     local cmds = {}
     local cmd = rootCmd
     while cmd do
         local args = {}
         for _, arg in pairs(cmd.args) do
-            tokenizer.stringVals(arg, args)
+            tokenizer.stringVals(arg, args, false, false, shArgs)
         end
         cmd.gocmd:args(args)
 
@@ -152,7 +152,7 @@ function M.runLine(str, args)
     return M.lineFunc(str, args)()
 end
 
-function M.lineFunc(parsed, args)
+function M.lineFunc(parsed, shArgs)
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
         error("shell.tokenizer error " .. tostring(err))
@@ -189,10 +189,10 @@ function M.lineFunc(parsed, args)
         local err, ok
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
-                startGoCmdDeep(cmd, false)
+                startGoCmdDeep(cmd, false, shArgs)
             else
                 if not skipNext then
-                    local okSub = startGoCmdDeep(cmd, true)
+                    local okSub = startGoCmdDeep(cmd, true, shArgs)
                     ok, exitCode = pcall(cmd.gocmd.wait, cmd.gocmd)
                     if not ok then
                         err = exitCode

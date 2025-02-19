@@ -101,7 +101,7 @@ function M.run(tokens)
                     append = token.len > 1,
                 }
 
-                local staticOutFile = tokenizer.oneStringVal(outFile, true, true)
+                local staticOutFile = tokenizer.oneStringVal(outFile, true, true, {})
                 if hasAmpersand then
                     local referTo = tonumber(staticOutFile)
                     if referTo == 1 then

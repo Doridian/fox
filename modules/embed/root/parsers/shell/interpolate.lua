@@ -10,7 +10,7 @@ local M = {}
 
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
--- TODO: Implement $0/1/2/3/4/... which means passthru of args from shell/init.lua/lineFunc
+-- TODO?: Implement $0 (just $0, all others work)
 
 M.InterpTypeString = 1
 M.InterpTypeFunc = 2
@@ -52,13 +52,24 @@ function M.generate(str, toks, escapeAllGlobs)
         end
         varTmp = str:sub(varStart + 1, varEnd - 1)
 
-        table.insert(toks, {
-            type = M.InterpTypeFunc,
-            escapeGlobs = true,
-            value = function()
-                return vars.get(varType, varTmp)
-            end
-        })
+        local varNameNum = tonumber(varTmp)
+        if varNameNum and varType == "$" then
+            table.insert(toks, {
+                type = M.InterpTypeFunc,
+                escapeGlobs = true,
+                value = function(_, args)
+                    return args[varNameNum] or ""
+                end
+            })
+        else
+            table.insert(toks, {
+                type = M.InterpTypeFunc,
+                escapeGlobs = true,
+                value = function()
+                    return vars.get(varType, varTmp) or ""
+                end
+            })
+        end
 
         i = varEnd + 1
     end
@@ -84,7 +95,7 @@ function M.singleToken(str, escapeGlobs)
     }
 end
 
-function M.eval(toks, noFuncs, noGlobs)
+function M.eval(toks, noFuncs, noGlobs, args)
     local ret = {}
     local retEsc = {}
 
@@ -94,7 +105,7 @@ function M.eval(toks, noFuncs, noGlobs)
         if tok.type == M.InterpTypeString then
             v = tok.value
         elseif tok.type == M.InterpTypeFunc then
-            v = tok.value()
+            v = tok:value(args)
             if noFuncs then
                 return nil, nil
             end
