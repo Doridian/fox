@@ -11,6 +11,8 @@ import (
 	"github.com/Doridian/fox/modules/cmd/builtin"
 )
 
+// TODO: Aliasing system
+
 const (
 	ExitCodeLuaError             = -10001
 	ExitCodeProcessCouldNotStart = -10002
