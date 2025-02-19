@@ -6,6 +6,9 @@ local M = {}
 M.ArgTypeString = 1
 M.ArgTypeOp = 2
 
+-- TODO: Variable sub-parser should decide end of variables
+--       This makes ${} variables fully work
+
 function M.run(parsed)
     local i = 1
     local tokens = {}
@@ -19,7 +22,7 @@ function M.run(parsed)
             }
         end
 
-        local sub, subEscaped
+        local sub, subEscaped, getFunc, err
         if nextControlIdx then
             sub = parsed:sub(i, nextControlIdx - 1)
             i = nextControlIdx + 1
@@ -30,13 +33,14 @@ function M.run(parsed)
 
         subEscaped = sub
         if container ~= "'" then
-            sub, subEscaped, foundGlobs = interpolate.run(sub, not container)
-            if not sub then
-                -- subEscaped will be the error message
-                return nil, "shell.interpolate error: " .. tostring(subEscaped)
+            getFunc, err = interpolate.run(sub, not container)
+            subEscaped = getFunc()
+            sub = subEscaped
+            if not getFunc then
+                return nil, "shell.interpolate error: " .. tostring(err)
             end
 
-            if (not container) and foundGlobs then
+            if not container then
                 curToken.isGlob = true
             end
         end

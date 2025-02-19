@@ -20,15 +20,19 @@ function M.run(str, escapeGlobs)
     local i = 1
     local varStart, varEnd, varTmp, varType
 
-    local hasGlobs = false
-    local retStrEscaped = nil
-    local retStr = ""
+    local retLazy = {}
 
     while i <= #str do
         varStart = str:find("[$%%]", i)
         if not varStart then
             break
         end
+
+        table.insert(retLazy, {
+            type = "str",
+            value = str:sub(i, varStart - 1)
+        })
+
         varType = str:sub(varStart, varStart)
 
         varTmp = str:sub(varStart + 1, varStart + 1)
@@ -45,24 +49,39 @@ function M.run(str, escapeGlobs)
             varEnd = #str + 1
         end
         varTmp = str:sub(varStart + 1, varEnd - 1)
-        varTmp = vars.get(varType, varTmp)
 
-        retStr = retStr .. varTmp
-        if hasGlobs then
-            retStrEscaped = retStrEscaped .. fs.globEscape(varTmp)
-        elseif escapeGlobs and fs.hasGlob(varTmp) then
-            hasGlobs = true
-            retStrEscaped = retStr .. fs.globEscape(varTmp)
-        end
+        table.insert(retLazy, {
+            type = "func",
+            escape = true,
+            value = function()
+                return vars.get(varType, varTmp)
+            end
+        })
 
         i = varEnd + 1
     end
 
-    retStr = retStr .. str:sub(i)
-    if hasGlobs then
-        retStrEscaped = retStrEscaped .. str:sub(i)
+    table.insert(retLazy, {
+        type = "str",
+        value = str:sub(i)
+    })
+
+    return function()
+        local ret = ""
+        for _, tok in ipairs(retLazy) do
+            local v
+            if tok.type == "str" then
+                v = tok.value
+            elseif tok.type == "func" then
+                v = tok.value()
+            end
+            if tok.escape and escapeGlobs then
+                v = fs.globEscape(v)
+            end
+            ret = ret .. v
+        end
+        return ret
     end
-    return retStr, retStrEscaped, hasGlobs
 end
 
 return M
