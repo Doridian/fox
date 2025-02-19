@@ -23,19 +23,6 @@ func (s *Shell) luaGetArgs(L *lua.LState) int {
 	return 1
 }
 
-func (s *Shell) luaGetRootArgs(L *lua.LState) int {
-	shl := s
-	for shl.parent != nil {
-		shl = shl.parent
-	}
-	argsL := shl.l.NewTable()
-	for _, arg := range shl.args {
-		argsL.Append(lua.LString(arg))
-	}
-	L.Push(argsL)
-	return 1
-}
-
 func (s *Shell) luaIsInteractive(L *lua.LState) int {
 	L.Push(lua.LBool(s.interactive))
 	return 1

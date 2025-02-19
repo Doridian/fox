@@ -19,11 +19,23 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		return 1, nil
 	}
 
-	subShell := shell.New(c.ctx, nil) // TODO: How to get the current shell?
+	subArgs := gocmd.Args[1:]
+
+	if gocmd.Args[1] == "-p" {
+		if len(gocmd.Args) < 3 {
+			_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
+			return 1, nil
+		}
+
+		var currentShell *shell.Shell // TODO: How to get the current shell?
+		subArgs = currentShell.GetArgs()
+	}
+
+	subShell := shell.New(c.ctx)
 	subShell.ShowErrors = false
 	defer subShell.Close()
 
-	err := subShell.Init(gocmd.Args[1:], false)
+	err := subShell.Init(subArgs, false)
 	if err != nil {
 		return 1, err
 	}

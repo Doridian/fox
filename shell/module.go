@@ -35,8 +35,6 @@ type Shell struct {
 	stdin  io.Reader
 	stdout io.Writer
 	stderr io.Writer
-
-	parent *Shell
 }
 
 func (s *Shell) Dependencies() []string {
