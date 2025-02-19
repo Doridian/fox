@@ -74,16 +74,12 @@ function M.run(parsed)
             end
 
             if container ~= "'" then
-                _, err = interpolate.run(sub, curToken.sub, escapeGlobs)
+                _, err = interpolate.generate(sub, curToken.sub, escapeGlobs)
                 if err then
                     return nil, "shell.interpolate error: " .. tostring(err)
                 end
             else
-                table.insert(curToken.sub, {
-                    type = "str",
-                    value = sub,
-                    escapeGlobs = escapeGlobs,
-                })
+                table.insert(curToken.sub, interpolate.singleToken(sub, escapeGlobs))
             end
         end
     end

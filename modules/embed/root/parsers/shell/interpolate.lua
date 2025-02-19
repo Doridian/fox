@@ -11,7 +11,10 @@ local M = {}
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
 
-function M.run(str, toks, escapeAllGlobs)
+M.InterpTypeString = 1
+M.InterpTypeFunc = 2
+
+function M.generate(str, toks, escapeAllGlobs)
     local i = 1
     local varStart, varEnd, varTmp, varType
 
@@ -25,7 +28,7 @@ function M.run(str, toks, escapeAllGlobs)
 
         if i < varStart then
             table.insert(toks, {
-                type = "str",
+                type = M.InterpTypeString,
                 escapeGlobs = escapeAllGlobs,
                 value = str:sub(i, varStart - 1)
             })
@@ -49,7 +52,7 @@ function M.run(str, toks, escapeAllGlobs)
         varTmp = str:sub(varStart + 1, varEnd - 1)
 
         table.insert(toks, {
-            type = "func",
+            type = M.InterpTypeFunc,
             escapeGlobs = true,
             value = function()
                 return vars.get(varType, varTmp)
@@ -64,12 +67,20 @@ function M.run(str, toks, escapeAllGlobs)
     end
 
     table.insert(toks, {
-        type = "str",
+        type = M.InterpTypeString,
         escapeGlobs = escapeAllGlobs,
         value = str:sub(i)
     })
 
     return toks
+end
+
+function M.singleToken(str, escapeGlobs)
+    return {
+        type = M.InterpTypeString,
+        value = str,
+        escapeGlobs = escapeGlobs
+    }
 end
 
 function M.eval(toks)
@@ -79,9 +90,9 @@ function M.eval(toks)
     local hasGlobs = false
     for _, tok in ipairs(toks) do
         local v, vEsc
-        if tok.type == "str" then
+        if tok.type == M.InterpTypeString then
             v = tok.value
-        elseif tok.type == "func" then
+        elseif tok.type == M.InterpTypeFunc then
             v = tok.value()
         end
         vEsc = v
