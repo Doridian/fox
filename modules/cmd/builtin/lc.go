@@ -19,7 +19,7 @@ func (c *LCCmd) RunAs(gocmd *exec.Cmd) (int, error) {
 		return 1, nil
 	}
 
-	subShell := shell.New(c.ctx)
+	subShell := shell.New(c.ctx, nil) // TODO: How to get the current shell?
 	subShell.ShowErrors = false
 	defer subShell.Close()
 

@@ -27,7 +27,7 @@ var ErrShellNotInited = errors.New("shell not initialized")
 // TODO?: Handle SIGTERM
 // TODO: Wait or stop jobs on shell exit
 
-func New(mCtx context.Context) *Shell {
+func New(mCtx context.Context, parent *Shell) *Shell {
 	s := &Shell{
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs:        true,
@@ -38,9 +38,14 @@ func New(mCtx context.Context) *Shell {
 		stderr:     os.Stderr,
 		ShowErrors: true,
 		mCtx:       mCtx,
+		parent:     parent,
 	}
 
 	return s
+}
+
+func (s *Shell) GetParent() *Shell {
+	return s.parent
 }
 
 func (s *Shell) SetStdio(in io.Reader, out io.Writer, err io.Writer) {
@@ -91,6 +96,7 @@ func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":        luaExit,
 		"args":        s.luaGetArgs,
+		"rootArgs":    s.luaGetRootArgs,
 		"interactive": s.luaIsInteractive,
 
 		"readlineConfig":    s.luaSetReadlineConfig,

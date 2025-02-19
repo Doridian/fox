@@ -39,7 +39,7 @@ var skipArg0 = false
 
 func Main() error {
 	var err error
-	s := shell.New(context.Background())
+	s := shell.New(context.Background(), nil)
 
 	forceShell := false
 	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {
