@@ -5,12 +5,9 @@ local M = {}
 
 -- TODO: Lazy interpolation, only once the string is actually grabbed/neeeded
 --       PreReq for $(cmd) interpolation
+--       And also correct behaviour
 
--- TODO?: Implement $(cmd) interpolation
--- SEMANTICS IMPORTANT:
--- $ (echo A "$(echo B > /dev/stderr)" >/dev/stderr || echo C "$(echo D > /dev/stderr)" >/dev/stderr) > /dev/null
--- B
--- A
+-- TODO?: Implement $(cmd) interpolation (LAZY EVAL CRITICAL)
 
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
