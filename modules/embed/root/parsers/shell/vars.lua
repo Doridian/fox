@@ -10,7 +10,7 @@ function M.get(name)
         return tostring(V[name:sub(2)] or "")
     else
         local nNum = tonumber(name)
-        if nNum then
+        if nNum and nNum > 0 then
             return shell.getArg(nNum) or ""
         end
         return env[name] or ""
