@@ -50,9 +50,9 @@ function M.get(name)
     return mustGetCommand(name)
 end
 
-function M.run(name)
+function M.run(name, ...)
     local cmd = mustGetCommand(name)
-    return cmd.run(table.unpack(shell.args()))
+    return cmd.run(name, ...)
 end
 
 return M

@@ -17,12 +17,12 @@ M.InterpTypeFunc = 2
 
 function M.generate(str, toks, escapeAllGlobs)
     local i = 1
-    local varStart, varEnd, varTmp, varType
+    local varStart, varEnd, varName
 
     toks = toks or {}
 
     while i <= #str do
-        varStart = str:find("[$%%]", i)
+        varStart = str:find("$", i, true)
         if not varStart then
             break
         end
@@ -35,41 +35,28 @@ function M.generate(str, toks, escapeAllGlobs)
             })
         end
 
-        varType = str:sub(varStart, varStart)
-
-        varTmp = str:sub(varStart + 1, varStart + 1)
-        if varTmp == "{"  then
+        varName = str:sub(varStart + 1, varStart + 1)
+        if varName == "{"  then
             varStart = varStart + 1
             varEnd = str:find("}", varStart + 1, true)
             if not varEnd then
                 return nil, "Unclosed variable ${}"
             end
         else
-            varEnd = str:find("[^%w_]", varStart + 1)
+            varEnd = str:find("[^%%%w_]", varStart + 1)
         end
         if not varEnd then
             varEnd = #str + 1
         end
-        varTmp = str:sub(varStart + 1, varEnd - 1)
-
-        local varNameNum = tonumber(varTmp)
-        if varNameNum and varType == "$" then
-            table.insert(toks, {
-                type = M.InterpTypeFunc,
-                escapeGlobs = true,
-                value = function(_, args)
-                    return args[varNameNum] or ""
-                end
-            })
-        else
-            table.insert(toks, {
-                type = M.InterpTypeFunc,
-                escapeGlobs = true,
-                value = function()
-                    return vars.get(varType, varTmp) or ""
-                end
-            })
-        end
+        varName = str:sub(varStart + 1, varEnd - 1)
+    
+        table.insert(toks, {
+            type = M.InterpTypeFunc,
+            escapeGlobs = true,
+            value = function()
+                return vars.get(varName) or ""
+            end
+        })
 
         i = varEnd + 1
     end
@@ -95,7 +82,7 @@ function M.singleToken(str, escapeGlobs)
     }
 end
 
-function M.eval(toks, noFuncs, noGlobs, args)
+function M.eval(toks, noFuncs, noGlobs)
     local ret = {}
     local retEsc = {}
 
@@ -105,7 +92,7 @@ function M.eval(toks, noFuncs, noGlobs, args)
         if tok.type == M.InterpTypeString then
             v = tok.value
         elseif tok.type == M.InterpTypeFunc then
-            v = tok:value(args)
+            v = tok:value()
             if noFuncs then
                 return nil, nil
             end

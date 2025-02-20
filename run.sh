@@ -17,8 +17,8 @@ prepare
 build
 
 if [ -z "${BINPATH-}" ]; then
-    exec ./src/fox
+    exec ./src/fox "$@"
 else
     mv ./src/fox "${BINPATH}"
-    exec "${BINPATH}"
+    exec "${BINPATH}" "$@"
 fi

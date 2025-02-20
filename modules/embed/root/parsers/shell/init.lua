@@ -24,7 +24,7 @@ local PIPE_FUNCS = {
     stderr = "stderrPipe",
 }
 
-local function setGocmdStdio(cmd, name, phase, shArgs)
+local function setGocmdStdio(cmd, name, phase)
     local redir = cmd[name]
     if not redir then
         if phase ~= 2 or name == "stdin" then
@@ -49,7 +49,7 @@ local function setGocmdStdio(cmd, name, phase, shArgs)
         else
             fMode = "w"
         end
-        local fh, err = fs.open(tokenizer.oneStringVal(redir.name, false, false, shArgs), fMode)
+        local fh, err = fs.open(tokenizer.oneStringVal(redir.name, false, false), fMode)
         if not fh then
             error(err)
         end
@@ -78,13 +78,13 @@ local function setGocmdStdio(cmd, name, phase, shArgs)
     end
 end
 
-local function startGoCmdDeep(rootCmd, wait, shArgs)
+local function startGoCmdDeep(rootCmd, wait)
     local cmds = {}
     local cmd = rootCmd
     while cmd do
         local args = {}
         for _, arg in pairs(cmd.args) do
-            tokenizer.stringVals(arg, args, false, false, shArgs)
+            tokenizer.stringVals(arg, args, false, false)
         end
         cmd.gocmd:args(args)
 
@@ -145,14 +145,14 @@ function M.run(strAdd, lineNo, prev)
         return parsed:sub(1, #parsed - 2) .. "\n", true
     end
 
-    return M.lineFunc(parsed, shell.args())
+    return M.lineFunc(parsed)
 end
 
-function M.runLine(str, args)
-    return M.lineFunc(str, args)()
+function M.runLine(str)
+    return M.lineFunc(str)()
 end
 
-function M.lineFunc(parsed, shArgs)
+function M.lineFunc(parsed)
     local tokens, err = tokenizer.run(parsed)
     if not tokens then
         error("shell.tokenizer error " .. tostring(err))
@@ -189,10 +189,10 @@ function M.lineFunc(parsed, shArgs)
         local err, ok
         for _, cmd in pairs(rootCmds) do
             if cmd.background then
-                startGoCmdDeep(cmd, false, shArgs)
+                startGoCmdDeep(cmd, false)
             else
                 if not skipNext then
-                    local okSub = startGoCmdDeep(cmd, true, shArgs)
+                    local okSub = startGoCmdDeep(cmd, true)
                     ok, exitCode = pcall(cmd.gocmd.wait, cmd.gocmd)
                     if not ok then
                         err = exitCode

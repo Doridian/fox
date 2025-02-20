@@ -9,12 +9,9 @@ M.ArgTypeOp = 2
 -- TODO: Variable sub-parser should decide end of variables
 --       This makes ${} variables fully work
 
-local function resolveStringFunc(token, outArgs, noFuncs, noGlobs, args)
-    if not args then
-        error("no args passed to resolveStringFunc")
-    end
+local function resolveStringFunc(token, outArgs, noFuncs, noGlobs)
 
-    local str, strEscaped, hasGlobs = interpolate.eval(token.sub, noFuncs, noGlobs, args)
+    local str, strEscaped, hasGlobs = interpolate.eval(token.sub, noFuncs, noGlobs)
 
     outArgs = outArgs or {}
     if hasGlobs then
@@ -30,14 +27,14 @@ local function resolveStringFunc(token, outArgs, noFuncs, noGlobs, args)
     return outArgs
 end
 
-function M.oneStringVal(token, noFuncs, noGlobs, args)
-    local v = M.stringVals(token, nil, noFuncs, noGlobs, args)
+function M.oneStringVal(token, noFuncs, noGlobs)
+    local v = M.stringVals(token, nil, noFuncs, noGlobs)
     return v and v[1]
 end
 
-function M.stringVals(token, outArgs, noFuncs, noGlobs, args)
+function M.stringVals(token, outArgs, noFuncs, noGlobs)
     if token.type == M.ArgTypeStringFunc then
-        return token:value(outArgs, noFuncs, noGlobs, args)
+        return token:value(outArgs, noFuncs, noGlobs)
     end
     error("invalid token type for stringVals")
 end

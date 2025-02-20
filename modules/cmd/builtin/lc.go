@@ -19,8 +19,9 @@ func (c *LCCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec
 		return 1, nil
 	}
 
-	subArgs := gocmd.Args[1:]
+	currentShell := loader.GetModule(shell.LuaName).(*shell.Shell)
 
+	subArgs := gocmd.Args[1:]
 	if subArgs[0] == "-p" {
 		if len(subArgs) < 2 {
 			_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
@@ -28,11 +29,10 @@ func (c *LCCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec
 		}
 
 		subArgs = subArgs[1:]
-		currentShell := loader.GetModule(shell.LuaName).(*shell.Shell)
 		subArgs = append(subArgs, currentShell.GetArgs()...)
 	}
 
-	subShell := shell.New(ctx)
+	subShell := shell.New(ctx, currentShell)
 	subShell.ShowErrors = false
 	defer subShell.Close()
 
@@ -41,7 +41,7 @@ func (c *LCCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec
 		return 1, err
 	}
 	subShell.SetStdio(gocmd.Stdin, gocmd.Stdout, gocmd.Stderr)
-	err = subShell.RunCommand(subArgs[0])
+	err = subShell.RunCommand(subArgs)
 	if err != nil {
 		return 1, err
 	}

@@ -27,7 +27,7 @@ var ErrShellNotInited = errors.New("shell not initialized")
 // TODO?: Handle SIGTERM
 // TODO: Wait or stop jobs on shell exit
 
-func New(mCtx context.Context) *Shell {
+func New(mCtx context.Context, parent *Shell) *Shell {
 	s := &Shell{
 		l: lua.NewState(lua.Options{
 			SkipOpenLibs:        true,
@@ -38,6 +38,7 @@ func New(mCtx context.Context) *Shell {
 		stderr:     os.Stderr,
 		ShowErrors: true,
 		mCtx:       mCtx,
+		parent:     parent,
 	}
 
 	return s
@@ -95,6 +96,8 @@ func (s *Shell) Loader(L *lua.LState) int {
 	mod := s.l.SetFuncs(s.l.NewTable(), map[string]lua.LGFunction{
 		"exit":        luaExit,
 		"args":        s.luaGetArgs,
+		"getArg":      s.luaGetArg,
+		"popArgs":     s.luaPopArgs,
 		"interactive": s.luaIsInteractive,
 
 		"readlineConfig":    s.luaSetReadlineConfig,
@@ -116,7 +119,10 @@ func (s *Shell) MustInit(args []string, interactive bool) {
 }
 
 func (s *Shell) Init(args []string, interactive bool) error {
-	if s.args != nil {
+	if args == nil {
+		return errors.New("args cannot be nil")
+	}
+	if s.mainMod != nil {
 		return errors.New("shell already initialized")
 	}
 	s.args = args
@@ -336,15 +342,17 @@ func (s *Shell) RunString(code string) error {
 	return err
 }
 
-func (s *Shell) RunCommand(cmd string) error {
+func (s *Shell) RunCommand(args []string) error {
 	if s.args == nil {
 		return ErrShellNotInited
 	}
 
 	s.startLuaLock()
 	s.l.Push(s.mod.RawGetString("runCommand"))
-	s.l.Push(lua.LString(cmd))
-	err := s.l.PCall(1, 0, nil)
+	for _, arg := range args {
+		s.l.Push(lua.LString(arg))
+	}
+	err := s.l.PCall(len(args), 0, nil)
 	s.endLuaLock(false, err)
 
 	return err

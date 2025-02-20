@@ -39,11 +39,15 @@ var skipArg0 = false
 
 func Main() error {
 	var err error
-	s := shell.New(context.Background())
+	s := shell.New(context.Background(), nil)
+
+	runCmdSimple := func(_ string) error {
+		return s.RunCommand(flag.Args())
+	}
 
 	forceShell := false
 	flag.BoolFunc("c", "First arg is an internal command (default)", func(val string) error {
-		return setRunFunc(val, s.RunCommand)
+		return setRunFunc(val, runCmdSimple)
 	})
 	flag.BoolFunc("e", "First arg is code to evaluate", func(val string) error {
 		skipArg0 = true
@@ -70,7 +74,7 @@ func Main() error {
 	}
 
 	if flag.NArg() > 0 && runFunc == nil && !forceShell {
-		runFunc = s.RunCommand
+		runFunc = runCmdSimple
 	}
 
 	s.MustInit(args, *continuePtr || (runFunc == nil))
