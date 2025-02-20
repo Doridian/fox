@@ -6,6 +6,7 @@ local fs = require("go:fs")
 
 -- TODO?: Implement "(echo A && echo B) | grep A" type subshells
 -- TODO?: Implement \ escaping
+-- TODO: Likely have to go per-char for above features
 
 local M = {
     errorOnFail = true,

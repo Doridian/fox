@@ -11,6 +11,7 @@ local M = {}
 -- TODO: Implement ${..#replace}
 -- TODO: Implement ${..-default}
 -- TODO?: Implement $0 (just $0, all others work)
+-- TODO: Likely have to go per-char for above features
 
 M.InterpTypeString = 1
 M.InterpTypeFunc = 2
