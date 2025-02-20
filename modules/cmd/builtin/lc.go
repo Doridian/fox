@@ -13,6 +13,8 @@ type LCCmd struct {
 
 var _ Cmd = &LCCmd{}
 
+// TODO?: Allow loader override
+
 func (c *LCCmd) RunAs(ctx context.Context, loader *loader.LuaModule, gocmd *exec.Cmd) (int, error) {
 	if len(gocmd.Args) < 2 {
 		_, _ = gocmd.Stderr.Write([]byte("missing command name\n"))
