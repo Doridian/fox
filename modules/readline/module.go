@@ -69,5 +69,8 @@ func (m *LuaModule) PrePrompt() {
 }
 
 func init() {
-	loader.AddModuleDefault(newLuaModule)
+	tBool := true
+	loader.AddModule(newLuaModule, loader.ModuleConfig{
+		Autoload: &tBool,
+	})
 }

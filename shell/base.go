@@ -147,13 +147,16 @@ func (s *Shell) Init(args []string, interactive bool) error {
 	s.l.Pop(lua.OpenChannel(s.l))
 	s.l.Pop(lua.OpenCoroutine(s.l))
 
-	mainMod := loader.NewLuaModule()
-	err := mainMod.ManualRegisterModuleDefault(s)
+	loaderMod := loader.NewLuaModule()
+	tBool := true
+	err := loaderMod.ManualRegisterModule(s, loader.ModuleConfig{
+		Autoload: &tBool,
+	})
 	if err != nil {
 		return fmt.Errorf("error registering shell as module: %w", err)
 	}
-	mainMod.Load(s.l)
-	s.mainMod = mainMod
+	loaderMod.Load(s.l)
+	s.mainMod = loaderMod
 
 	s.signalInit()
 	s.setStdioThru()

@@ -110,7 +110,7 @@ func (m *LuaModule) Loader(L *lua.LState) int {
 		}
 
 		for _, inst := range m.gomods {
-			if inst.cfg.IsAutoload() {
+			if inst.cfg.IsAutoload() && inst.mod != m {
 				modules.Require(L, inst.mod.Name())
 			}
 		}
@@ -132,11 +132,11 @@ func (m *LuaModule) Load(L *lua.LState) {
 	m.builtins = L.NewTable()
 	m.autoload = L.NewTable()
 
-	t := true
+	tBool := true
 	m.preLoadMod(L, &ModuleInstance{
 		mod: m,
 		cfg: ModuleConfig{
-			Autoload: &t,
+			Autoload: &tBool,
 		},
 	})
 	modules.Require(L, m.Name())

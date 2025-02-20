@@ -1,7 +1,6 @@
 local shell = require("go:shell")
 local env = require("go:env")
 local fs = require("go:fs")
-local cmd = require("go:cmd")
 
 local p = print
 function _G.print(...)

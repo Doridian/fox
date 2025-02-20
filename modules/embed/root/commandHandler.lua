@@ -1,5 +1,3 @@
-local shell = require("go:shell")
-
 local M = {}
 
 local commandCache = {}
