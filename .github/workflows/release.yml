@@ -39,7 +39,7 @@ jobs:
         env:
           GOLDFLAGS: -s -w
       - name: Release add
-        uses: ncipollo/release-action@v1.16.0
+        uses: ncipollo/release-action@v1.18.0
         with:
           name: ${{ env.RELEASE_NAME }}
           tag: ${{ env.RELEASE_TAG }}
